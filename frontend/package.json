@@ -1,0 +1,36 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@heroicons/vue": "^2.2.0",
+    "@vueuse/core": "^13.9.0",
+    "axios": "^1.11.0",
+    "dayjs": "^1.11.18",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.2",
+    "konva": "^10.0.1",
+    "pinia": "^3.0.3",
+    "qrcode": "^1.5.4",
+    "vee-validate": "^4.15.1",
+    "vue": "^3.5.18",
+    "vue-konva": "^3.2.6",
+    "vue-loading-overlay": "^6.0.6",
+    "vue-router": "^4.5.1",
+    "vue-toastification": "^2.0.0-rc.5",
+    "yup": "^1.7.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "vite": "^7.1.2"
+  }
+}

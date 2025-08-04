@@ -2,9 +2,13 @@
 __pycache__/
 *.py[codz]
 *$py.class
-
+.claude
+.serena
+staticfiles/
+static/
 # C extensions
 *.so
+node_modules/
 
 # Distribution / packaging
 .Python
