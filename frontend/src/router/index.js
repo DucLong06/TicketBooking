@@ -31,7 +31,8 @@ const routes = [
         path: '/booking/confirmation/:bookingCode',
         name: 'Confirmation',
         component: () => import('../pages/Confirmation.vue')
-    }
+    },
+
 ]
 
 const router = createRouter({

@@ -1,7 +1,10 @@
+from logzero import logger
 import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
 
+load_dotenv()
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -14,7 +17,7 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
 
 if DEBUG:
-    # For development - print emails to console
+    # For development - logger.debug emails to console
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
     # For production
@@ -124,6 +127,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Vue dev server
     "http://127.0.0.1:5173",
+    "http://127.0.0.1:8888",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -148,6 +152,5 @@ PAYMENT_TIMEOUT_MINUTES = 5   # Thời gian thanh toán
 
 # Email settings (config sau)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
-
 VNP_TMNCODE = os.getenv('VNP_TMNCODE', '')
 VNP_HASTSECRET = os.getenv('VNP_HASTSECRET', '')

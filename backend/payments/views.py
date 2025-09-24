@@ -4,10 +4,12 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404, redirect
 from django.db import transaction
 from django.utils import timezone
-from django.conf import settings
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from logzero import logger
+from .constant import VNPAY_RESPONSE_CODES
+
 import uuid
+
 
 from .models import Payment
 from .vnpay import VNPay
@@ -39,7 +41,6 @@ def create_payment(request, booking_code):
         status='pending'
     )
 
-    # ✅ VNPAY INTEGRATION
     if payment_method == 'vnpay':
         vnpay = VNPay()
 
@@ -49,7 +50,7 @@ def create_payment(request, booking_code):
             order_id=transaction_id,
             amount=float(booking.final_amount),
             order_desc=f"Thanh toan ve {booking.booking_code}",
-            bank_code=""  # Để trống để user chọn
+            bank_code=""
         )
 
         return Response({
@@ -59,7 +60,6 @@ def create_payment(request, booking_code):
             'method': 'vnpay'
         })
 
-    # Other payment methods...
     else:
         return Response(
             {'error': 'Payment method not supported'},
@@ -104,7 +104,7 @@ def vnpay_return(request):
                     try:
                         send_booking_confirmation(booking)
                     except Exception as e:
-                        print(f"Failed to send email: {e}")
+                        logger.debug(f"Failed to send email: {e}")
 
                 # Redirect to success page
                 return redirect(f'http://localhost:5173/booking/confirmation/{booking.booking_code}')
@@ -114,8 +114,9 @@ def vnpay_return(request):
                 payment.gateway_response = dict(request.GET)
                 payment.save()
 
-                # Redirect to failure page
-                return redirect(f'http://localhost:5173/payment/failed?code={response_code}')
+                error_message = VNPAY_RESPONSE_CODES.get(response_code, f'Lỗi không xác định (Mã lỗi: {response_code})')
+                failure_url = f'http://localhost:5173/payment/failed?code={response_code}&message={error_message}'
+                return redirect(failure_url)
 
         except Payment.DoesNotExist:
             return redirect('http://localhost:5173/payment/error')

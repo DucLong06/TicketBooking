@@ -70,7 +70,7 @@
 							</div>
 
 							<!-- Bank Transfer -->
-							<div
+							<!-- <div
 								@click="selectPaymentMethod('bank')"
 								:class="[
 									'border-2 rounded-lg p-4 cursor-pointer transition',
@@ -110,10 +110,10 @@
 										>
 									</div>
 								</div>
-							</div>
+							</div> -->
 
 							<!-- Momo -->
-							<div
+							<!-- <div
 								@click="selectPaymentMethod('momo')"
 								:class="[
 									'border-2 rounded-lg p-4 cursor-pointer transition',
@@ -147,10 +147,10 @@
 										>
 									</div>
 								</div>
-							</div>
+							</div> -->
 
 							<!-- Credit Card -->
-							<div
+							<!-- <div
 								@click="selectPaymentMethod('card')"
 								:class="[
 									'border-2 rounded-lg p-4 cursor-pointer transition',
@@ -186,11 +186,11 @@
 										>
 									</div>
 								</div>
-							</div>
+							</div> -->
 						</div>
 
 						<!-- Customer Info Summary -->
-						<div class="mt-8 p-4 bg-gray-50 rounded-lg">
+						<!-- <div class="mt-8 p-4 bg-gray-50 rounded-lg">
 							<h3 class="font-semibold mb-3">
 								Thông tin người đặt
 							</h3>
@@ -214,7 +214,7 @@
 									}}</span>
 								</div>
 							</div>
-						</div>
+						</div> -->
 
 						<!-- Action Buttons -->
 						<div class="mt-8 flex justify-between">
@@ -457,71 +457,69 @@ const applyPromo = () => {
 };
 
 const processPayment = async () => {
-console.log("=== DEBUG PAYMENT ===");
-console.log("selectedMethod:", selectedMethod.value);
-console.log("bookingStore.bookingCode:", bookingStore.bookingCode);
+	console.log("=== DEBUG PAYMENT ===");
+	console.log("selectedMethod:", selectedMethod.value);
+	console.log("bookingStore.bookingCode:", bookingStore.bookingCode);
 
-if (!selectedMethod.value) return;
-		isProcessing.value = true;
+	if (!selectedMethod.value) return;
+	isProcessing.value = true;
 
-try {
-			// Create payment
- const paymentData = await bookingStore.processPayment(
- selectedMethod.value
-);
+	try {
+		// Create payment
+		const paymentData = await bookingStore.processPayment(
+			selectedMethod.value
+		);
 
-console.log("Payment data:", paymentData);
+		console.log("Payment data:", paymentData);
 
-// If VNPay or other payment methods that require redirect
-if (paymentData.payment_url) {
-console.log("Redirecting to:", paymentData.payment_url);
-// Redirect to payment gateway
-window.location.href = paymentData.payment_url;
-				return;
-}
-
-// Handle mock or other payment types
-if (paymentData.auto_complete) {
-// Show waiting message for mock payment
-alert(
-`Đang xử lý thanh toán... Vui lòng đợi ${paymentData.wait_time} giây`
-);
-
-// Poll payment status
-const checkPayment = setInterval(async () => {
-try {
-const status = await bookingStore.checkPaymentStatus(
-paymentData.transaction_id
-);
-if (status.data.status === "success") {
-  clearInterval(checkPayment);
- router.push(
-   `/booking/confirmation/${status.data.booking_code}`
-   );
-						} else if (status.data.status === "failed") {
-   clearInterval(checkPayment);
-   alert("Thanh toán thất bại!");
-  isProcessing.value = false;
- }
- } catch (error) {
-   console.error("Check payment error:", error);
-   }
- }, 5000); // Check every 5 seconds
-
-  // Timeout after 60 seconds
-   setTimeout(() => {
-					clearInterval(checkPayment);
-					isProcessing.value = false;
-				}, 60000);
-			}
-		} catch (error) {
-			console.error("Payment error:", error);
-			alert("Lỗi thanh toán: " + error.message);
-			isProcessing.value = false;
+		// If VNPay or other payment methods that require redirect
+		if (paymentData.payment_url) {
+			console.log("Redirecting to:", paymentData.payment_url);
+			// Redirect to payment gateway
+			window.location.href = paymentData.payment_url;
+			return;
 		}
-	};
 
+		// Handle mock or other payment types
+		if (paymentData.auto_complete) {
+			// Show waiting message for mock payment
+			alert(
+				`Đang xử lý thanh toán... Vui lòng đợi ${paymentData.wait_time} giây`
+			);
 
+			// Poll payment status
+			const checkPayment = setInterval(async () => {
+				try {
+					const status = await bookingStore.checkPaymentStatus(
+						paymentData.transaction_id
+					);
+					if (status.data.status === "success") {
+						clearInterval(checkPayment);
+						router.push(
+							`/booking/confirmation/${status.data.booking_code}`
+						);
+					} else if (status.data.status === "failed") {
+						clearInterval(checkPayment);
+						alert("Thanh toán thất bại!");
+						isProcessing.value = false;
+					}
+				} catch (error) {
+					console.error("Check payment error:", error);
+				}
+			}, 5000); // Check every 5 seconds
+
+			// Timeout after 60 seconds
+			setTimeout(() => {
+				clearInterval(checkPayment);
+				isProcessing.value = false;
+			}, 60000);
+		}
+	} catch (error) {
+		console.error("Payment error:", error);
+		alert("Lỗi thanh toán: " + error.message);
+		isProcessing.value = false;
+	}
+};
 
 const goBack = () => {
 	router.back();
