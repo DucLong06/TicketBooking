@@ -5,14 +5,9 @@ services:
         volumes:
             - postgres_data:/var/lib/postgresql/data
         environment:
-            - POSTGRES_DB=DATABASE
-            - POSTGRES_USER=USER
-            - POSTGRES_PASSWORD=PASSWORD
-        healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U USER -d DATABASE"]
-            interval: 5s
-            timeout: 5s
-            retries: 5
+            - POSTGRES_DB=Ticketbooking
+            - POSTGRES_USER=admin
+            - POSTGRES_PASSWORD=123456
 
     backend:
         build:
@@ -22,20 +17,20 @@ services:
             - static_files:/app/static
             - media_files:/app/media
         environment:
-            - DATABASE_URL=postgres://USER:PASSWORD@postgres:5432/DATABASE
+            - DATABASE_URL=postgres://admin:123456@postgres:5432/Ticketbooking
             - DB_ENGINE=postgres
-            - REDIS_URL=redis://redis:6379/0
-            - REDIS_HOST=redis
-            - REDIS_PORT=6379
+            # - REDIS_URL=redis://redis:6379/0
+            # - REDIS_HOST=redis
+            # - REDIS_PORT=6379
             - DEBUG=False
             - VNP_TMNCODE=VNP_TMNCODE
             - VNP_HASTSECRET=VNP_HASTSECRET
-        depends_on:
-            postgres:
-                condition: service_healthy
-            # Uncomment the following lines if you want to use Redis
-            # redis:
-            #   condition: service_healthy
+        # depends_on:
+        #     postgres:
+        #         condition: service_healthy
+        # Uncomment the following lines if you want to use Redis
+        # redis:
+        #   condition: service_healthy
 
     # Uncomment the following lines if you want to use Redis
     # redis:
@@ -75,7 +70,7 @@ services:
             context: .
             dockerfile: nginx/Dockerfile
         ports:
-            - "8888:8888"
+            - "80:80"
         volumes:
             - static_files:/static
             - media_files:/media
