@@ -58,10 +58,10 @@
 								{{ show.category }}
 							</p>
 							<div class="flex justify-between items-center">
-								<span class="text-primary-600 font-bold">
+								<!-- <span class="text-primary-600 font-bold">
 									{{ formatPrice(show.min_price) }} -
 									{{ formatPrice(show.max_price) }}
-								</span>
+								</span> -->
 								<button
 									@click="goToBooking(show.id)"
 									class="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700 transition"

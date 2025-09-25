@@ -4,6 +4,7 @@ from django.utils.html import strip_tags
 from django.conf import settings
 import io
 import base64
+from logzero import logger
 
 
 # def generate_qr_code(data):
@@ -122,7 +123,7 @@ def send_booking_confirmation(booking):
 
         return True
     except Exception as e:
-        print(f"Error sending email: {e}")
+        logger.debug(f"Error sending email: {e}")
         return False
 
 

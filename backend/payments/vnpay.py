@@ -4,6 +4,7 @@ import urllib.parse
 from datetime import datetime, timedelta
 import random
 from django.conf import settings
+from logzero import logger
 
 
 class VNPay:
@@ -15,10 +16,10 @@ class VNPay:
 
         # Debug: Check credentials
         if not self.vnp_TmnCode or not self.vnp_HashSecret:
-            print(f"⚠️  VNPay Credentials Missing:")
-            print(f"   TmnCode: {'✓' if self.vnp_TmnCode else '✗ MISSING'}")
-            print(f"   HashSecret: {'✓' if self.vnp_HashSecret else '✗ MISSING'}")
-            print(f"   Please check your .env file and settings.py")
+            logger.debug(f"⚠️  VNPay Credentials Missing:")
+            logger.debug(f"   TmnCode: {'✓' if self.vnp_TmnCode else '✗ MISSING'}")
+            logger.debug(f"   HashSecret: {'✓' if self.vnp_HashSecret else '✗ MISSING'}")
+            logger.debug(f"   Please check your .env file and settings.py")
 
     def get_payment_url(self, request, order_id, amount, order_desc, bank_code=""):
         """
@@ -63,15 +64,15 @@ class VNPay:
         payment_url = f"{self.vnp_Url}?{urllib.parse.urlencode(vnp_params)}"
 
         # Debug logging
-        print(f"=== VNPay Debug ===")
-        print(f"TmnCode: {self.vnp_TmnCode}")
-        print(f"Amount: {amount} -> {int(amount * 100)}")
-        print(f"OrderId: {order_id}")
-        print(f"CreateDate: {datetime.now().strftime('%Y%m%d%H%M%S')}")
-        print(f"ExpireDate: {expire_time.strftime('%Y%m%d%H%M%S')}")
-        print(f"ReturnUrl: {self.vnp_ReturnUrl}")
-        print(f"Payment URL: {payment_url}")
-        print(f"=================")
+        logger.debug(f"=== VNPay Debug ===")
+        logger.debug(f"TmnCode: {self.vnp_TmnCode}")
+        logger.debug(f"Amount: {amount} -> {int(amount * 100)}")
+        logger.debug(f"OrderId: {order_id}")
+        logger.debug(f"CreateDate: {datetime.now().strftime('%Y%m%d%H%M%S')}")
+        logger.debug(f"ExpireDate: {expire_time.strftime('%Y%m%d%H%M%S')}")
+        logger.debug(f"ReturnUrl: {self.vnp_ReturnUrl}")
+        logger.debug(f"Payment URL: {payment_url}")
+        logger.debug(f"=================")
 
         return payment_url
 
@@ -102,27 +103,30 @@ class VNPay:
         byte_data = data.encode('utf-8')
         return hmac.new(byte_key, byte_data, hashlib.sha512).hexdigest()
 
+
     def validate_response(self, request_data):
-        """Validate VNPay response"""
-        vnp_SecureHash = request_data.get('vnp_SecureHash')
+        """Validate VNPay response - FIXED VERSION"""
+        vnp_params = {}
+        for key, value in request_data.items():
+            if key.startswith('vnp_'):
+                vnp_params[key] = value
 
-        # Remove hash from params
-        params = dict(request_data)
-        if 'vnp_SecureHash' in params:
-            del params['vnp_SecureHash']
+        vnp_secure_hash = vnp_params.pop('vnp_SecureHash', None)
 
-        # Sort and create query string
-        sorted_params = sorted(params.items())
-        query_string = urllib.parse.urlencode(sorted_params)
+        vnp_params.pop('vnp_SecureHashType', None)
 
-        # Create signature
-        hash_value = hmac.new(
-            self.vnp_HashSecret.encode('utf-8'),
-            query_string.encode('utf-8'),
-            hashlib.sha512
-        ).hexdigest()
+        vnp_params = dict(sorted(vnp_params.items()))
 
-        return hash_value == vnp_SecureHash
+        hash_data = '&'.join([f"{k}={urllib.parse.quote_plus(str(v))}" for k, v in vnp_params.items()])
+
+        signature = self._hmacsha512(self.vnp_HashSecret, hash_data)
+
+        logger.debug(f"Hash data: {hash_data}")
+        logger.debug(f"Generated signature: {signature}")
+        logger.debug(f"VNPay signature: {vnp_secure_hash}")
+        logger.debug(f"Match: {signature == vnp_secure_hash}")
+
+        return signature == vnp_secure_hash
 
     def get_client_ip(self, request):
         """Get client IP address"""

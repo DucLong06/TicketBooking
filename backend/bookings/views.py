@@ -242,13 +242,6 @@ class BookingViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             booking = serializer.save()
 
-            # Send confirmation email
-            try:
-                send_booking_confirmation(booking)
-            except Exception as e:
-                print(f"Failed to send email: {e}")
-                # Don't fail the booking if email fails
-
         # Return booking details
         detail_serializer = BookingDetailSerializer(booking)
         return Response(

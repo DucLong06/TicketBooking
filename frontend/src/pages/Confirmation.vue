@@ -94,8 +94,7 @@
 							</div>
 						</div>
 					</div>
-
-					<!-- QR Code -->
+					<!-- 
 					<div class="mb-6">
 						<p class="text-sm text-gray-600 mb-3">
 							Mã QR để check-in
@@ -105,11 +104,11 @@
 						>
 							<canvas ref="qrcodeCanvas"></canvas>
 						</div>
-					</div>
+					</div> -->
 
 					<!-- Actions -->
 					<div class="flex flex-col sm:flex-row gap-4 justify-center">
-						<button
+						<!-- <button
 							@click="downloadTicket"
 							class="px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition"
 						>
@@ -125,7 +124,7 @@
 								></path>
 							</svg>
 							Tải vé
-						</button>
+						</button> -->
 
 						<button
 							@click="sendEmail"
@@ -172,9 +171,9 @@
 							check-in
 						</li>
 						<li>• Vé đã mua không được hoàn trả hoặc đổi lịch</li>
-						<li>
+						<!-- <li>
 							• Mã QR là duy nhất, không chia sẻ cho người khác
-						</li>
+						</li> -->
 					</ul>
 				</div>
 			</div>

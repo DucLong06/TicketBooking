@@ -35,7 +35,7 @@
 							>
 								<img
 									v-if="showInfo.poster"
-									:src="`http://localhost:8000${showInfo.poster}`"
+									:src="showInfo.poster"
 									:alt="showInfo.name"
 									class="w-full h-full object-cover"
 								/>
