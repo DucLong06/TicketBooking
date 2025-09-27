@@ -58,5 +58,10 @@ export const bookingAPI = {
     // Check payment status
     checkPaymentStatus(transactionId) {
         return api.get(`/payment/${transactionId}/status/`)
+    },
+
+    // Resend confirmation email
+    resendEmail(bookingCode) {
+        return api.post(`/bookings/${bookingCode}/resend-email/`)
     }
 }

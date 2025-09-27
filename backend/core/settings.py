@@ -16,6 +16,7 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
 
+logger.info(f"DEBUG mode is {'on' if DEBUG else 'off'}")
 if DEBUG:
     # For development - logger.debug emails to console
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -26,6 +27,7 @@ else:
     EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
     EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+    logger.info(f"Using email host: {EMAIL_HOST} with user: {EMAIL_HOST_USER}")
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@example.com')
 
@@ -67,7 +69,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -114,11 +116,11 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, '/app/staticfiles/')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Media files
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, '/app/media/')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -151,6 +153,5 @@ BOOKING_TIMEOUT_MINUTES = 10  # Thời gian giữ ghế
 PAYMENT_TIMEOUT_MINUTES = 5   # Thời gian thanh toán
 
 # Email settings (config sau)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
 VNP_TMNCODE = os.getenv('VNP_TMNCODE', '')
 VNP_HASTSECRET = os.getenv('VNP_HASTSECRET', '')

@@ -15,6 +15,7 @@ from .serializers import (
 )
 from venues.models import Seat
 from shows.models import Performance, PerformancePrice
+from logzero import logger
 from .email_service import send_booking_confirmation
 
 
@@ -272,3 +273,35 @@ class BookingViewSet(viewsets.ModelViewSet):
             )
 
         return Response({'status': 'cancelled'})
+
+    @action(detail=True, methods=['post'], url_path='resend-email')
+    def resend_email(self, request, booking_code=None):
+        """Resend booking confirmation email"""
+        booking = self.get_object()
+
+        if booking.status not in ['paid', 'confirmed']:
+            return Response(
+                {'error': 'Chỉ có thể gửi lại email cho đơn đã thanh toán'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Send email
+            success = send_booking_confirmation(booking)
+
+            if success:
+                return Response({
+                    'success': True,
+                    'message': 'Email đã được gửi lại thành công!'
+                })
+            else:
+                return Response(
+                    {'error': 'Không thể gửi email. Vui lòng thử lại sau.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        except Exception as e:
+            logger.error(f"Error resending email for booking {booking_code}: {e}")
+            return Response(
+                {'error': 'Lỗi hệ thống. Vui lòng thử lại sau.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
