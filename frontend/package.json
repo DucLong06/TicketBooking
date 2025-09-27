@@ -16,6 +16,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.2",
     "konva": "^10.0.1",
+    "lucide-vue-next": "^0.544.0",
     "pinia": "^3.0.3",
     "qrcode": "^1.5.4",
     "vee-validate": "^4.15.1",

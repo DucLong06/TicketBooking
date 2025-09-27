@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      /* Thiết lập font chữ mặc định */
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 16px; /* Kích thước font chữ mặc định */
+      }
+      .banve {
+      	font-size: 16px;
+      }
+      .banve span {
+      	font-size: 12px;
+      }
+      .banve a {
+      	font-size: 16px;
+      }
+      .info {
+      	font-size: 20px;
+      }
+      .info span {
+      	font-size: 12px;
+      }            
+      .component-wrapper h2 {
+        font-size: 20px; /* Giảm font size của tiêu đề */
+	    }
+      .nhackich {
+        font-size: 18px;
+      } 
+      .headertext {
+        font-size: 20px; /* Kích thước chữ mặc định */
+      }
+      .link {
+        width: 35px;
+	  }
+      /* Media query cho màn hình nhỏ (điện thoại di động) */
+      @media only screen and (max-width: 600px) {
+        body {
+          font-size: 12px; /* Giảm kích thước font chữ khi hiển thị trên điện thoại */
+        }
+        table {
+          width: 100%;
+        }
+        .headertext {
+          font-size: 16px; /* Giảm kích thước chữ trên điện thoại */
+        }
+        table td {
+          font-size: 12px; /* Giảm font size của tất cả các ô trong bảng */
+        }
+        td span {
+          font-size: 10px; /* Giảm font size của tất cả các span trong ô trong bảng */
+        }
+        .order-id {
+          font-size: 12px;
+        }
+        .component-wrapper {
+          padding: 10px;
+        }
+        .component-wrapper h2 {
+          font-size: 12px; /* Giảm font size của tiêu đề */
+        }
+        .info {
+          font-size: 12px; /* Giảm kích thước caption */
+        }
+        .info span {
+          font-size: 8px; /* Giảm font chữ của subtitle caption */
+        }
+        .content-text span {
+          font-size: 13px; /* Giảm font chữ của subtitle trong p */
+        }
+        .content-text {
+          font-size: 12px; /* Giảm font size cho p */
+        }
+        .component-wrapper ol {
+          font-size: 8px; /* Giảm kích thước font chữ của danh sách */
+        }
+        /* Giảm kích thước chữ cho các mục trong ol */
+        .component-wrapper ol li {
+          font-size: 8px; /* Giảm font size cho từng mục trong danh sách */
+        }
+        .banve {
+      	  font-size: 10px;
+      	}
+        .banve span {
+      	  font-size: 8px;
+      	}
+        .banve a {
+      	  font-size: 12px;
+      	}        
+        .nhackich {
+          font-size: 10px;
+        }
+        .link {
+          width: 20px;
+        }
+    }
+    </style>
+    </head>
+    <body style="font-family: Arial, sans-serif; background-color: #f8f4f0; padding: 20px;">
+      <div style="max-width: 600px; margin: auto; background: white; padding: 10px; border-radius: 10px;">
+        <table style="background-color: #5a3b30; padding: 20px; border-radius: 10px; color: white; width: 100%; border-collapse: collapse;">
+ 		      <tr>
+   			    <td style="width: 80px; vertical-align: middle; text-align: left;">
+     			    <img alt="{{ show.name }}" src="{{ logo_url }}" style="max-width: 80px; width: 80px; display: block;">
+   			    </td>
+   			    <td style="vertical-align: middle; text-align: center; padding: 0 10px;">
+     			    <span class="headertext" style="color: white;">{{ header_text }}</span>
+    		    </td>
+ 		      </tr>
+	      </table>
+        <p class="content-text">Thân chào <b>{{ customer_name }}</b>,</p>
+        <p class="content-text">Ban Tổ Chức xác nhận bạn đã đặt vé thành công cho đêm diễn <b>{{ show.name }}</b>.</p>
+        <p class="content-text">Đây là email xác nhận không có giá trị thay thế vé giấy, vé giấy sẽ được gửi đến quý khách trong vòng 03 ngày. <b>Quý khách bắt buộc phải mang theo vé giấy để qua cửa soát vé của Nhà hát.</b></p>
+        
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+    	<caption class="info" style="color: #6d4c41; text-align: center; font-weight: bold; text-transform: uppercase;">
+        Thông tin mua hàng <br>
+        	<span style=" font-style: italic; font-weight: normal; display: block; margin-top: -3px;">Purchase Information</span>
+    	</caption>
+    	<tr>
+        	<td class="banve" style="width: 30%; font-weight: bold;">
+            Sự kiện <br> 
+            	<span style="font-style: italic; font-weight: normal;">Event</span>
+        	</td>
+        	<td class="banve" style="font-weight: bold;">{{ show.name|upper }}</td>
+    	</tr>
+    	<tr>
+        	<td class="banve" style="width: 30%; font-weight: bold;">
+            	Thời gian <br> 
+            <span style=" font-style: italic; font-weight: normal;">Time</span>
+        	</td>
+        	<td class="banve" style="font-weight: bold;">
+                <a style="color:black; font-weight: bold" href="webcal://www.google.com/calendar/render?action=TEMPLATE&text={{ show.name|urlencode }}&dates={{ performance_datetime_cal }}">
+                    {{ performance_datetime_display }}
+                </a>
+            </td>
+    	</tr>
+    	<tr>
+        	<td class="banve" style="width: 30%; font-weight: bold;">
+            Địa điểm <br> 
+            <span style="font-style: italic; font-weight: normal;">Location</span>
+        	</td>
+        	<td class="banve">
+                <a style="color:black" href="{{ venue_maps_url }}" target="_blank">
+                    {{ venue.name }} - {{ venue.address }}
+                </a>
+            </td>    
+    	</tr>
+        <tr>
+        	<td class="banve" style="width: 30%; font-weight: bold;">
+            Mã hoá đơn <br> 
+            <span style=" font-style: italic; font-weight: normal;">Order No.</span>
+        	</td>
+        	<td style="">{{ booking_code }}</td>
+    	</tr>
+    	<tr>
+        	<td class="banve" style="width: 30%; font-weight: bold;">
+            Số lượng <br> 
+            <span style="font-style: italic; font-weight: normal;">Quantity</span>
+        	</td>
+        	<td style="">{{ ticket_count }}</td>
+    	</tr>
+    	<tr>
+        	<td class="banve" style="width: 30%; font-weight: bold;">
+            Hạng vé <br> 
+            <span style=" font-style: italic; font-weight: normal;">Ticket Class</span>
+        	</td>
+        	<td style="">{{ ticket_class }}</td>
+    	</tr>
+    	<tr>
+        	<td class="banve"style="width: 30%; font-weight: bold;">
+            Số ghế <br> 
+            <span style="font-style: italic; font-weight: normal;">Seat Numbers</span>
+        	</td>
+        	<td style="">{{ seat_numbers }}</td>
+    	</tr>
+    	<tr>
+        	<td class="banve" style="width: 30%; font-weight: bold;">
+            Khán phòng <br> 
+            <span style="font-style: italic; font-weight: normal;">Hall</span>
+        	</td>
+        	<td style="">{{ venue.name }}</td>
+    	</tr>
+        <tr>
+        	<td class="banve" style="width: 30%; font-weight: bold; font-weight: bold;">
+            Tổng tiền <br> 
+            <span style="font-size: 12px; font-style: italic; font-weight: normal;">Total</span>
+        	</td>
+        	<td class="banve" style="font-weight: bold; font-weight: bold;">{{ total_amount }} VNĐ</td>
+    	</tr>
+        {{ payment_section|safe }}
+    </table>
+                
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+    	<caption class="info" style="color: #6d4c41; text-align: center; font-weight: bold; text-transform: uppercase;">
+        Thông tin Khách Hàng <br>
+        	<span style="font-style: italic; font-weight: normal; text-transform: uppercase;display: block; margin-top: -3px;">Customer Information</span>
+   		</caption>
+    	<tr>
+       		<td class="banve" style="width: 30%; font-weight: bold;">Tên khách hàng <br> 
+            	<span style="font-style: italic; font-weight: normal;">Customer Name</span>
+        	</td>
+        	<td style="">{{ customer_name }}</td>
+    	</tr>
+    	<tr>
+        	<td class="banve" style="width: 30%; font-weight: bold;"> Số điện thoại <br> 
+            	<span style="font-style: italic; font-weight: normal;">Phone Number</span>
+        	</td>
+        	<td style="">{{ phone }}</td>
+    	</tr>
+    	<tr>
+       		<td class="banve" style="width: 30%; font-weight: bold;"> Địa chỉ <br> 
+            <span style="font-style: italic; font-weight: normal;">Address</span>
+        	</td>
+        	<td style="">{{ address }}</td>
+    	</tr> 
+     </table>
+        <div class="component-wrapper" style="background-color:#FCF8F3; padding:0px 10px 0px 0px;border-radius: 20px;">
+			<div style="font-family:'Helvetica Neue',Arial,sans-serif;line-height:1.4;color:##6d4c41;">
+				<h2 class="info" style="text-align:center;font-weight:bold;margin-bottom:15px;color:#6d4c41;text-transform: uppercase;">Lưu Ý</h2>
+			    <ol>
+				    <div style="text-align: left;">
+                      <li><em><strong style="text-transform: uppercase; ">Nhà hát đóng cửa đúng giờ in trên vé. BTC không hỗ trợ giải quyết trường hợp đến muộn hoặc mất vé với tất cả lí do.</strong></em></li>
+                      <li><em><strong>Vé của đêm diễn {{ show.name }} sẽ KHÔNG hỗ trợ hoàn/đổi/trả/bảo lưu.</strong></em></li>
+                      <li><em><strong>Nhà hát không có chỗ đỗ xe dành cho khách nên khuyến khích khán giả di chuyển bằng xe taxi hoặc xe công nghệ</strong></em></li>
+                      <li><em>Thời gian bắt đầu check-in: <strong>{{ checkin_time }}</strong></em></li>
+                      <li><em>Quý khách vui lòng mặc trang phục lịch sự khi vào nhà hát.(Nam mặc quần dài)</em></li>
+                      <li><em>Quý khách vui lòng có mặt trước giờ biểu diễn/sự kiện <strong>30 phút</strong> để làm thủ tục và ổn định chỗ ngồi.</em></li>
+                      <li><em>Vé không kèm trẻ em, chương trình không dành cho trẻ em dưới 6 tuổi;</em></li>
+                      <li><em>Không quay phim, chụp ảnh, ghi âm, ghi hình trong quá trình xem chương trình biểu diễn.</em></li>
+                      <li><em>Không hút thuốc lá, không mang quà bánh và kẹo cao su vào Nhà hát.</em></li>
+                      <li><em>Chuyển điện thoại sang chế độ im lặng hoặc rung khi chương trình bắt đầu biểu diễn. </em></li>
+                      <li><em>Yêu cầu giữ im lặng để đảm bảo không khí thưởng thức nghệ thuật.</em></li>
+				    </div>
+			    </ol>
+			</div>
+		</div>
+      	<p class="content-text" style="text-align: center; color: #6d4c41;">
+            <strong><i>Chúc bạn có một trải nghiệm tuyệt vời cùng 
+                <span class="nhackich" style= "text-transform: uppercase;">
+                    <p style="text-align: center; color: #6d4c41;">{{ show.name }}!</p>
+                </span>
+            </i></strong>
+        </p>
+        <div style="text-align: center; padding: 5px; background: #5a3b30; color: white; border-radius: 20px;">
+            <p class="content-text"> 
+                Hotline: <a href="tel:{{ contact.hotline }}" style="color: #ffffff;">{{ contact.hotline_display }}</a> | 
+                Hỗ trợ: <a href="mailto:{{ contact.support_email }}" style="color: #ffffff;">{{ contact.support_email }}</a>
+            </p>
+            {% if contact.facebook_url %}
+            <a href="{{ contact.facebook_url }}" target="_blank">
+                <img class="link" alt="Facebook" src="https://d3k81ch9hvuctc.cloudfront.net/assets/email/buttons/subtleinverse/facebook_96.png" width="35"/>
+            </a>
+            {% endif %}
+            {% if contact.tiktok_url %}
+            <a href="{{ contact.tiktok_url }}" target="_blank">
+                <img class="link" alt="Tiktok" src="https://d3k81ch9hvuctc.cloudfront.net/assets/email/buttons/subtleinverse/tiktok_96.png" width="35"/>
+            </a>
+            {% endif %}
+            <p class="content-text">
+                <i style="color: white;">© 2025 {{ contact.copyright_text }}. All rights reserved.</i>
+            </p>
+        </div>
+    </body>
+    </html>

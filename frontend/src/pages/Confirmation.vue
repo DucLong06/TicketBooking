@@ -128,21 +128,54 @@
 
 						<button
 							@click="sendEmail"
-							class="px-6 py-3 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition"
+							:disabled="isResendingEmail"
+							:class="[
+								'px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold transition',
+								isResendingEmail
+									? 'opacity-50 cursor-not-allowed'
+									: 'hover:bg-blue-700',
+							]"
 						>
 							<svg
-								class="inline-block w-5 h-5 mr-2"
+								v-if="!isResendingEmail"
+								class="w-5 h-5 inline-block mr-2"
 								fill="currentColor"
 								viewBox="0 0 20 20"
 							>
 								<path
-									d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"
-								></path>
-								<path
-									d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"
+									fill-rule="evenodd"
+									d="M2.94 6.412A2 2 0 002 8.108V16a2 2 0 002 2h12a2 2 0 002-2V8.108a2 2 0 00-.94-1.696l-6-3.75a2 2 0 00-2.12 0l-6 3.75zm3.06 2.876L8 8.382l2.94.906a2 2 0 001.12 0L15 8.382V14a1 1 0 01-1 1H6a1 1 0 01-1-1V9.288zm8-4.288V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"
 								></path>
 							</svg>
-							Gửi lại email
+
+							<!-- Loading spinner -->
+							<svg
+								v-if="isResendingEmail"
+								class="animate-spin -ml-1 mr-2 h-5 w-5 text-white inline-block"
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+							>
+								<circle
+									class="opacity-25"
+									cx="12"
+									cy="12"
+									r="10"
+									stroke="currentColor"
+									stroke-width="4"
+								></circle>
+								<path
+									class="opacity-75"
+									fill="currentColor"
+									d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+								></path>
+							</svg>
+
+							{{
+								isResendingEmail
+									? "Đang gửi..."
+									: "Gửi lại email"
+							}}
 						</button>
 
 						<button
@@ -187,10 +220,12 @@ import { useRouter, useRoute } from "vue-router";
 import QRCode from "qrcode";
 import jsPDF from "jspdf";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
+import { bookingAPI } from "../api/booking";
 
 const router = useRouter();
 const route = useRoute();
 
+const isResendingEmail = ref(false);
 // Data
 const bookingCode = ref("");
 const bookingData = ref({});
@@ -281,10 +316,34 @@ const downloadTicket = () => {
 };
 
 const sendEmail = async () => {
-	alert("Email đã được gửi lại thành công!");
+	if (isResendingEmail.value) return; // Prevent double click
 
-	// In real app, this would call API to resend email
-	// await api.post('/bookings/resend-email', { bookingCode: bookingCode.value })
+	isResendingEmail.value = true;
+
+	try {
+		const response = await bookingAPI.resendEmail(bookingCode.value);
+
+		if (response.data.success) {
+			alert(response.data.message || "Email đã được gửi lại thành công!");
+		} else {
+			alert(response.data.error || "Có lỗi xảy ra khi gửi email");
+		}
+	} catch (error) {
+		console.error("Error resending email:", error);
+
+		// Handle different error responses
+		if (
+			error.response &&
+			error.response.data &&
+			error.response.data.error
+		) {
+			alert(error.response.data.error);
+		} else {
+			alert("Không thể gửi email. Vui lòng thử lại sau.");
+		}
+	} finally {
+		isResendingEmail.value = false;
+	}
 };
 
 const goHome = () => {
@@ -294,33 +353,64 @@ const goHome = () => {
 };
 
 onMounted(async () => {
-	// Get booking code from route
 	bookingCode.value = route.params.bookingCode;
 
-	// Load booking data from sessionStorage
-	const savedData = sessionStorage.getItem("bookingData");
-	if (savedData) {
-		bookingData.value = JSON.parse(savedData);
-	} else {
-		// Mock data for testing
+	try {
+		const response = await bookingAPI.getBooking(bookingCode.value);
+		const rawData = response.data;
+
+		// Transform backend data to frontend expected structure
 		bookingData.value = {
-			bookingCode: bookingCode.value,
-			amount: 4020000,
-			showInfo: { name: "Italia Mistero" },
-			performance: { date: "15/12/2024", time: "19:00" },
-			selectedSeats: [
-				{ row: "A", number: 5 },
-				{ row: "A", number: 6 },
-			],
-			customerInfo: {
-				fullName: "Nguyễn Văn Test",
-				email: "test@example.com",
-				phone: "0901234567",
+			showInfo: {
+				name: rawData.show_name,
 			},
+			performance: {
+				date: new Date(rawData.performance_datetime).toLocaleDateString(
+					"vi-VN"
+				),
+				time: new Date(rawData.performance_datetime).toLocaleTimeString(
+					"vi-VN",
+					{
+						hour: "2-digit",
+						minute: "2-digit",
+					}
+				),
+			},
+			customerInfo: {
+				fullName: rawData.customer_name,
+				email: rawData.customer_email,
+				phone: rawData.customer_phone,
+			},
+			amount: rawData.final_amount,
+			selectedSeats: rawData.seat_reservations.map((sr) => ({
+				id: sr.seat.id,
+				row: sr.seat.row,
+				number: sr.seat.number,
+				price: sr.price,
+			})),
+			// Keep original data for reference
+			...rawData,
 		};
+
+		// Save the transformed data to sessionStorage for backup
+		sessionStorage.setItem(
+			"bookingData",
+			JSON.stringify(bookingData.value)
+		);
+	} catch (error) {
+		console.error("Failed to load booking data:", error);
+
+		// Fallback to sessionStorage
+		const savedData = sessionStorage.getItem("bookingData");
+		if (savedData) {
+			bookingData.value = JSON.parse(savedData);
+		} else {
+			alert("Không tìm thấy thông tin đặt vé");
+			router.push("/");
+			return;
+		}
 	}
 
-	// Generate QR code
-	await generateQRCode();
+	// await generateQRCode();
 });
 </script>
