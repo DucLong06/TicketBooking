@@ -12,7 +12,7 @@ class VNPay:
         self.vnp_TmnCode = settings.VNP_TMNCODE
         self.vnp_HashSecret = settings.VNP_HASTSECRET
         self.vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
-        self.vnp_ReturnUrl = "http://localhost:8000/api/payment/vnpay/return/"
+        self.vnp_ReturnUrl = "http://54.169.68.183/api/payment/vnpay/return/"
 
         # Debug: Check credentials
         if not self.vnp_TmnCode or not self.vnp_HashSecret:
@@ -102,7 +102,6 @@ class VNPay:
         byte_key = key.encode('utf-8')
         byte_data = data.encode('utf-8')
         return hmac.new(byte_key, byte_data, hashlib.sha512).hexdigest()
-
 
     def validate_response(self, request_data):
         """Validate VNPay response - FIXED VERSION"""

@@ -20,7 +20,6 @@ const routes = [
         path: '/booking/:showId/customer-info',
         name: 'CustomerInfo',
         component: () => import('../pages/CustomerInfo.vue'),
-        // meta: { requiresSession: true }
     },
     {
         path: '/booking/:showId/payment',
@@ -32,7 +31,16 @@ const routes = [
         name: 'Confirmation',
         component: () => import('../pages/Confirmation.vue')
     },
-
+    {
+        path: '/payment/failed',
+        name: 'PaymentFailed',
+        component: () => import('../pages/PaymentFailed.vue')
+    },
+    {
+        path: '/payment/error',
+        name: 'PaymentError',
+        component: () => import('../pages/PaymentError.vue')
+    },
 ]
 
 const router = createRouter({
