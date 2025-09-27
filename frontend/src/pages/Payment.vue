@@ -398,14 +398,13 @@ const isProcessing = ref(false);
 const promoCode = ref("");
 const discount = ref(0);
 
-// Mock data
 const showInfo = ref({
-	name: "Italia Mistero",
+	name: "",
 });
 
 const performanceInfo = ref({
-	date: "15/12/2024",
-	time: "19:00",
+	date: "",
+	time: "",
 });
 
 const customerInfo = ref({});
@@ -472,6 +471,36 @@ const processPayment = async () => {
 
 		console.log("Payment data:", paymentData);
 
+		// Save booking data to sessionStorage before redirect/polling
+		const bookingData = {
+			showInfo: {
+				name: showInfo.value.name,
+			},
+			performance: {
+				date: performanceInfo.value.date,
+				time: performanceInfo.value.time,
+			},
+			customerInfo: {
+				fullName:
+					customerInfo.value.fullName ||
+					customerInfo.value.customer_name,
+				email:
+					customerInfo.value.email ||
+					customerInfo.value.customer_email,
+				phone:
+					customerInfo.value.phone ||
+					customerInfo.value.customer_phone,
+			},
+			amount: totalAmount.value,
+			selectedSeats: selectedSeats.value,
+			// Additional info
+			bookingCode: bookingStore.bookingCode,
+			status: "pending",
+			transactionId: paymentData.transaction_id,
+		};
+
+		sessionStorage.setItem("bookingData", JSON.stringify(bookingData));
+
 		// If VNPay or other payment methods that require redirect
 		if (paymentData.payment_url) {
 			console.log("Redirecting to:", paymentData.payment_url);
@@ -501,26 +530,23 @@ const processPayment = async () => {
 					} else if (status.data.status === "failed") {
 						clearInterval(checkPayment);
 						alert("Thanh toán thất bại!");
-						isProcessing.value = false;
+						// Clear failed booking data
+						sessionStorage.removeItem("bookingData");
 					}
 				} catch (error) {
-					console.error("Check payment error:", error);
+					console.error("Error checking payment status:", error);
+					clearInterval(checkPayment);
+					alert("Lỗi kiểm tra trạng thái thanh toán");
 				}
-			}, 5000); // Check every 5 seconds
-
-			// Timeout after 60 seconds
-			setTimeout(() => {
-				clearInterval(checkPayment);
-				isProcessing.value = false;
-			}, 60000);
+			}, 3000);
 		}
 	} catch (error) {
 		console.error("Payment error:", error);
 		alert("Lỗi thanh toán: " + error.message);
+	} finally {
 		isProcessing.value = false;
 	}
 };
-
 const goBack = () => {
 	router.back();
 };
@@ -539,27 +565,29 @@ const startTimer = () => {
 };
 
 onMounted(() => {
-	// Load data from sessionStorage
-	const savedCustomer = sessionStorage.getItem("customerInfo");
-	if (savedCustomer) {
-		customerInfo.value = JSON.parse(savedCustomer);
+	// Load show and performance data
+	if (bookingStore.selectedPerformance) {
+		const performance = bookingStore.selectedPerformance;
+		showInfo.value = {
+			name: performance.show_name || performance.show?.name,
+		};
+		performanceInfo.value = {
+			date: new Date(performance.datetime).toLocaleDateString("vi-VN"),
+			time: new Date(performance.datetime).toLocaleTimeString("vi-VN", {
+				hour: "2-digit",
+				minute: "2-digit",
+			}),
+		};
 	}
 
-	const savedSeats = sessionStorage.getItem("selectedSeats");
-	if (savedSeats) {
-		selectedSeats.value = JSON.parse(savedSeats);
+	// Load selected seats from store instead of mock data
+	if (bookingStore.selectedSeats && bookingStore.selectedSeats.length > 0) {
+		selectedSeats.value = bookingStore.selectedSeats;
 	} else {
-		// Mock data for testing
-		selectedSeats.value = [
-			{ id: "A-5", row: "A", number: 5, price: 2000000 },
-			{ id: "A-6", row: "A", number: 6, price: 2000000 },
-		];
-
-		customerInfo.value = {
-			fullName: "Nguyễn Văn Test",
-			email: "test@example.com",
-			phone: "0901234567",
-		};
+		// Redirect back if no seats selected
+		alert("Không tìm thấy ghế đã chọn. Vui lòng chọn lại.");
+		router.push(`/booking/${route.params.showId}/seats`);
+		return;
 	}
 
 	startTimer();

@@ -7,6 +7,7 @@ from shows.models import Performance
 
 
 class SeatReservationSerializer(serializers.ModelSerializer):
+    seat = serializers.IntegerField(source='seat.id', read_only=True)
     seat_label = serializers.CharField(source='seat.full_label', read_only=True)
     row = serializers.CharField(source='seat.row.label', read_only=True)
     number = serializers.IntegerField(source='seat.number', read_only=True)
@@ -140,11 +141,48 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     performance_datetime = serializers.DateTimeField(source='performance.datetime', read_only=True)
     venue_name = serializers.CharField(source='performance.show.venue.name', read_only=True)
 
+    # Add computed fields for frontend compatibility
+    showInfo = serializers.SerializerMethodField()
+    performance = serializers.SerializerMethodField()
+    customerInfo = serializers.SerializerMethodField()
+    selectedSeats = serializers.SerializerMethodField()
+    amount = serializers.DecimalField(source='final_amount', max_digits=10, decimal_places=0, read_only=True)
+
     class Meta:
         model = Booking
         fields = [
             'id', 'booking_code', 'show_name', 'performance_datetime',
             'venue_name', 'customer_name', 'customer_email', 'customer_phone',
             'status', 'total_amount', 'service_fee', 'discount_amount',
-            'final_amount', 'seat_reservations', 'created_at', 'expires_at'
+            'final_amount', 'seat_reservations', 'created_at', 'expires_at',
+            'showInfo', 'performance', 'customerInfo', 'selectedSeats', 'amount'
+        ]
+
+    def get_showInfo(self, obj):
+        return {
+            'name': obj.performance.show.name
+        }
+
+    def get_performance(self, obj):
+        return {
+            'date': obj.performance.datetime.strftime('%d/%m/%Y'),
+            'time': obj.performance.datetime.strftime('%H:%M')
+        }
+
+    def get_customerInfo(self, obj):
+        return {
+            'fullName': obj.customer_name,
+            'email': obj.customer_email,
+            'phone': obj.customer_phone
+        }
+
+    def get_selectedSeats(self, obj):
+        return [
+            {
+                'id': sr.seat.id,
+                'row': sr.seat.row.label,
+                'number': sr.seat.number,
+                'price': float(sr.price)
+            }
+            for sr in obj.seat_reservations.all()
         ]

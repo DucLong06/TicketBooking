@@ -300,6 +300,16 @@ const router = useRouter();
 const route = useRoute();
 
 // Form data
+const showInfo = ref({
+	name: "",
+});
+
+const performanceInfo = ref({
+	date: "",
+	time: "",
+});
+
+// Form data
 const customerInfo = ref({
 	fullName: "",
 	email: "",
@@ -311,16 +321,6 @@ const customerInfo = ref({
 const agreedToTerms = ref(false);
 const subscribeNewsletter = ref(false);
 const errors = ref({});
-
-// Mock data - sẽ lấy từ sessionStorage/store
-const showInfo = ref({
-	name: "Italia Mistero",
-});
-
-const performanceInfo = ref({
-	date: "15/12/2024",
-	time: "19:00",
-});
 
 const selectedSeats = ref([]);
 
@@ -421,38 +421,31 @@ const startTimer = () => {
 };
 
 onMounted(() => {
+	// Load performance data from session
+	const savedPerformance = sessionStorage.getItem("selectedPerformance");
+	if (savedPerformance) {
+		const performance = JSON.parse(savedPerformance);
+		showInfo.value = {
+			name: performance.show_name,
+		};
+		performanceInfo.value = {
+			date: new Date(performance.datetime).toLocaleDateString("vi-VN"),
+			time: new Date(performance.datetime).toLocaleTimeString("vi-VN", {
+				hour: "2-digit",
+				minute: "2-digit",
+			}),
+		};
+	}
+
 	// Load selected seats from sessionStorage
 	const savedSeats = sessionStorage.getItem("selectedSeats");
 	if (savedSeats) {
 		selectedSeats.value = JSON.parse(savedSeats);
 	} else {
-		// Mock data for testing
-		selectedSeats.value = [
-			{
-				id: "A-5",
-				row: "A",
-				number: 5,
-				sectionName: "Khu A - VIP",
-				price: 2000000,
-			},
-			{
-				id: "A-6",
-				row: "A",
-				number: 6,
-				sectionName: "Khu A - VIP",
-				price: 2000000,
-			},
-		];
-	}
-
-	// Load performance info
-	const savedPerformance = sessionStorage.getItem("selectedPerformance");
-	if (savedPerformance) {
-		const data = JSON.parse(savedPerformance);
-		performanceInfo.value.date = new Date(data.date).toLocaleDateString(
-			"vi-VN"
-		);
-		performanceInfo.value.time = data.time;
+		// Redirect if no seats selected
+		alert("Không tìm thấy ghế đã chọn. Vui lòng chọn lại.");
+		router.push(`/booking/${route.params.showId}/seats`);
+		return;
 	}
 
 	startTimer();

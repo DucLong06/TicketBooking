@@ -14,17 +14,11 @@ services:
             context: ./backend
             dockerfile: Dockerfile
         volumes:
-            - static_files:/app/static
+            - static_files:/app/staticfiles
             - media_files:/app/media
-        environment:
-            - DATABASE_URL=postgres://admin:123456@postgres:5432/Ticketbooking
-            - DB_ENGINE=postgres
-            # - REDIS_URL=redis://redis:6379/0
-            # - REDIS_HOST=redis
-            # - REDIS_PORT=6379
-            - DEBUG=False
-            - VNP_TMNCODE=VNP_TMNCODE
-            - VNP_HASTSECRET=VNP_HASTSECRET
+        env_file:
+            - .env
+
         # depends_on:
         #     postgres:
         #         condition: service_healthy
@@ -72,8 +66,8 @@ services:
         ports:
             - "80:80"
         volumes:
-            - static_files:/static
-            - media_files:/media
+            - static_files:/app/staticfiles
+            - media_files:/app/media
             - frontend_dist:/frontend
         depends_on:
             - backend

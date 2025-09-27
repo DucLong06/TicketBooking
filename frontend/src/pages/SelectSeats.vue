@@ -36,14 +36,68 @@
 			<div v-else class="grid grid-cols-1 lg:grid-cols-4 gap-6">
 				<!-- Seat Map - 3 columns -->
 				<div class="lg:col-span-3">
-					<div class="bg-white rounded-lg shadow-lg p-4">
+					<div class="bg-white rounded-lg shadow-lg p-6">
+						<!-- Venue Info & Layout Image -->
+						<div class="mb-6 text-center">
+							<h2 class="text-xl font-bold mb-2">
+								{{
+									performanceInfo.show?.venue?.name ||
+									"Nhà hát"
+								}}
+							</h2>
+							<div class="mb-4">
+								<img
+									:src="venueLayoutImage"
+									:alt="
+										'Sơ đồ ' +
+										(performanceInfo.show?.venue?.name ||
+											'nhà hát')
+									"
+									class="mx-auto max-w-xs opacity-75 mb-2"
+									v-if="venueLayoutImage"
+								/>
+								<p class="text-sm text-gray-500">
+									Sơ đồ tham khảo - Màu sắc có thể khác với
+									ghế thực tế
+								</p>
+							</div>
+						</div>
+
 						<!-- Stage -->
 						<div class="mb-8 text-center">
 							<div
-								class="bg-gray-800 text-white py-4 rounded-t-3xl mx-auto"
+								class="bg-gradient-to-r from-gray-700 to-gray-900 text-white py-4 rounded-t-2xl mx-auto shadow-lg"
 								style="max-width: 600px"
 							>
-								SÂN KHẤU
+								<div class="text-lg font-bold">SÂN KHẤU</div>
+								<div class="text-sm opacity-75">STAGE</div>
+							</div>
+						</div>
+
+						<!-- Price Categories Legend -->
+						<div class="mb-6 bg-gray-50 rounded-lg p-4">
+							<h3 class="font-semibold mb-3">Phân loại vé:</h3>
+							<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+								<div
+									v-for="(category, code) in priceCategories"
+									:key="code"
+									class="flex items-center space-x-2"
+								>
+									<div
+										class="w-4 h-4 rounded border"
+										:style="{
+											backgroundColor: category.color,
+										}"
+									></div>
+									<div class="text-sm">
+										<div class="font-medium">
+											{{ category.name }}
+										</div>
+										<div class="text-gray-600">
+											{{ formatPrice(category.price) }}
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
 
@@ -56,74 +110,158 @@
 									:key="section.id"
 									class="mb-8"
 								>
-									<h3 class="text-center font-semibold mb-4">
+									<h3
+										class="text-center font-semibold mb-4 text-lg"
+									>
 										{{ section.name }}
 									</h3>
 
 									<div
-										v-for="row in section.rows"
-										:key="row.label"
-										class="flex items-center mb-2"
+										class="flex flex-col items-center space-y-3"
 									>
-										<span
-											class="w-8 text-right mr-4 font-semibold"
-											>{{ row.label }}</span
+										<div
+											v-for="row in section.rows"
+											:key="row.label"
+											class="flex items-center justify-center"
 										>
-
-										<div class="flex gap-1">
-											<button
-												v-for="seat in row.seats"
-												:key="seat.id"
-												@click="toggleSeat(seat)"
-												:disabled="
-													seat.status !==
-														'available' &&
-													!isSelected(seat)
-												"
-												:class="[
-													'w-8 h-8 text-xs rounded transition-all',
-													getSeatClass(seat),
-												]"
-												:title="`${
-													section.name
-												} - Hàng ${row.label} Ghế ${
-													seat.number
-												} - ${formatPrice(seat.price)}`"
+											<!-- Row Label Left -->
+											<span
+												class="w-8 text-right mr-4 font-semibold text-gray-600"
 											>
-												{{ seat.number }}
-											</button>
-										</div>
+												{{ row.label }}
+											</span>
 
-										<span
-											class="w-8 text-left ml-4 font-semibold"
-											>{{ row.label }}</span
-										>
+											<!-- Seats with center alignment -->
+											<div class="flex justify-center">
+												<!-- Center-out layout -->
+												<div
+													v-if="
+														row.seats.style ===
+														'center_out'
+													"
+													class="flex gap-1 items-center"
+												>
+													<!-- Left side (odd numbers) -->
+													<button
+														v-for="seat in row.seats
+															.oddSeats"
+														:key="seat.id"
+														@click="
+															toggleSeat(seat)
+														"
+														:disabled="
+															seat.status !==
+																'available' &&
+															!isSelected(seat)
+														"
+														:class="[
+															'w-8 h-8 text-xs font-bold rounded border transition-colors',
+															getSeatClass(seat),
+														]"
+														:style="
+															getSeatStyle(seat)
+														"
+													>
+														{{ seat.number }}
+													</button>
+
+													<!-- Center aisle -->
+													<div class="w-8"></div>
+
+													<!-- Right side (even numbers) -->
+													<button
+														v-for="seat in row.seats
+															.evenSeats"
+														:key="seat.id"
+														@click="
+															toggleSeat(seat)
+														"
+														:disabled="
+															seat.status !==
+																'available' &&
+															!isSelected(seat)
+														"
+														:class="[
+															'w-8 h-8 text-xs font-bold rounded border transition-colors',
+															getSeatClass(seat),
+														]"
+														:style="
+															getSeatStyle(seat)
+														"
+													>
+														{{ seat.number }}
+													</button>
+												</div>
+
+												<!-- Linear layout (left-to-right, vertical) -->
+												<div
+													v-else
+													class="flex gap-1 items-center"
+												>
+													<button
+														v-for="seat in row.seats
+															.seats"
+														:key="seat.id"
+														@click="
+															toggleSeat(seat)
+														"
+														:disabled="
+															seat.status !==
+																'available' &&
+															!isSelected(seat)
+														"
+														:class="[
+															'w-8 h-8 text-xs font-bold rounded border transition-colors',
+															getSeatClass(seat),
+														]"
+														:style="
+															getSeatStyle(seat)
+														"
+													>
+														{{ seat.number }}
+													</button>
+												</div>
+											</div>
+											<!-- Row Label Right -->
+											<span
+												class="w-8 text-left ml-4 font-semibold text-gray-600"
+											>
+												{{ row.label }}
+											</span>
+										</div>
 									</div>
 								</div>
 							</div>
 						</div>
-					</div>
 
-					<!-- Legend -->
-					<div class="mt-4 bg-white rounded-lg shadow p-4">
-						<div class="flex flex-wrap gap-6 justify-center">
-							<div class="flex items-center space-x-2">
-								<div class="w-5 h-5 bg-green-500 rounded"></div>
-								<span class="text-sm">Còn trống</span>
-							</div>
-							<div class="flex items-center space-x-2">
-								<div
-									class="w-5 h-5 bg-yellow-500 rounded"
-								></div>
-								<span class="text-sm">Đang chọn</span>
-							</div>
-							<div class="flex items-center space-x-2">
-								<div class="w-5 h-5 bg-red-500 rounded"></div>
-								<span class="text-sm">Đã bán</span>
-							</div>
-							<div class="flex items-center space-x-2">
-								<div class="w-5 h-5 bg-gray-400 rounded"></div>
-								<span class="text-sm">Đang giữ</span>
+						<!-- Status Legend -->
+						<div class="mt-6 bg-white rounded-lg shadow p-4">
+							<h4 class="font-semibold mb-3">Trạng thái ghế:</h4>
+							<div class="flex flex-wrap gap-6 justify-center">
+								<div class="flex items-center space-x-2">
+									<div
+										class="w-5 h-5 bg-green-500 rounded border"
+									></div>
+									<span class="text-sm">Còn trống</span>
+								</div>
+								<div class="flex items-center space-x-2">
+									<div
+										class="w-5 h-5 bg-yellow-500 rounded border"
+									></div>
+									<span class="text-sm">Đang chọn</span>
+								</div>
+								<div class="flex items-center space-x-2">
+									<div
+										class="w-5 h-5 bg-red-500 rounded border"
+									></div>
+									<span class="text-sm">Đã bán</span>
+								</div>
+								<div class="flex items-center space-x-2">
+									<div
+										class="w-5 h-5 bg-gray-400 rounded border"
+									></div>
+									<span class="text-sm">Đang giữ</span>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -165,13 +303,13 @@
 									:key="seat.id"
 									class="flex justify-between items-center text-sm p-2 bg-gray-50 rounded"
 								>
-									<span
-										>{{ seat.section_name }} - {{ seat.row
-										}}{{ seat.number }}</span
-									>
-									<span class="font-semibold">{{
-										formatPrice(seat.price)
-									}}</span>
+									<span>
+										{{ seat.section_name }} - {{ seat.row
+										}}{{ seat.number }}
+									</span>
+									<span class="font-semibold">
+										{{ formatPrice(seat.price) }}
+									</span>
 								</div>
 							</div>
 						</div>
@@ -241,7 +379,6 @@ const reservationExpiry = ref(null);
 const timeLeft = ref(0);
 let timer = null;
 
-// Computed
 const seatsBySections = computed(() => {
 	if (!seatMap.value) return [];
 
@@ -260,6 +397,7 @@ const seatsBySections = computed(() => {
 			sections[seat.section_id].rows[seat.row] = {
 				label: seat.row,
 				seats: [],
+				numbering_style: seat.numbering_style,
 			};
 		}
 
@@ -269,10 +407,85 @@ const seatsBySections = computed(() => {
 	// Convert to array and sort
 	return Object.values(sections).map((section) => ({
 		...section,
-		rows: Object.values(section.rows).sort((a, b) =>
-			a.label.localeCompare(b.label)
-		),
+		rows: Object.values(section.rows)
+			.map((row) => ({
+				...row,
+				seats: sortSeatsForDisplay(row.seats, row.numbering_style),
+			}))
+			.sort((a, b) => {
+				// Custom sort cho rows
+				const order = [
+					"A",
+					"B",
+					"C",
+					"D",
+					"E",
+					"F",
+					"G",
+					"H",
+					"I",
+					"J",
+					"K",
+					"L",
+					"M",
+					"N",
+					"O",
+					"P",
+					"Q",
+					"R",
+					"S",
+					"T",
+					"U",
+					"V",
+					"W",
+					"X",
+					"Y",
+					"Z",
+					"AA",
+					"BB",
+					"CC",
+				];
+				return order.indexOf(a.label) - order.indexOf(b.label);
+			}),
 	}));
+});
+
+const sortSeatsForDisplay = (seats, numberingStyle) => {
+	// 🔧 FIX: Chỉ render seats có trong API response (skip gaps)
+	const seatNumbers = new Set(seats.map((s) => s.number));
+
+	if (numberingStyle === "center_out") {
+		// Chỉ lấy seats thực sự có trong API
+		const oddSeats = seats
+			.filter((s) => s.number % 2 === 1)
+			.sort((a, b) => b.number - a.number);
+		const evenSeats = seats
+			.filter((s) => s.number % 2 === 0)
+			.sort((a, b) => a.number - b.number);
+
+		return { oddSeats, evenSeats, style: "center_out" };
+	} else {
+		return {
+			seats: seats.sort((a, b) => a.number - b.number),
+			style: "linear",
+		};
+	}
+};
+// Thêm computed cho numbering info
+const numberingInfo = computed(() => {
+	return seatMap.value?.numbering_info || {};
+});
+
+const priceCategories = computed(() => {
+	return seatMap.value?.price_categories || {};
+});
+
+const venueLayoutImage = computed(() => {
+	const venueType = performanceInfo.value.show?.venue?.venue_type;
+	if (venueType === "opera") {
+		return "/images/ho-guom-opera-layout.jpg";
+	}
+	return null;
 });
 
 const totalAmount = computed(() => {
@@ -307,20 +520,33 @@ const formatTime = (datetime) => {
 };
 
 const getSeatClass = (seat) => {
+	const baseClasses = "w-8 h-8 text-xs rounded transition-all border";
+
 	if (isSelected(seat)) {
-		return "bg-yellow-500 hover:bg-yellow-600 text-white";
+		return `${baseClasses} bg-yellow-500 hover:bg-yellow-600 text-white border-yellow-400`;
 	}
 
 	switch (seat.status) {
 		case "available":
-			return "bg-green-500 hover:bg-green-600 text-white";
+			return `${baseClasses} text-white border-gray-300 hover:opacity-80 cursor-pointer`;
 		case "sold":
-			return "bg-red-500 text-white cursor-not-allowed";
+			return `${baseClasses} bg-red-500 text-white cursor-not-allowed border-red-400`;
 		case "reserved":
-			return "bg-gray-400 text-white cursor-not-allowed";
+			return `${baseClasses} bg-gray-400 text-white cursor-not-allowed border-gray-300`;
 		default:
-			return "bg-gray-300 cursor-not-allowed";
+			return `${baseClasses} bg-gray-300 cursor-not-allowed border-gray-200`;
 	}
+};
+
+const getSeatStyle = (seat) => {
+	if (seat.status === "available" && !isSelected(seat)) {
+		const color = seat.price_category_color || "#10B981";
+		return {
+			backgroundColor: color,
+			borderColor: color,
+		};
+	}
+	return {};
 };
 
 const isSelected = (seat) => {
@@ -402,6 +628,7 @@ const loadSeatMap = async () => {
 	try {
 		const response = await bookingAPI.getSeatMap(performanceInfo.value.id);
 		seatMap.value = response.data;
+		console.log("Seat map data:", response.data); // Debug
 	} catch (error) {
 		console.error("Failed to load seat map:", error);
 	}
