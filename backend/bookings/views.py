@@ -15,11 +15,14 @@ from .serializers import (
 )
 from venues.models import Seat
 from shows.models import Performance, PerformancePrice
+from logzero import logger
 from .email_service import send_booking_confirmation
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 
 def get_performance_seat_map(performance):
-    """Get complete seat map for a performance"""
+    """Get complete seat map for a performance with safe fallbacks"""
     venue = performance.show.venue
 
     # Get all seats in venue
@@ -51,13 +54,16 @@ def get_performance_seat_map(performance):
             'height': 900
         },
         'sections': [],
-        'seats': []
+        'seats': [],
+        'numbering_info': {}
     }
 
     sections_dict = {}
+    rows_dict = {}
 
     for seat in seats:
         section = seat.row.section
+        row = seat.row
 
         # Add section if not exists
         if section.id not in sections_dict:
@@ -71,6 +77,14 @@ def get_performance_seat_map(performance):
             }
             seat_map_data['sections'].append(sections_dict[section.id])
 
+        # Track row info for numbering
+        if row.id not in rows_dict:
+            rows_dict[row.id] = {
+                'row': row,
+                'seats': []
+            }
+        rows_dict[row.id]['seats'].append(seat)
+
         # Determine seat status
         if seat.id in reservation_map:
             seat_status = reservation_map[seat.id]
@@ -79,36 +93,83 @@ def get_performance_seat_map(performance):
 
         # Get price for this seat
         price_category_id = seat.row.price_category_id
-        price = price_map.get(price_category_id, seat.row.price_category.base_price)
+        price = price_map.get(price_category_id, seat.row.price_category.base_price if seat.row.price_category else 0)
 
-        # Add seat data
+        # Safe calculation of seat properties
+        try:
+            seat_number = int(seat.number)
+            remainder = seat_number % 2
+            is_odd_number = remainder == 1
+            is_even_number = remainder == 0
+            seat_side = 'left' if is_odd_number else 'right'
+        except (ValueError, TypeError):
+            # Fallback for non-numeric seat numbers
+            seat_number = seat.number
+            is_odd_number = False
+            is_even_number = False
+            seat_side = 'center'
+
+        # Add seat data with safe field access
         seat_data = {
             'id': seat.id,
             'section_id': section.code,
             'section_name': section.name,
             'row': seat.row.label,
-            'number': seat.number,
+            'number': seat_number,
             'x': seat.position_x,
             'y': seat.position_y,
             'status': seat_status,
             'price': float(price),
             'price_category': seat.row.price_category.code if seat.row.price_category else 'standard',
-            'is_accessible': seat.is_accessible
+            'price_category_color': seat.row.price_category.color if seat.row.price_category else '#10B981',
+            'is_accessible': seat.is_accessible,
+            # Safe numbering info with fallbacks
+            'numbering_style': safe_getattr(seat.row, 'numbering_style', 'left_to_right'),
+            'is_odd': is_odd_number,
+            'is_even': is_even_number,
+            'side': seat_side
         }
 
         seat_map_data['seats'].append(seat_data)
 
+    # Add numbering info per row with safe access
+    for row_id, row_data in rows_dict.items():
+        row = row_data['row']
+        row_key = "{}-{}".format(row.section.code, row.label)
+
+        seat_map_data['numbering_info'][row_key] = {
+            'numbering_style': safe_getattr(row, 'numbering_style', 'left_to_right'),
+            'center_x': safe_getattr(row, 'center_x', 400),
+            'aisle_width': safe_getattr(row, 'aisle_width', 60),
+            'has_center_aisle': safe_getattr(row, 'has_center_aisle', True),
+            'gaps': safe_getattr(row, 'gaps', []),
+            'total_seats': row.seat_count,
+            'actual_seats': len(row_data['seats']),
+            'actual_seat_numbers': [s.number for s in row.seats.all()],
+        }
+
     # Add price categories
-    seat_map_data['price_categories'] = {
-        pc.code: {
+    from venues.models import PriceCategory
+    all_categories = PriceCategory.objects.all()
+
+    seat_map_data['price_categories'] = {}
+    for pc in all_categories:
+        performance_price = price_map.get(pc.id, pc.base_price)
+        seat_map_data['price_categories'][pc.code] = {
             'name': pc.name,
-            'price': float(price_map.get(pc.id, pc.base_price)),
+            'price': float(performance_price),
             'color': pc.color
         }
-        for pc in venue.sections.first().rows.first().price_category.__class__.objects.all()
-    }
 
     return seat_map_data
+
+
+def safe_getattr(obj, attr_name, default_value):
+    """Safely get attribute with fallback"""
+    try:
+        return getattr(obj, attr_name, default_value)
+    except (AttributeError, TypeError):
+        return default_value
 
 
 @api_view(['GET'])
@@ -120,6 +181,7 @@ def performance_seat_map(request, performance_id):
 
 
 @api_view(['POST'])
+@csrf_exempt
 def reserve_seats(request):
     """Reserve seats temporarily"""
     serializer = ReserveSeatSerializer(data=request.data)
@@ -197,6 +259,7 @@ def reserve_seats(request):
 
 
 @api_view(['POST'])
+@csrf_exempt
 def release_seats(request):
     """Release reserved seats"""
     session_id = request.data.get('session_id')
@@ -223,6 +286,7 @@ def release_seats(request):
     return Response({'released': count})
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class BookingViewSet(viewsets.ModelViewSet):
     """API for Bookings"""
     queryset = Booking.objects.all()
@@ -272,3 +336,35 @@ class BookingViewSet(viewsets.ModelViewSet):
             )
 
         return Response({'status': 'cancelled'})
+
+    @action(detail=True, methods=['post'], url_path='resend-email')
+    def resend_email(self, request, booking_code=None):
+        """Resend booking confirmation email"""
+        booking = self.get_object()
+
+        if booking.status not in ['paid', 'confirmed']:
+            return Response(
+                {'error': 'Chỉ có thể gửi lại email cho đơn đã thanh toán'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Send email
+            success = send_booking_confirmation(booking)
+
+            if success:
+                return Response({
+                    'success': True,
+                    'message': 'Email đã được gửi lại thành công!'
+                })
+            else:
+                return Response(
+                    {'error': 'Không thể gửi email. Vui lòng thử lại sau.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        except Exception as e:
+            logger.error(f"Error resending email for booking {booking_code}: {e}")
+            return Response(
+                {'error': 'Lỗi hệ thống. Vui lòng thử lại sau.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

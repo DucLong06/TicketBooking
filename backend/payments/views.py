@@ -107,7 +107,7 @@ def vnpay_return(request):
                         logger.debug(f"Failed to send email: {e}")
 
                 # Redirect to success page
-                return redirect(f'http://localhost:5173/booking/confirmation/{booking.booking_code}')
+                return redirect(f'http://54.169.68.183/booking/confirmation/{booking.booking_code}')
 
             else:  # Failed
                 payment.status = 'failed'
@@ -115,15 +115,15 @@ def vnpay_return(request):
                 payment.save()
 
                 error_message = VNPAY_RESPONSE_CODES.get(response_code, f'Lỗi không xác định (Mã lỗi: {response_code})')
-                failure_url = f'http://localhost:5173/payment/failed?code={response_code}&message={error_message}'
+                failure_url = f'http://54.169.68.183/payment/failed?code={response_code}&message={error_message}'
                 return redirect(failure_url)
 
         except Payment.DoesNotExist:
-            return redirect('http://localhost:5173/payment/error')
+            return redirect('http://54.169.68.183/payment/error')
 
     else:
         # Invalid signature
-        return redirect('http://localhost:5173/payment/error')
+        return redirect('http://54.169.68.183/payment/error')
 
 
 @api_view(['GET'])
