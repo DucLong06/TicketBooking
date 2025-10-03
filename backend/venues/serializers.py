@@ -2,6 +2,7 @@ from .models import Venue, Section, Row, Seat, PriceCategory, VenueLayout
 from rest_framework import serializers
 from django.db import models
 
+
 class VenueLayoutSerializer(serializers.ModelSerializer):
     total_seats = serializers.ReadOnlyField()
 
@@ -23,16 +24,60 @@ class SeatSerializer(serializers.ModelSerializer):
     row_label = serializers.CharField(source='row.label', read_only=True)
     section_name = serializers.CharField(source='row.section.name', read_only=True)
     section_id = serializers.CharField(source='row.section.code', read_only=True)
-    price_category = serializers.CharField(source='row.price_category.code', read_only=True)
-    price_category_color = serializers.CharField(source='row.price_category.color', read_only=True)
+
+    # Display fields
+    display_number = serializers.CharField(source='display_label', read_only=True)
+    full_display_label = serializers.CharField(read_only=True)
+
+    # Price category fields
+    effective_price_category_code = serializers.CharField(
+        source='effective_price_category.code',
+        read_only=True
+    )
+    effective_price_category_name = serializers.CharField(
+        source='effective_price_category.name',
+        read_only=True
+    )
+    effective_price_category_color = serializers.CharField(
+        source='effective_price_category.color',
+        read_only=True
+    )
+    has_custom_price_category = serializers.SerializerMethodField()
+
+    seat_image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Seat
         fields = [
-            'id', 'number', 'row_label', 'section_name', 'section_id',
-            'position_x', 'position_y', 'status', 'is_accessible',
-            'price_category', 'price_category_color'
+            'id',
+            'number',
+            'display_number',
+            'full_display_label',
+            'row_label',
+            'section_name',
+            'section_id',
+            'position_x',
+            'position_y',
+            'spacing_after',
+            'status',
+            'is_accessible',
+            'effective_price_category_code',
+            'effective_price_category_name',
+            'effective_price_category_color',
+            'has_custom_price_category',
+            'seat_image_url'
         ]
+
+    def get_has_custom_price_category(self, obj):
+        return obj.price_category is not None and obj.price_category != obj.row.price_category
+
+    def get_seat_image_url(self, obj):
+        if obj.seat_image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.seat_image.url)
+            return obj.seat_image.url
+        return None
 
 
 class RowSerializer(serializers.ModelSerializer):

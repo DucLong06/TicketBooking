@@ -313,7 +313,8 @@
 									:key="seat.id"
 									class="flex justify-between items-center text-sm"
 								>
-									<span>{{ seat.row }}{{ seat.number }}</span>
+									<span>{{ seat.full_label }}</span>
+									<!-- ← Thay đổi -->
 									<span class="font-medium">{{
 										formatPrice(seat.price)
 									}}</span>
