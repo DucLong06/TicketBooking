@@ -1,246 +1,343 @@
 <template>
 	<div
-		class="relative flex items-center justify-center min-h-screen p-5 overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-600"
+		class="relative min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-pink-50"
 	>
-		<div
-			class="relative z-10 w-full max-w-2xl p-6 bg-white sm:p-10 rounded-3xl shadow-2xl"
-		>
-			<div class="flex justify-center mb-6">
-				<transition name="bounce" appear>
-					<div
-						class="icon-circle relative flex items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-full"
-						:class="`severity-${responseInfo.severity}`"
-						:style="{ backgroundColor: responseInfo.color + '20' }"
-					>
-						<component
-							:is="iconComponent"
-							class="w-12 h-12 stroke-[1.5] sm:w-16 sm:h-16"
-							:style="{ color: responseInfo.color }"
-						/>
-					</div>
-				</transition>
-			</div>
-
-			<div
-				class="absolute px-3 py-1.5 text-xs font-semibold tracking-wider text-white rounded-full top-5 right-5"
-				:style="{ backgroundColor: responseInfo.color }"
-			>
-				MÃ LỖI: {{ errorCode }}
-			</div>
-
-			<transition name="fade" appear>
-				<div class="mb-8 text-center">
-					<h1
-						class="mb-3 text-2xl font-bold sm:text-3xl text-slate-800"
-					>
-						Thanh Toán Thất Bại
-					</h1>
-					<p
-						class="text-base leading-relaxed sm:text-lg text-slate-600"
-					>
-						{{ responseInfo.message }}
-					</p>
-				</div>
-			</transition>
-
-			<transition name="slide-up" appear>
-				<div
-					class="mb-8"
-					v-if="responseInfo.additionalInfo || responseInfo.action"
-				>
-					<div class="flex gap-3 p-4 rounded-xl bg-slate-100">
-						<AlertCircle
-							class="w-5 h-5 mt-0.5 text-slate-500 shrink-0"
-						/>
-						<div class="text-sm text-slate-600">
-							<p v-if="responseInfo.additionalInfo">
-								{{ responseInfo.additionalInfo }}
-							</p>
-							<p
-								v-if="responseInfo.action"
-								class="mt-1 font-medium text-slate-700"
-							>
-								{{ responseInfo.action }}
-							</p>
-						</div>
-					</div>
-				</div>
-			</transition>
-
-			<transition name="slide-up" appear>
-				<div
-					class="p-5 mb-8 rounded-xl bg-slate-50"
-					v-if="transactionDetails"
-				>
-					<h3 class="mb-4 font-semibold text-slate-700">
-						Chi tiết giao dịch
-					</h3>
-					<div class="space-y-3">
-						<div
-							class="flex justify-between pb-3 text-sm border-b border-slate-200"
-						>
-							<span class="text-slate-500">Mã giao dịch:</span>
-							<span class="font-medium text-slate-800">{{
-								transactionDetails.transactionId
-							}}</span>
-						</div>
-						<div
-							class="flex justify-between pb-3 text-sm border-b border-slate-200"
-						>
-							<span class="text-slate-500">Số tiền:</span>
-							<span class="font-medium text-slate-800">{{
-								formatCurrency(transactionDetails.amount)
-							}}</span>
-						</div>
-						<div
-							class="flex justify-between pb-3 text-sm border-b border-slate-200"
-						>
-							<span class="text-slate-500">Thời gian:</span>
-							<span class="font-medium text-slate-800">{{
-								formatDateTime(transactionDetails.timestamp)
-							}}</span>
-						</div>
-						<div
-							class="flex justify-between text-sm"
-							v-if="transactionDetails.bookingCode"
-						>
-							<span class="text-slate-500">Mã đặt vé:</span>
-							<span class="font-medium text-slate-800">{{
-								transactionDetails.bookingCode
-							}}</span>
-						</div>
-					</div>
-				</div>
-			</transition>
-
-			<transition name="slide-up" appear>
-				<div class="flex flex-col gap-3 mb-6 sm:flex-row">
-					<button
-						@click="retryPayment"
-						class="flex items-center justify-center flex-1 gap-2 px-5 py-3 font-semibold text-white transition-all duration-300 transform bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/50"
-					>
-						<RefreshCw class="w-5 h-5" />
-						Thử Lại
-					</button>
-					<button
-						@click="chooseOtherMethod"
-						class="flex items-center justify-center flex-1 gap-2 px-5 py-3 font-semibold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
-					>
-						<CreditCard class="w-5 h-5" />
-						Phương Thức Khác
-					</button>
-					<button
-						@click="goToHome"
-						class="flex items-center justify-center flex-1 gap-2 px-5 py-3 font-semibold border text-slate-500 border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-					>
-						<Home class="w-5 h-5" />
-						Về Trang Chủ
-					</button>
-				</div>
-			</transition>
-
-			<transition name="fade" appear>
-				<div
-					class="flex items-center justify-center gap-2 pt-5 border-t border-slate-200"
-				>
-					<Phone class="w-4 h-4 text-slate-500" />
-					<p class="text-sm text-slate-500">
-						Cần hỗ trợ? Liên hệ hotline:
-						<a
-							href="tel:1900xxxx"
-							class="font-semibold text-indigo-500 hover:underline"
-							>1900 XXXX</a
-						>
-					</p>
-				</div>
-			</transition>
-		</div>
-
-		<div class="absolute top-0 left-0 z-0 w-full h-full">
+		<!-- Background Animation -->
+		<div class="absolute inset-0 overflow-hidden bg-animation">
 			<div class="circle circle-1"></div>
 			<div class="circle circle-2"></div>
 			<div class="circle circle-3"></div>
+		</div>
+
+		<!-- Content -->
+		<div
+			class="relative z-10 flex items-center justify-center min-h-screen px-4 py-12"
+		>
+			<div class="w-full max-w-md">
+				<!-- Icon Animation -->
+				<transition name="bounce" appear>
+					<div
+						class="flex items-center justify-center mb-8"
+						:class="`icon-circle severity-${responseInfo.severity}`"
+						:style="{
+							'--dynamic-color-alpha': responseInfo.color + '60',
+						}"
+					>
+						<div
+							class="relative flex items-center justify-center w-24 h-24 rounded-full shadow-2xl"
+							:style="{ backgroundColor: responseInfo.color }"
+						>
+							<component
+								:is="responseInfo.icon"
+								class="w-12 h-12 text-white"
+							/>
+						</div>
+					</div>
+				</transition>
+
+				<!-- Card -->
+				<transition name="fade" appear>
+					<div
+						class="overflow-hidden bg-white shadow-2xl rounded-2xl"
+					>
+						<div class="p-8">
+							<!-- Title -->
+							<h1
+								class="mb-2 text-3xl font-bold text-center"
+								:style="{ color: responseInfo.color }"
+							>
+								{{ responseInfo.title }}
+							</h1>
+
+							<!-- Error Message -->
+							<p class="mb-6 text-center text-slate-600">
+								{{ errorMessage || responseInfo.message }}
+							</p>
+
+							<!-- Error Code Badge -->
+							<div class="flex justify-center mb-6">
+								<span
+									class="px-4 py-2 text-sm font-mono font-semibold rounded-full"
+									:style="{
+										backgroundColor:
+											responseInfo.color + '20',
+										color: responseInfo.color,
+									}"
+								>
+									Mã lỗi: {{ errorCode }}
+								</span>
+							</div>
+
+							<!-- Additional Info -->
+							<transition name="fade">
+								<div
+									v-if="
+										responseInfo.additionalInfo ||
+										responseInfo.action
+									"
+									class="p-4 mb-6 border-l-4 rounded-r-lg bg-slate-50"
+									:style="{ borderColor: responseInfo.color }"
+								>
+									<div class="flex items-start space-x-3">
+										<AlertCircle
+											class="w-5 h-5 mt-0.5 text-slate-500 shrink-0"
+										/>
+										<div class="text-sm text-slate-600">
+											<p
+												v-if="
+													responseInfo.additionalInfo
+												"
+											>
+												{{
+													responseInfo.additionalInfo
+												}}
+											</p>
+											<p
+												v-if="responseInfo.action"
+												class="mt-1 font-medium text-slate-700"
+											>
+												{{ responseInfo.action }}
+											</p>
+										</div>
+									</div>
+								</div>
+							</transition>
+
+							<!-- Transaction Details -->
+							<transition name="slide-up" appear>
+								<div
+									class="p-5 mb-8 rounded-xl bg-slate-50"
+									v-if="transactionDetails"
+								>
+									<h3
+										class="mb-4 font-semibold text-slate-700"
+									>
+										Chi tiết giao dịch
+									</h3>
+									<div class="space-y-3">
+										<div
+											class="flex justify-between pb-3 text-sm border-b border-slate-200"
+										>
+											<span class="text-slate-500"
+												>Mã giao dịch:</span
+											>
+											<span
+												class="font-medium text-slate-800"
+											>
+												{{
+													transactionDetails.transactionId
+												}}
+											</span>
+										</div>
+										<div
+											class="flex justify-between pb-3 text-sm border-b border-slate-200"
+										>
+											<span class="text-slate-500"
+												>Số tiền:</span
+											>
+											<span
+												class="font-medium text-slate-800"
+											>
+												{{
+													formatCurrency(
+														transactionDetails.amount
+													)
+												}}
+											</span>
+										</div>
+										<div
+											class="flex justify-between pb-3 text-sm border-b border-slate-200"
+										>
+											<span class="text-slate-500"
+												>Thời gian:</span
+											>
+											<span
+												class="font-medium text-slate-800"
+											>
+												{{
+													formatDateTime(
+														transactionDetails.timestamp
+													)
+												}}
+											</span>
+										</div>
+										<div
+											class="flex justify-between text-sm"
+											v-if="transactionDetails.method"
+										>
+											<span class="text-slate-500"
+												>Phương thức:</span
+											>
+											<span
+												class="font-medium text-slate-800"
+											>
+												{{ transactionDetails.method }}
+											</span>
+										</div>
+									</div>
+								</div>
+							</transition>
+
+							<!-- Action Buttons -->
+							<div class="space-y-3">
+								<button
+									@click="retryPayment"
+									class="w-full px-6 py-3 font-semibold text-white transition-all duration-200 rounded-lg shadow-lg hover:shadow-xl"
+									:style="{
+										backgroundColor: responseInfo.color,
+										'&:hover': {
+											transform: 'translateY(-2px)',
+										},
+									}"
+								>
+									Thử lại thanh toán
+								</button>
+
+								<button
+									@click="goToHome"
+									class="w-full px-6 py-3 font-semibold transition-all duration-200 border-2 rounded-lg text-slate-700 border-slate-300 hover:bg-slate-50"
+								>
+									Về trang chủ
+								</button>
+							</div>
+
+							<!-- Support -->
+							<div class="mt-6 text-center">
+								<p class="text-sm text-slate-500">
+									Cần hỗ trợ?
+									<a
+										href="mailto:support@example.com"
+										class="font-medium hover:underline"
+										:style="{ color: responseInfo.color }"
+									>
+										Liên hệ chúng tôi
+									</a>
+								</p>
+							</div>
+						</div>
+					</div>
+				</transition>
+			</div>
 		</div>
 	</div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import {
-	AlertCircle,
-	XCircle,
-	Lock,
-	Clock,
-	ShieldOff,
-	Wallet,
-	TrendingUp,
-	AlertOctagon,
-	RefreshCw,
-	CreditCard,
-	Home,
-	Phone,
-	AlertTriangle,
-} from "lucide-vue-next";
+import { useRouter, useRoute } from "vue-router";
+import { XCircle, AlertCircle, Clock, CreditCard, Ban } from "lucide-vue-next";
 
-const route = useRoute();
 const router = useRouter();
+const route = useRoute();
 
-// --- State ---
-const errorCode = ref("99");
+const errorCode = ref("");
 const errorMessage = ref("");
 const transactionDetails = ref(null);
 
-const mockTransactionDetails = {
-	transactionId: "TXN123456789",
-	amount: 250000,
-	timestamp: new Date().toISOString(),
-	bookingCode: "BOOKING_ABC123",
+// 9Pay Error Codes Mapping
+const ninepayErrors = {
+	"000": {
+		title: "Giao dịch thành công",
+		message: "Thanh toán của bạn đã được xử lý thành công",
+		severity: "success",
+		color: "#10b981",
+		icon: "CheckCircle",
+	},
+	"001": {
+		title: "Giao dịch thất bại",
+		message: "Giao dịch không thành công",
+		severity: "error",
+		color: "#ef4444",
+		icon: XCircle,
+		additionalInfo: "Vui lòng kiểm tra lại thông tin thẻ và thử lại.",
+	},
+	"002": {
+		title: "Giao dịch bị từ chối",
+		message: "Ngân hàng từ chối giao dịch",
+		severity: "error",
+		color: "#ef4444",
+		icon: Ban,
+		additionalInfo: "Vui lòng liên hệ ngân hàng để biết thêm chi tiết.",
+	},
+	"003": {
+		title: "Thẻ không hợp lệ",
+		message: "Thông tin thẻ không chính xác",
+		severity: "error",
+		color: "#ef4444",
+		icon: CreditCard,
+		additionalInfo: "Vui lòng kiểm tra lại số thẻ, ngày hết hạn và CVV.",
+	},
+	"004": {
+		title: "Không đủ số dư",
+		message: "Tài khoản không đủ số dư để thực hiện giao dịch",
+		severity: "error",
+		color: "#f59e0b",
+		icon: AlertCircle,
+		additionalInfo: "Vui lòng nạp thêm tiền hoặc sử dụng phương thức khác.",
+	},
+	"005": {
+		title: "Hết hạn giao dịch",
+		message: "Phiên giao dịch đã hết hạn",
+		severity: "warning",
+		color: "#f59e0b",
+		icon: Clock,
+		additionalInfo: "Vui lòng tạo giao dịch mới.",
+	},
+	"006": {
+		title: "Quá số lần thử",
+		message: "Bạn đã nhập sai thông tin quá nhiều lần",
+		severity: "error",
+		color: "#ef4444",
+		icon: Ban,
+		additionalInfo: "Vui lòng đợi ít nhất 15 phút trước khi thử lại.",
+	},
+	"007": {
+		title: "Lỗi hệ thống",
+		message: "Có lỗi xảy ra từ cổng thanh toán",
+		severity: "error",
+		color: "#ef4444",
+		icon: AlertCircle,
+		additionalInfo: "Vui lòng thử lại sau ít phút.",
+	},
+	"008": {
+		title: "Giao dịch bị hủy",
+		message: "Bạn đã hủy giao dịch",
+		severity: "warning",
+		color: "#f59e0b",
+		icon: XCircle,
+	},
+	99: {
+		title: "Lỗi không xác định",
+		message: "Có lỗi không xác định xảy ra",
+		severity: "error",
+		color: "#ef4444",
+		icon: AlertCircle,
+		additionalInfo: "Vui lòng liên hệ bộ phận hỗ trợ.",
+	},
 };
 
-// --- Computed Properties ---
-const responseInfo = computed(() => getResponseInfo(errorCode.value));
-
-const iconComponent = computed(() => {
-	const iconMap = {
-		"x-circle": XCircle,
-		lock: Lock,
-		clock: Clock,
-		"shield-off": ShieldOff,
-		wallet: Wallet,
-		"trending-up": TrendingUp,
-		"alert-octagon": AlertOctagon,
-		"alert-circle": AlertCircle,
-		"alert-triangle": AlertTriangle,
-	};
-	return iconMap[responseInfo.value.icon] || AlertCircle;
+// Computed
+const responseInfo = computed(() => {
+	return ninepayErrors[errorCode.value] || ninepayErrors["99"];
 });
 
-// --- Helper Functions ---
+// Methods
 const formatCurrency = (amount) => {
 	return new Intl.NumberFormat("vi-VN", {
 		style: "currency",
 		currency: "VND",
 	}).format(amount);
 };
+
 const formatDateTime = (timestamp) => {
 	return new Date(timestamp).toLocaleString("vi-VN");
 };
 
-// --- Action Handlers ---
 const retryPayment = () => {
 	if (transactionDetails.value?.bookingCode) {
 		router.push(`/booking/${transactionDetails.value.bookingCode}/payment`);
 	} else {
-		router.push("/"); // Fallback
-	}
-};
-
-const chooseOtherMethod = () => {
-	if (transactionDetails.value?.bookingCode) {
-		router.push(
-			`/booking/${transactionDetails.value.bookingCode}/payment-methods`
-		);
+		router.push("/");
 	}
 };
 
@@ -248,16 +345,21 @@ const goToHome = () => {
 	router.push("/");
 };
 
-// --- Lifecycle Hook ---
+// Lifecycle
 onMounted(() => {
 	errorCode.value = route.query.code || "99";
 	errorMessage.value = route.query.message || "";
 
-	const storedDetails = sessionStorage.getItem("lastTransaction");
+	const storedDetails = sessionStorage.getItem("bookingData");
 	if (storedDetails) {
-		transactionDetails.value = JSON.parse(storedDetails);
-	} else {
-		transactionDetails.value = mockTransactionDetails;
+		const booking = JSON.parse(storedDetails);
+		transactionDetails.value = {
+			transactionId: booking.transactionId || "N/A",
+			amount: booking.amount || 0,
+			timestamp: new Date().toISOString(),
+			method: "9Pay",
+			bookingCode: booking.bookingCode,
+		};
 	}
 });
 </script>
@@ -308,7 +410,7 @@ onMounted(() => {
 	}
 }
 
-/* Icon Animation (Pulse) */
+/* Icon Animation */
 .icon-circle.severity-error {
 	animation: pulse-error 2s infinite;
 }
@@ -327,7 +429,6 @@ onMounted(() => {
 		box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
 	}
 }
-/* :style="{ '--dynamic-color-alpha': responseInfo.color + '60' }" */
 
 @keyframes pulse-warning {
 	0% {

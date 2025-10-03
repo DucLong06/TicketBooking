@@ -68,7 +68,40 @@
 									/>
 								</div>
 							</div>
-
+                            <!-- 9 pay -->
+							<div
+								@click="selectPaymentMethod('9pay')"
+								:class="[
+									'border-2 rounded-lg p-4 cursor-pointer transition',
+									selectedMethod === '9pay'
+										? 'border-primary-600 bg-primary-50'
+										: 'border-gray-200 hover:border-gray-300',
+								]"
+							>
+								<div class="flex items-center justify-between">
+									<div class="flex items-center space-x-3">
+										<input
+											type="radio"
+											:checked="selectedMethod === '9pay'"
+											class="text-primary-600"
+										/>
+										<div>
+											<div class="font-semibold">
+												9Pay
+											</div>
+											<div class="text-sm text-gray-600">
+												Thanh toán qua Cổng thanh toán
+												9Pay
+											</div>
+										</div>
+									</div>
+									<img
+										src="https://9pay.vn/assets/images/logo-icon/logo-primary.svg"
+										alt="9Pay"
+										class="h-8"
+									/>
+								</div>
+							</div>
 							<!-- Bank Transfer -->
 							<!-- <div
 								@click="selectPaymentMethod('bank')"
@@ -313,7 +346,8 @@
 									:key="seat.id"
 									class="flex justify-between items-center text-sm"
 								>
-									<span>{{ seat.row }}{{ seat.number }}</span>
+									<span>{{ seat.full_label }}</span>
+									<!-- ← Thay đổi -->
 									<span class="font-medium">{{
 										formatPrice(seat.price)
 									}}</span>
@@ -456,9 +490,6 @@ const applyPromo = () => {
 };
 
 const processPayment = async () => {
-	console.log("=== DEBUG PAYMENT ===");
-	console.log("selectedMethod:", selectedMethod.value);
-	console.log("bookingStore.bookingCode:", bookingStore.bookingCode);
 
 	if (!selectedMethod.value) return;
 	isProcessing.value = true;

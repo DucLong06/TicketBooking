@@ -14,6 +14,10 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
+# Frontend and  Backend URLs
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:8000')
+
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
 
 logger.info(f"DEBUG mode is {'on' if DEBUG else 'off'}")
@@ -39,9 +43,9 @@ else:
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@example.com')
     logger.info(f"Using email host: {EMAIL_HOST} with user: {EMAIL_HOST_USER}")
 
-    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True'
-    SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False') == 'True'
-    CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False') == 'True'
+    # SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True'
+    # SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False') == 'True'
+    # CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False') == 'True'
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     DATABASES = {
@@ -80,7 +84,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # Add this
+    'corsheaders.middleware.CorsMiddleware',  
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -146,22 +150,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # CORS settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vue dev server
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:8888",
-    "http://54.169.68.183"
-]
+CORS_ALLOWED_ORIGINS = [FRONTEND_URL, BACKEND_URL]
+CSRF_TRUSTED_ORIGINS = [FRONTEND_URL, BACKEND_URL]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:8888",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost",
-    "http://54.169.68.183"
-]
 logger.info(f"CSRF_TRUSTED_ORIGINS: {CSRF_TRUSTED_ORIGINS}")
 CORS_ALLOW_CREDENTIALS = True
 
@@ -189,13 +180,15 @@ REST_FRAMEWORK = {
 }
 
 # Booking settings
-BOOKING_TIMEOUT_MINUTES = 10  # Thời gian giữ ghế
-PAYMENT_TIMEOUT_MINUTES = 5   # Thời gian thanh toán
+BOOKING_TIMEOUT_MINUTES = 10
+PAYMENT_TIMEOUT_MINUTES = 15
 
-# Email settings (config sau)
-VNP_TMNCODE = os.getenv('VNP_TMNCODE', '')
-VNP_HASTSECRET = os.getenv('VNP_HASTSECRET', '')
-
+# 9Pay Settings
+NINEPAY_MERCHANT_KEY = os.getenv('NINEPAY_MERCHANT_KEY', '')
+NINEPAY_SECRET_KEY = os.getenv('NINEPAY_SECRET_KEY', '')
+NINEPAY_URL = os.getenv('NINEPAY_URL', 'https://sand-payment.9pay.vn')
+NINEPAY_RETURN_URL = f"{BACKEND_URL}/api/payment/ninepay/return/"
+NINEPAY_CHECKSUM_KEY = os.getenv('NINEPAY_CHECKSUM_KEY', '')
 
 # Jazzmin Admin Configuration
 JAZZMIN_SETTINGS = {
