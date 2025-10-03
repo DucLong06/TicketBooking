@@ -57,6 +57,10 @@
 							<p class="text-gray-600 mb-4">
 								{{ show.category }}
 							</p>
+							<p class="text-gray-600 mb-4">
+								bookingStore: {{ bookingStore.shows }} >
+							</p>
+
 							<div class="flex justify-between items-center">
 								<!-- <span class="text-primary-600 font-bold">
 									{{ formatPrice(show.min_price) }} -
@@ -112,7 +116,6 @@ onMounted(async () => {
 	try {
 		await bookingStore.loadShows();
 		shows.value = bookingStore.shows;
-		console.log("Shows from store:", bookingStore.shows);
 	} catch (error) {
 		console.error("Failed to load shows:", error);
 	} finally {

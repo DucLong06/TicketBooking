@@ -71,7 +71,6 @@ export const useBookingStore = defineStore('booking', () => {
             loading.value = true
             const response = await bookingAPI.getShows()
             shows.value = response.data.results || response.data
-            console.log('shows: ', shows.value);
 
         } catch (error) {
             console.error('Failed to load shows:', error)
