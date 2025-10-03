@@ -14,14 +14,13 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-# Frontend và Backend URLs
+# Frontend and  Backend URLs
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:8000')
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
 
 logger.info(f"DEBUG mode is {'on' if DEBUG else 'off'}")
-
 if DEBUG:
     # For development - logger.debug emails to console
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -32,6 +31,7 @@ if DEBUG:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
 else:
     # Email For production
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -43,16 +43,11 @@ else:
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@example.com')
     logger.info(f"Using email host: {EMAIL_HOST} with user: {EMAIL_HOST_USER}")
 
-    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True') == 'True'
-    SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'True') == 'True'
-    CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'True') == 'True'
-    # SECURE_BROWSER_XSS_FILTER = True
-    # SECURE_CONTENT_TYPE_NOSNIFF = True
-    # X_FRAME_OPTIONS = 'DENY'
-    # SECURE_HSTS_SECONDS = 31536000
-    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    # SECURE_HSTS_PRELOAD = True
-
+    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True'
+    SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False') == 'True'
+    CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False') == 'True'
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -89,10 +84,10 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Add this
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -117,6 +112,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'core.wsgi.application'
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -150,60 +146,20 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 # WhiteNoise configuration
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# CORS settings
+CORS_ALLOWED_ORIGINS = [FRONTEND_URL, BACKEND_URL]
+CSRF_TRUSTED_ORIGINS = [FRONTEND_URL, BACKEND_URL]
+
+logger.info(f"CSRF_TRUSTED_ORIGINS: {CSRF_TRUSTED_ORIGINS}")
+CORS_ALLOW_CREDENTIALS = True
 
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
-
-if DEBUG:
-    CORS_ALLOW_ALL_ORIGINS = True
-    CORS_ALLOW_CREDENTIALS = True
-else:
-    CORS_ALLOWED_ORIGINS = [
-        FRONTEND_URL,
-        BACKEND_URL,
-    ]
-    CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
-
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-]
-
-
-CSRF_TRUSTED_ORIGINS = [
-    FRONTEND_URL,
-    BACKEND_URL,
-]
-
-
-CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_USE_SESSIONS = False
-
-# if not DEBUG:
-#     CSRF_COOKIE_SECURE = True
-#     CSRF_COOKIE_SAMESITE = 'None'
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -224,10 +180,10 @@ REST_FRAMEWORK = {
 }
 
 # Booking settings
-BOOKING_TIMEOUT_MINUTES = 10
-PAYMENT_TIMEOUT_MINUTES = 15
+BOOKING_TIMEOUT_MINUTES = 10 
+PAYMENT_TIMEOUT_MINUTES = 15 
 
-# VNPay settings
+# Email settings (config sau)
 VNP_TMNCODE = os.getenv('VNP_TMNCODE', '')
 VNP_HASTSECRET = os.getenv('VNP_HASTSECRET', '')
 VNP_URL = os.getenv('VNP_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html')
@@ -299,7 +255,7 @@ JAZZMIN_SETTINGS = {
     },
 
     # Themes
-    "theme": "flatly",
+    "theme": "flatly",  # default, darkly, solar, etc.
     "dark_mode_theme": "darkly",
 
     # Custom CSS/JS

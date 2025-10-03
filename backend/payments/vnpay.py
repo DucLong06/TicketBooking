@@ -21,7 +21,7 @@ class VNPay:
         """
 
         # Calculate expiry time (15 minutes from now)
-        expire_time = datetime.now() + timedelta(minutes=15)
+        expire_time = datetime.now() + timedelta(minutes=settings.PAYMENT_TIMEOUT_MINUTES)
 
         vnp_params = {
             'vnp_Version': '2.1.0',
