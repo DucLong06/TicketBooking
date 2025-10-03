@@ -112,6 +112,7 @@ onMounted(async () => {
 	try {
 		await bookingStore.loadShows();
 		shows.value = bookingStore.shows;
+		console.log("Shows from store:", bookingStore.shows);
 	} catch (error) {
 		console.error("Failed to load shows:", error);
 	} finally {
