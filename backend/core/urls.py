@@ -9,6 +9,7 @@ urlpatterns = [
     path('api/', include('shows.urls')),
     path('api/', include('bookings.urls')),
     path('api/', include('payments.urls')),
+    path('api/', include('venues.urls')),
 ]
 
 if settings.DEBUG:

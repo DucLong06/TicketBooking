@@ -1,10 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { sessionManager } from '@/utils/sessionManager'
 
 const routes = [
     {
         path: '/',
         name: 'Home',
         component: () => import('../pages/HomePage.vue')
+    },
+    {
+        path: '/lookup',
+        name: 'Lookup',
+        component: () => import('../pages/LookupPage.vue')
     },
     {
         path: '/booking/:showId',
@@ -15,16 +21,19 @@ const routes = [
         path: '/booking/:showId/seats',
         name: 'SelectSeats',
         component: () => import('../pages/SelectSeats.vue'),
+        meta: {
+            requiresSession: true,
+            requiredKeys: ['session_id', 'selectedPerformance']
+        }
     },
     {
         path: '/booking/:showId/customer-info',
         name: 'CustomerInfo',
         component: () => import('../pages/CustomerInfo.vue'),
-    },
-    {
-        path: '/booking/:showId/payment',
-        name: 'Payment',
-        component: () => import('../pages/Payment.vue'),
+        meta: {
+            requiresSession: true,
+            requiredKeys: ['session_id', 'selectedPerformance', 'selectedSeats', 'reservationExpiry']
+        }
     },
     {
         path: '/booking/confirmation/:bookingCode',
@@ -48,16 +57,44 @@ const router = createRouter({
     routes
 })
 
-// Navigation guard
-router.beforeEach((to, from, next) => {
-    // Check session for booking flow
+router.beforeEach(async (to, from, next) => {
     if (to.meta.requiresSession) {
-        const sessionId = sessionStorage.getItem('session_id')
+        const sessionId = sessionManager.get('session_id')
+
         if (!sessionId) {
-            next({ name: 'Home' })
+            console.warn('❌ No session ID found, redirecting to home')
+            sessionManager.clearBookingSession()
+            return next({ name: 'Home' })
+        }
+
+        const requiredKeys = to.meta.requiredKeys || []
+        if (!sessionManager.validateSession(requiredKeys)) {
+            console.warn('❌ Invalid session data, redirecting to home')
+            sessionManager.clearBookingSession()
+
+            const selectedSeats = sessionManager.get('selectedSeats')
+            if (selectedSeats?.length > 0) {
+                try {
+                    await bookingAPI.releaseSeats(
+                        selectedSeats.map(s => s.id),
+                        sessionId
+                    )
+                } catch (error) {
+                    console.error('Failed to release seats:', error)
+                }
+            }
+
+            return next({ name: 'Home' })
+        }
+    }
+    if (to.name === 'CustomerInfo') {
+        const hasSeats = sessionStorage.getItem('selectedSeats')
+        if (!hasSeats) {
+            next({ name: 'SelectPerformance', params: { showId: to.params.showId } })
             return
         }
     }
+
     next()
 })
 

@@ -1,563 +1,69 @@
 <template>
 	<DefaultLayout>
-		<div class="min-h-screen bg-gray-50 py-8">
-			<div class="container mx-auto px-4">
-				<!-- Loading State -->
+		<div
+			v-if="loading"
+			class="flex items-center justify-center min-h-screen"
+		>
+			<div class="text-center">
 				<div
-					v-if="loading"
-					class="flex justify-center items-center min-h-[400px]"
-				>
-					<div class="text-center">
-						<div
-							class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"
-						></div>
-						<p class="text-gray-600">Đang tải sơ đồ ghế...</p>
-					</div>
-				</div>
+					class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"
+				></div>
+				<p class="mt-4 text-gray-600">Đang tải...</p>
+			</div>
+		</div>
 
-				<!-- Main Content -->
-				<div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-					<!-- Seat Map - 2 columns -->
-					<div class="lg:col-span-2">
-						<div class="bg-white rounded-lg shadow-lg p-6">
-							<!-- Performance Info Header -->
-							<div class="mb-6 text-center border-b pb-4">
-								<h2
-									class="text-2xl font-bold mb-2 text-gray-800"
-								>
-									{{ showInfo.name }}
-								</h2>
+		<div v-else class="container mx-auto px-4 py-8">
+			<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+				<!-- Left Column: Seat Map (2/3 width) -->
+				<div class="lg:col-span-2">
+					<div class="">
+						<!-- Price Categories - Mobile horizontal scroll -->
+						<div class="lg:hidden mb-4">
+							<div class="grid grid-cols-2 gap-2">
 								<div
-									class="flex items-center justify-center gap-4 text-gray-600 text-sm"
-								>
-									<div class="flex items-center gap-1">
-										<svg
-											class="w-4 h-4"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-											/>
-										</svg>
-										<span>{{
-											performanceData.day_of_week
-										}}</span>
-									</div>
-									<div class="flex items-center gap-1">
-										<svg
-											class="w-4 h-4"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-											/>
-										</svg>
-										<span
-											>{{ performanceData.date }} -
-											{{ performanceData.time }}</span
-										>
-									</div>
-								</div>
-								<p class="text-sm text-gray-500 mt-2">
-									{{ venueInfo.name }}
-								</p>
-							</div>
-
-							<!-- Stage -->
-							<div class="mb-8">
-								<div
-									class="bg-gradient-to-b from-gray-800 to-gray-900 text-white py-4 px-8 rounded-t-lg text-center mx-auto max-w-md shadow-lg"
-								>
-									<div class="text-lg font-bold">
-										SÂN KHẤU
-									</div>
-									<div class="text-sm opacity-75">STAGE</div>
-								</div>
-							</div>
-
-							<!-- Price Categories Legend -->
-							<div
-								class="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-100"
-							>
-								<h3 class="font-semibold mb-3 text-gray-700">
-									📋 Phân loại vé:
-								</h3>
-								<div
-									class="grid grid-cols-2 md:grid-cols-3 gap-3"
+									v-for="(category, code) in priceCategories"
+									:key="code"
+									class="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-lg px-2.5 py-2 shadow-sm border border-gray-200"
 								>
 									<div
-										v-for="(
-											category, code
-										) in priceCategories"
-										:key="code"
-										class="flex items-center space-x-2 bg-white rounded-lg p-2 shadow-sm"
-									>
+										class="w-3.5 h-3.5 rounded border border-white shadow-sm flex-shrink-0"
+										:style="{
+											backgroundColor: category.color,
+										}"
+									></div>
+									<div class="text-xs flex-1 min-w-0">
 										<div
-											class="w-5 h-5 rounded border-2 border-gray-300"
-											:style="{
-												backgroundColor: category.color,
-											}"
-										></div>
-										<div class="text-sm">
-											<div
-												class="font-medium text-gray-800"
-											>
-												{{ category.name }}
-											</div>
-											<div
-												class="text-primary-600 font-semibold"
-											>
-												{{
-													formatPrice(category.price)
-												}}
-											</div>
+											class="font-semibold text-gray-800 truncate"
+										>
+											{{ category.name }}
 										</div>
-									</div>
-								</div>
-							</div>
-
-							<!-- Seat Grid -->
-							<div class="overflow-auto pb-4">
-								<div class="min-w-max px-4">
-									<div
-										v-for="section in seatsBySections"
-										:key="section.id"
-										class="mb-8"
-									>
-										<h3
-											class="text-center font-semibold mb-4 text-lg text-gray-700"
-										>
-											{{ section.name }}
-										</h3>
-
-										<div
-											class="flex flex-col items-center space-y-3"
-										>
-											<div
-												v-for="row in section.rows"
-												:key="row.label"
-												class="flex items-center justify-center"
-											>
-												<!-- Row Label Left -->
-												<span
-													class="w-10 text-right mr-4 font-bold text-gray-700 text-sm"
-													>{{ row.label }}</span
-												>
-
-												<!-- Seats -->
-												<div
-													class="flex justify-center"
-												>
-													<!-- Center-out layout -->
-													<div
-														v-if="
-															row.seats.style ===
-															'center_out'
-														"
-														class="flex gap-1 items-center"
-													>
-														<!-- Left side (odd) -->
-														<button
-															v-for="seat in row
-																.seats.oddSeats"
-															:key="seat.id"
-															@click="
-																toggleSeat(seat)
-															"
-															:disabled="
-																seat.status !==
-																	'available' &&
-																!isSelected(
-																	seat
-																)
-															"
-															:class="[
-																'w-9 h-9 text-xs font-bold rounded-lg border-2 transition-all duration-200',
-																getSeatClass(
-																	seat
-																),
-															]"
-															:style="{
-																backgroundColor:
-																	getSeatBackgroundColor(
-																		seat
-																	),
-																borderColor:
-																	getSeatBorderColor(
-																		seat
-																	),
-																marginRight:
-																	seat.spacing_after
-																		? `${seat.spacing_after}px`
-																		: '2px',
-															}"
-															@mouseenter="
-																showSeatTooltip(
-																	seat,
-																	$event
-																)
-															"
-															@mouseleave="
-																hideSeatTooltip
-															"
-														>
-															{{
-																seat.display_number
-															}}
-														</button>
-
-														<!-- Center aisle -->
-														<div class="w-10"></div>
-
-														<!-- Right side (even) -->
-														<button
-															v-for="seat in row
-																.seats
-																.evenSeats"
-															:key="seat.id"
-															@click="
-																toggleSeat(seat)
-															"
-															:disabled="
-																seat.status !==
-																	'available' &&
-																!isSelected(
-																	seat
-																)
-															"
-															:class="[
-																'w-9 h-9 text-xs font-bold rounded-lg border-2 transition-all duration-200',
-																getSeatClass(
-																	seat
-																),
-															]"
-															:style="{
-																backgroundColor:
-																	getSeatBackgroundColor(
-																		seat
-																	),
-																borderColor:
-																	getSeatBorderColor(
-																		seat
-																	),
-																marginRight:
-																	seat.spacing_after
-																		? `${seat.spacing_after}px`
-																		: '2px',
-															}"
-															@mouseenter="
-																showSeatTooltip(
-																	seat,
-																	$event
-																)
-															"
-															@mouseleave="
-																hideSeatTooltip
-															"
-														>
-															{{
-																seat.display_number
-															}}
-														</button>
-													</div>
-
-													<!-- Linear layout -->
-													<div
-														v-else
-														class="flex gap-1 items-center"
-													>
-														<button
-															v-for="seat in row
-																.seats.seats"
-															:key="seat.id"
-															@click="
-																toggleSeat(seat)
-															"
-															:disabled="
-																seat.status !==
-																	'available' &&
-																!isSelected(
-																	seat
-																)
-															"
-															:class="[
-																'w-9 h-9 text-xs font-bold rounded-lg border-2 transition-all duration-200',
-																getSeatClass(
-																	seat
-																),
-															]"
-															:style="{
-																backgroundColor:
-																	getSeatBackgroundColor(
-																		seat
-																	),
-																borderColor:
-																	getSeatBorderColor(
-																		seat
-																	),
-																marginRight:
-																	seat.spacing_after
-																		? `${seat.spacing_after}px`
-																		: '2px',
-															}"
-															@mouseenter="
-																showSeatTooltip(
-																	seat,
-																	$event
-																)
-															"
-															@mouseleave="
-																hideSeatTooltip
-															"
-														>
-															{{
-																seat.display_number
-															}}
-														</button>
-													</div>
-												</div>
-
-												<!-- Row Label Right -->
-												<span
-													class="w-10 text-left ml-4 font-bold text-gray-700 text-sm"
-													>{{ row.label }}</span
-												>
-											</div>
+										<div class="text-gray-600 text-xs">
+											{{ formatPrice(category.price) }}
 										</div>
-									</div>
-								</div>
-							</div>
-
-							<!-- Status Legend -->
-							<div
-								class="mt-6 bg-white rounded-lg shadow-md p-4 border border-gray-200"
-							>
-								<h4 class="font-semibold mb-3 text-gray-700">
-									📌 Trạng thái ghế:
-								</h4>
-								<div
-									class="flex flex-wrap gap-4 justify-center"
-								>
-									<div class="flex items-center space-x-2">
-										<div
-											class="w-6 h-6 bg-green-500 rounded-lg border-2 border-green-600"
-										></div>
-										<span class="text-sm text-gray-700"
-											>Còn trống</span
-										>
-									</div>
-									<div class="flex items-center space-x-2">
-										<div
-											class="w-6 h-6 bg-yellow-500 rounded-lg border-2 border-yellow-600"
-										></div>
-										<span class="text-sm text-gray-700"
-											>Đang chọn</span
-										>
-									</div>
-									<div class="flex items-center space-x-2">
-										<div
-											class="w-6 h-6 bg-red-500 rounded-lg border-2 border-red-600"
-										></div>
-										<span class="text-sm text-gray-700"
-											>Đã bán</span
-										>
-									</div>
-									<div class="flex items-center space-x-2">
-										<div
-											class="w-6 h-6 bg-gray-400 rounded-lg border-2 border-gray-500"
-										></div>
-										<span class="text-sm text-gray-700"
-											>Đang giữ</span
-										>
 									</div>
 								</div>
 							</div>
 						</div>
-					</div>
 
-					<!-- Booking Summary Sidebar - 1 column -->
-					<div class="lg:col-span-1">
+						<!-- Seat Map Container with Zoom -->
+
 						<div
-							class="bg-white rounded-lg shadow-lg p-6 sticky top-4"
+							class="relative overflow-hidden"
+							:style="{
+								minHeight: isMobile ? '400px' : '600px',
+								maxHeight: isMobile
+									? 'calc(100vh - 200px)'
+									: 'calc(100vh - 150px)',
+							}"
 						>
-							<h3
-								class="text-xl font-bold mb-4 text-gray-800 border-b pb-2"
-							>
-								🎫 Thông tin đặt vé
-							</h3>
-
-							<!-- Show Info -->
-							<div class="mb-4 pb-4 border-b">
-								<div class="flex items-start gap-3">
-									<div
-										class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center text-white font-bold text-xl flex-shrink-0"
-									>
-										🎭
-									</div>
-									<div class="flex-1">
-										<h4
-											class="font-bold text-gray-800 mb-1"
-										>
-											{{ showInfo.name }}
-										</h4>
-										<div
-											class="space-y-1 text-sm text-gray-600"
-										>
-											<div
-												class="flex items-center gap-2"
-											>
-												<svg
-													class="w-4 h-4 text-primary-500"
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-													/>
-												</svg>
-												<span class="font-medium"
-													>{{
-														performanceData.day_of_week
-													}},
-													{{
-														performanceData.date
-													}}</span
-												>
-											</div>
-											<div
-												class="flex items-center gap-2"
-											>
-												<svg
-													class="w-4 h-4 text-primary-500"
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-													/>
-												</svg>
-												<span
-													>Suất:
-													<strong>{{
-														performanceData.time
-													}}</strong></span
-												>
-											</div>
-											<div
-												class="flex items-center gap-2"
-											>
-												<svg
-													class="w-4 h-4 text-primary-500"
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-													/>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-													/>
-												</svg>
-												<span class="text-xs">{{
-													venueInfo.name
-												}}</span>
-											</div>
-											<div
-												v-if="showInfo.duration_minutes"
-												class="flex items-center gap-2"
-											>
-												<svg
-													class="w-4 h-4 text-primary-500"
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-													/>
-												</svg>
-												<span class="text-xs"
-													>Thời lượng:
-													{{
-														showInfo.duration_minutes
-													}}
-													phút</span
-												>
-											</div>
-										</div>
-									</div>
-								</div>
-
-								<!-- Check-in Info -->
-								<div
-									v-if="venueInfo.checkin_minutes_before"
-									class="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3"
-								>
-									<div
-										class="flex items-center gap-2 text-amber-800 text-xs"
-									>
-										<svg
-											class="w-4 h-4"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-											/>
-										</svg>
-										<span
-											>Vui lòng có mặt trước
-											<strong
-												>{{
-													venueInfo.checkin_minutes_before
-												}}
-												phút</strong
-											></span
-										>
-									</div>
-								</div>
-							</div>
-
-							<!-- Layout Image Button -->
+							<!-- Zoom Controls - Top Left Corner -->
 							<div
-								v-if="venueInfo.layout_image_url"
-								class="mb-4 pb-4 border-b"
+								class="absolute top-4 left-4 z-20 flex flex-col gap-2"
 							>
 								<button
-									@click="showLayoutModal = true"
-									class="w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-600 transition-all flex items-center justify-center gap-2"
+									@click="handleZoomIn"
+									class="bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-lg shadow-lg border-2 border-gray-200 transition-all hover:scale-110 active:scale-95"
+									title="Phóng to"
 								>
 									<svg
 										class="w-5 h-5"
@@ -569,30 +75,18 @@
 											stroke-linecap="round"
 											stroke-linejoin="round"
 											stroke-width="2"
-											d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+											d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"
 										/>
 									</svg>
-									Xem sơ đồ nhà hát
 								</button>
-							</div>
 
-							<!-- Selected Seats -->
-							<div class="mb-4 pb-4 border-b">
-								<h4
-									class="font-semibold mb-2 text-gray-700 flex items-center justify-between"
-								>
-									<span>Ghế đã chọn</span>
-									<span
-										class="text-sm font-normal text-gray-500"
-										>({{ selectedSeats.length }}/8)</span
-									>
-								</h4>
-								<div
-									v-if="selectedSeats.length === 0"
-									class="text-sm text-gray-400 text-center py-6 bg-gray-50 rounded-lg"
+								<button
+									@click="handleZoomOut"
+									class="bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-lg shadow-lg border-2 border-gray-200 transition-all hover:scale-110 active:scale-95"
+									title="Thu nhỏ"
 								>
 									<svg
-										class="w-12 h-12 mx-auto mb-2 text-gray-300"
+										class="w-5 h-5"
 										fill="none"
 										stroke="currentColor"
 										viewBox="0 0 24 24"
@@ -601,185 +95,1026 @@
 											stroke-linecap="round"
 											stroke-linejoin="round"
 											stroke-width="2"
-											d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+											d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"
 										/>
 									</svg>
-									<p>Chưa chọn ghế nào</p>
-								</div>
-								<div
-									v-else
-									class="space-y-2 max-h-56 overflow-y-auto pr-2"
+								</button>
+
+								<!-- <button
+									@click="handleResetView"
+									class="bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-lg shadow-lg border-2 border-gray-200 transition-all hover:scale-110 active:scale-95"
+									title="Đặt lại vị trí"
 								>
-									<div
-										v-for="seat in selectedSeats"
-										:key="seat.id"
-										class="flex justify-between items-center text-sm bg-gradient-to-r from-primary-50 to-purple-50 p-3 rounded-lg border border-primary-200"
+									<svg
+										class="w-5 h-5"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
 									>
-										<span class="font-bold text-gray-800">{{
-											seat.full_label
-										}}</span>
-										<span
-											class="text-primary-600 font-bold"
-											>{{ formatPrice(seat.price) }}</span
-										>
-									</div>
-								</div>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+										/>
+									</svg>
+								</button> -->
 							</div>
 
-							<!-- Total -->
-							<div class="mb-4 pb-4 border-b">
-								<div
-									class="flex justify-between items-center bg-gradient-to-r from-primary-50 to-purple-50 p-4 rounded-lg"
-								>
-									<span
-										class="font-bold text-gray-700 text-lg"
-										>Tổng tiền:</span
-									>
-									<span
-										class="text-2xl font-bold text-primary-600"
-										>{{ formatPrice(totalAmount) }}</span
-									>
-								</div>
-							</div>
+							<div class=""></div>
 
-							<!-- Timer -->
 							<div
-								v-if="timeLeft > 0"
-								class="mb-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border-2 border-yellow-300"
+								class="h-full p-6 flex items-center justify-center"
+								id="seat-map-container"
+								@wheel="handleWheel"
+								@mousedown="handleMouseDown"
+								@mousemove="handleMouseMove"
+								@mouseup="handleMouseUp"
+								@mouseleave="handleMouseLeave"
+								@touchstart="handleTouchStart"
+								@touchmove="handleTouchMove"
+								@touchend="handleTouchEnd"
+								:style="{
+									cursor: isDragging ? 'grabbing' : 'grab',
+									userSelect: 'none',
+									touchAction: 'none',
+								}"
 							>
 								<div
-									class="text-sm text-yellow-800 text-center"
+									:class="[
+										'ease-out',
+										{
+											'transition-transform duration-200':
+												!isDragging,
+											'transition-transform duration-500':
+												zoomLevel <= 0.25,
+										},
+									]"
+									:style="{
+										transform: `translate(${panX}px, ${panY}px) scale(${zoomLevel})`,
+										transformOrigin: 'center center',
+										minWidth: 'fit-content',
+										margin: '0 auto',
+									}"
 								>
-									<div class="font-semibold mb-1">
-										⏱️ Thời gian giữ ghế
+									<!-- Stage -->
+									<div class="mb-12 flex justify-center">
+										<div
+											class="relative"
+											:style="{ width: stageWidth }"
+										>
+											<div
+												class="absolute -top-8 left-1/2 transform -translate-x-1/2 w-3/4 h-16 bg-gradient-radial from-yellow-200/30 via-transparent to-transparent blur-xl"
+											></div>
+											<div
+												class="relative bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white py-6 px-8 rounded-t-2xl text-center shadow-2xl border-t-4 border-yellow-500/50"
+											>
+												<div
+													class="absolute inset-0 bg-gradient-to-b from-red-900/20 to-transparent rounded-t-2xl"
+												></div>
+												<div class="relative z-10">
+													<div
+														class="text-4xl font-bold tracking-wider mb-1 text-yellow-100"
+													>
+														SÂN KHẤU
+													</div>
+													<div
+														class="text-xl opacity-75 tracking-widest text-yellow-200/70"
+													>
+														STAGE
+													</div>
+												</div>
+												<div
+													class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"
+												></div>
+											</div>
+											<div
+												class="h-2 bg-gradient-to-b from-gray-700 to-gray-600 rounded-b-sm shadow-lg"
+											></div>
+										</div>
 									</div>
+
+									<!-- Main area with LG -->
 									<div
-										class="text-2xl font-bold text-orange-600"
+										class="flex items-start justify-between gap-20"
 									>
-										{{ formatTime(timeLeft) }}
+										<!-- LG Left -->
+										<div
+											v-if="logeLeftSection"
+											class="flex-shrink-0"
+											style="width: 50px"
+										>
+											<div
+												:style="{
+													marginTop: lgMarginTop,
+												}"
+											>
+												<div
+													class="text-center mb-2 text-xs font-bold text-gray-500"
+												>
+													LG
+												</div>
+												<div
+													class="flex flex-col gap-2"
+												>
+													<button
+														v-for="seat in logeLeftSection.seats"
+														:key="seat.id"
+														@click="
+															toggleSeat(seat)
+														"
+														:disabled="
+															seat.status !==
+																'available' &&
+															!isSelected(seat)
+														"
+														:class="[
+															'w-12 h-12 text-xs font-bold rounded-lg border-2 transition-all duration-200',
+															getSeatClass(seat),
+														]"
+														:style="{
+															backgroundColor:
+																getSeatBackgroundColor(
+																	seat
+																),
+															borderColor:
+																getSeatBorderColor(
+																	seat
+																),
+														}"
+														@mouseenter="
+															showSeatTooltip(
+																seat,
+																$event
+															)
+														"
+														@mouseleave="
+															hideSeatTooltip
+														"
+													>
+														{{
+															seat.display_number
+														}}
+													</button>
+												</div>
+											</div>
+										</div>
+
+										<!-- Main Sections -->
+										<div
+											class="flex-1"
+											style="
+												max-width: 1000px;
+												margin: 0 260px;
+											"
+										>
+											<div
+												v-for="section in mainSections"
+												:key="section.id"
+												class="mb-10"
+											>
+												<div class="text-center mb-6">
+													<div
+														class="inline-block bg-gradient-to-r from-primary-500 to-purple-500 text-white px-6 py-2 rounded-full shadow-lg"
+													>
+														<h3
+															class="font-bold text-lg tracking-wide"
+														>
+															{{ section.name }}
+														</h3>
+													</div>
+												</div>
+
+												<div
+													class="flex flex-col items-center"
+												>
+													<div
+														v-for="row in section.rows"
+														:key="row.label"
+														:ref="
+															(el) => {
+																if (el)
+																	rowRefs[
+																		`${section.id}-${row.label}`
+																	] = el;
+															}
+														"
+														class="flex items-center justify-center"
+														:style="{
+															marginBottom:
+																row.spacing_after
+																	? `${row.spacing_after}px`
+																	: '16px',
+														}"
+													>
+														<span
+															class="w-12 text-right mr-6 font-bold text-gray-600 text-base"
+														>
+															{{ row.label }}
+														</span>
+
+														<div
+															class="flex justify-center"
+														>
+															<div
+																v-if="
+																	row.seats
+																		.style ===
+																	'center_out'
+																"
+																class="flex gap-2 items-center"
+															>
+																<button
+																	v-for="seat in row
+																		.seats
+																		.oddSeats"
+																	:key="
+																		seat.id
+																	"
+																	@click="
+																		toggleSeat(
+																			seat
+																		)
+																	"
+																	:disabled="
+																		seat.status !==
+																			'available' &&
+																		!isSelected(
+																			seat
+																		)
+																	"
+																	:class="[
+																		'w-10 h-10 text-sm font-bold rounded-lg border-2 transition-all duration-200',
+																		getSeatClass(
+																			seat
+																		),
+																	]"
+																	:style="{
+																		backgroundColor:
+																			getSeatBackgroundColor(
+																				seat
+																			),
+																		borderColor:
+																			getSeatBorderColor(
+																				seat
+																			),
+																		marginRight:
+																			seat.spacing_after
+																				? `${seat.spacing_after}px`
+																				: '3px',
+																	}"
+																	@mouseenter="
+																		showSeatTooltip(
+																			seat,
+																			$event
+																		)
+																	"
+																	@mouseleave="
+																		hideSeatTooltip
+																	"
+																>
+																	{{
+																		seat.display_number
+																	}}
+																</button>
+
+																<div
+																	class="w-12 flex items-center justify-center"
+																>
+																	<div
+																		class="w-px h-8 bg-gradient-to-b from-transparent via-gray-300 to-transparent"
+																	></div>
+																</div>
+
+																<button
+																	v-for="seat in row
+																		.seats
+																		.evenSeats"
+																	:key="
+																		seat.id
+																	"
+																	@click="
+																		toggleSeat(
+																			seat
+																		)
+																	"
+																	:disabled="
+																		seat.status !==
+																			'available' &&
+																		!isSelected(
+																			seat
+																		)
+																	"
+																	:class="[
+																		'w-10 h-10 text-sm font-bold rounded-lg border-2 transition-all duration-200',
+																		getSeatClass(
+																			seat
+																		),
+																	]"
+																	:style="{
+																		backgroundColor:
+																			getSeatBackgroundColor(
+																				seat
+																			),
+																		borderColor:
+																			getSeatBorderColor(
+																				seat
+																			),
+																		marginRight:
+																			seat.spacing_after
+																				? `${seat.spacing_after}px`
+																				: '3px',
+																	}"
+																	@mouseenter="
+																		showSeatTooltip(
+																			seat,
+																			$event
+																		)
+																	"
+																	@mouseleave="
+																		hideSeatTooltip
+																	"
+																>
+																	{{
+																		seat.display_number
+																	}}
+																</button>
+															</div>
+
+															<div
+																v-else
+																class="flex gap-2 items-center"
+															>
+																<button
+																	v-for="seat in row
+																		.seats
+																		.seats"
+																	:key="
+																		seat.id
+																	"
+																	@click="
+																		toggleSeat(
+																			seat
+																		)
+																	"
+																	:disabled="
+																		seat.status !==
+																			'available' &&
+																		!isSelected(
+																			seat
+																		)
+																	"
+																	:class="[
+																		'w-10 h-10 text-sm font-bold rounded-lg border-2 transition-all duration-200',
+																		getSeatClass(
+																			seat
+																		),
+																	]"
+																	:style="{
+																		backgroundColor:
+																			getSeatBackgroundColor(
+																				seat
+																			),
+																		borderColor:
+																			getSeatBorderColor(
+																				seat
+																			),
+																		marginRight:
+																			seat.spacing_after
+																				? `${seat.spacing_after}px`
+																				: '3px',
+																	}"
+																	@mouseenter="
+																		showSeatTooltip(
+																			seat,
+																			$event
+																		)
+																	"
+																	@mouseleave="
+																		hideSeatTooltip
+																	"
+																>
+																	{{
+																		seat.display_number
+																	}}
+																</button>
+															</div>
+														</div>
+
+														<span
+															class="w-12 text-left ml-6 font-bold text-gray-600 text-base"
+														>
+															{{ row.label }}
+														</span>
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<!-- LG Right -->
+										<div
+											v-if="logeRightSection"
+											class="flex-shrink-0"
+											style="width: 50px"
+										>
+											<div
+												:style="{
+													marginTop: lgMarginTop,
+												}"
+											>
+												<div
+													class="text-center mb-2 text-xs font-bold text-gray-500"
+												>
+													LG
+												</div>
+												<div
+													class="flex flex-col gap-2"
+												>
+													<button
+														v-for="seat in logeRightSection.seats"
+														:key="seat.id"
+														@click="
+															toggleSeat(seat)
+														"
+														:disabled="
+															seat.status !==
+																'available' &&
+															!isSelected(seat)
+														"
+														:class="[
+															'w-12 h-12 text-xs font-bold rounded-lg border-2 transition-all duration-200',
+															getSeatClass(seat),
+														]"
+														:style="{
+															backgroundColor:
+																getSeatBackgroundColor(
+																	seat
+																),
+															borderColor:
+																getSeatBorderColor(
+																	seat
+																),
+														}"
+														@mouseenter="
+															showSeatTooltip(
+																seat,
+																$event
+															)
+														"
+														@mouseleave="
+															hideSeatTooltip
+														"
+													>
+														{{
+															seat.display_number
+														}}
+													</button>
+												</div>
+											</div>
+										</div>
 									</div>
 								</div>
 							</div>
-
-							<!-- Continue Button -->
-							<button
-								@click="continueToCustomerInfo"
-								:disabled="selectedSeats.length === 0"
-								:class="[
-									'w-full py-4 px-4 rounded-lg font-bold text-lg transition-all shadow-lg',
-									selectedSeats.length > 0
-										? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-xl transform hover:scale-105'
-										: 'bg-gray-300 text-gray-500 cursor-not-allowed',
-								]"
-							>
-								{{
-									selectedSeats.length > 0
-										? "✓ Tiếp tục"
-										: "Vui lòng chọn ghế"
-								}}
-							</button>
 						</div>
+
+						<!-- Status Legend -->
+						<!-- <div
+							class="mt-6 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-5 border border-gray-200 relative z-10"
+						>
+							<h4
+								class="font-bold mb-4 text-gray-700 text-center text-lg"
+							>
+								📌 Trạng thái ghế
+							</h4>
+							<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+								<div
+									class="flex items-center space-x-3 bg-green-50 p-3 rounded-lg border border-green-200"
+								>
+									<div
+										class="w-8 h-8 bg-green-500 rounded-lg border-2 border-green-600 shadow-sm flex-shrink-0"
+									></div>
+									<span
+										class="text-sm font-medium text-gray-700"
+										>Còn trống</span
+									>
+								</div>
+								<div
+									class="flex items-center space-x-3 bg-yellow-50 p-3 rounded-lg border border-yellow-200"
+								>
+									<div
+										class="w-8 h-8 bg-yellow-500 rounded-lg border-2 border-yellow-600 shadow-sm flex-shrink-0"
+									></div>
+									<span
+										class="text-sm font-medium text-gray-700"
+										>Đang chọn</span
+									>
+								</div>
+								<div
+									class="flex items-center space-x-3 bg-red-50 p-3 rounded-lg border border-red-200"
+								>
+									<div
+										class="w-8 h-8 bg-red-500 rounded-lg border-2 border-red-600 shadow-sm flex-shrink-0"
+									></div>
+									<span
+										class="text-sm font-medium text-gray-700"
+										>Đã bán</span
+									>
+								</div>
+								<div
+									class="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg border border-gray-200"
+								>
+									<div
+										class="w-8 h-8 bg-gray-400 rounded-lg border-2 border-gray-500 shadow-sm flex-shrink-0"
+									></div>
+									<span
+										class="text-sm font-medium text-gray-700"
+										>Đang giữ</span
+									>
+								</div>
+							</div>
+						</div> -->
+					</div>
+				</div>
+
+				<!-- Right Column: Price Categories & Booking Summary - DESKTOP ONLY -->
+
+				<div class="hidden lg:block lg:col-span-1">
+					<!-- Decorative background pattern -->
+					<!-- <div class="absolute inset-0 opacity-5">
+						<div
+							class="absolute inset-0"
+							style="
+								background-image: radial-gradient(
+									circle,
+									#000 1px,
+									transparent 1px
+								);
+								background-size: 20px 20px;
+							"
+						></div>
+					</div> -->
+
+					<!-- Enhanced Header -->
+
+					<div
+						class="mb-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl shadow-xl p-5 border-2 border-blue-100"
+					>
+						<div class="text-center relative z-10">
+							<h2
+								class="text-xl lg:text-2xl font-bold text-gray-800 mb-3 lg:mb-4 flex items-center justify-center gap-2 lg:gap-3"
+							>
+								<span class="text-2xl lg:text-3xl">🎭</span>
+								<span>{{ showInfo.name }}</span>
+							</h2>
+							<div
+								class="flex flex-wrap justify-center gap-2 lg:gap-3 text-xs"
+							>
+								<div
+									class="flex items-center gap-1.5 lg:gap-2 bg-white/80 backdrop-blur-sm px-3 lg:px-4 py-1.5 lg:py-2 rounded-full shadow-sm border border-gray-200"
+								>
+									<svg
+										class="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary-600"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+										/>
+									</svg>
+									<span class="font-semibold">{{
+										performanceData.date
+									}}</span>
+								</div>
+								<div
+									class="flex items-center gap-1.5 lg:gap-2 bg-white/80 backdrop-blur-sm px-3 lg:px-4 py-1.5 lg:py-2 rounded-full shadow-sm border border-gray-200"
+								>
+									<svg
+										class="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary-600"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+										/>
+									</svg>
+									<span class="font-semibold">{{
+										performanceData.time
+									}}</span>
+								</div>
+								<div
+									class="hidden lg:flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-200"
+								>
+									<svg
+										class="w-4 h-4 text-primary-600"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+										/>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+										/>
+									</svg>
+									<span class="font-medium">{{
+										venueInfo.name
+									}}</span>
+								</div>
+								<div
+									v-if="showInfo.duration_minutes"
+									class="hidden lg:flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-200"
+								>
+									<svg
+										class="w-4 h-4 text-primary-600"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+										/>
+									</svg>
+									<span class="font-medium"
+										>{{
+											showInfo.duration_minutes
+										}}
+										phút</span
+									>
+								</div>
+							</div>
+							<div
+								v-if="venueInfo.checkin_minutes_before"
+								class="mt-2 lg:mt-3 inline-block"
+							>
+								<!-- <div
+									class="bg-amber-100/80 backdrop-blur-sm border-2 border-amber-300 rounded-full px-3 lg:px-4 py-1.5 lg:py-2 shadow-sm"
+								>
+									<span
+										class="text-xs text-amber-800 font-semibold"
+									>
+										Vé không kèm trẻ em, chương trình không
+										dành cho trẻ em dưới 6 tuổi
+									</span>
+								</div> -->
+							</div>
+						</div>
+						<div class="space-y-3">
+							<div
+								v-for="(category, code) in priceCategories"
+								:key="code"
+								class="flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-md border border-gray-100 hover:shadow-lg transition-shadow"
+							>
+								<div class="flex items-center gap-3">
+									<div
+										class="w-6 h-6 rounded-lg border-2 border-white shadow-md flex-shrink-0"
+										:style="{
+											backgroundColor: category.color,
+										}"
+									></div>
+									<div
+										class="text-sm font-semibold text-gray-800"
+									>
+										{{ category.name }}
+									</div>
+								</div>
+								<div class="text-sm text-primary-600 font-bold">
+									{{ formatPrice(category.price) }}
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div
+						class="bg-white rounded-2xl shadow-2xl p-6 sticky top-4 border-2 border-gray-100"
+					>
+						<div class="mb-4 pb-4 border-b-2 border-gray-100">
+							<h4
+								class="font-bold mb-3 text-gray-800 flex items-center gap-2"
+							>
+								<span class="text-lg">🎫</span>
+								<span>Ghế đã chọn</span>
+							</h4>
+
+							<div
+								class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"
+							>
+								<div
+									v-for="seat in selectedSeats"
+									:key="seat.id"
+									class="flex justify-between items-center text-sm bg-gradient-to-r from-primary-50 to-purple-50 p-3 rounded-xl border-2 border-primary-200 shadow-sm hover:shadow-md transition-shadow"
+								>
+									<span class="font-bold text-gray-800">{{
+										seat.full_label +
+										" - " +
+										seat.section_name
+									}}</span>
+									<span class="text-primary-600 font-bold">{{
+										formatPrice(seat.price)
+									}}</span>
+								</div>
+							</div>
+						</div>
+
+						<div class="mb-4">
+							<div
+								v-if="selectedSeats.length !== 0"
+								class="flex justify-between items-center bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl shadow-md border-2 border-green-200"
+							>
+								<span class="font-bold text-gray-700 text-lg"
+									>Tổng tiền:</span
+								>
+								<span
+									class="text-2xl font-bold text-green-600"
+									>{{ formatPrice(totalAmount) }}</span
+								>
+							</div>
+						</div>
+
+						<div
+							v-if="timeLeft > 0"
+							class="mb-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border-2 border-yellow-300 shadow-md"
+						>
+							<div class="text-sm text-yellow-800 text-center">
+								<div
+									class="font-semibold mb-2 flex items-center justify-center gap-2"
+								>
+									<span class="text-lg">⏱️</span>
+									<span>Thời gian giữ ghế</span>
+								</div>
+								<div
+									class="text-3xl font-bold text-orange-600 tabular-nums"
+								>
+									{{ formatTime(timeLeft) }}
+								</div>
+							</div>
+						</div>
+
+						<button
+							@click="continueToCustomerInfo"
+							:disabled="selectedSeats.length === 0"
+							:class="[
+								'w-full py-4 px-4 rounded-xl font-bold text-lg transition-all shadow-xl',
+								selectedSeats.length > 0
+									? 'bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 hover:shadow-2xl transform hover:scale-105 active:scale-95'
+									: 'bg-gray-200 text-gray-400 cursor-not-allowed',
+							]"
+						>
+							{{
+								selectedSeats.length > 0
+									? `Tiếp tục (${selectedSeats.length} ghế)`
+									: "Chọn ghế để tiếp tục"
+							}}
+						</button>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<!-- Layout Image Modal -->
-		<Teleport to="body">
+		<!-- Mobile Bottom Sheet -->
+		<div class="lg:hidden">
 			<div
-				v-if="showLayoutModal"
-				class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4"
-				@click="showLayoutModal = false"
+				v-if="bottomSheetState === 'expanded'"
+				class="fixed inset-0 bg-black/40 z-40 transition-opacity"
+				@click="bottomSheetState = 'minimized'"
+			></div>
+
+			<div
+				v-if="selectedSeats.length > 0"
+				class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-50 transition-transform duration-300"
+				:style="{
+					transform: getBottomSheetTransform(),
+				}"
+				@touchstart="handleBottomSheetTouchStart"
+				@touchmove="handleBottomSheetTouchMove"
+				@touchend="handleBottomSheetTouchEnd"
 			>
-				<div
-					class="relative max-w-5xl w-full bg-white rounded-lg shadow-2xl"
-					@click.stop
-				>
-					<button
-						@click="showLayoutModal = false"
-						class="absolute top-4 right-4 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors z-10"
-					>
-						<svg
-							class="w-6 h-6 text-gray-700"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
+				<div class="flex justify-center pt-3 pb-2">
+					<div class="w-12 h-1 bg-gray-300 rounded-full"></div>
+				</div>
+
+				<div v-if="bottomSheetState === 'minimized'" class="px-4 pb-4">
+					<div class="flex items-center justify-between gap-3">
+						<div
+							class="flex-1 cursor-pointer flex items-center gap-3"
+							@click="bottomSheetState = 'expanded'"
 						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M6 18L18 6M6 6l12 12"
-							/>
-						</svg>
-					</button>
-					<div class="p-6">
-						<h3 class="text-2xl font-bold mb-4 text-gray-800">
-							Sơ đồ {{ venueInfo.name }}
-						</h3>
-						<img
-							:src="venueInfo.layout_image_url"
-							alt="Venue Layout"
-							class="w-full rounded-lg shadow-lg"
-						/>
+							<span class="text-purple-600 text-xl">🎫</span>
+							<div>
+								<div class="font-bold text-gray-800">
+									{{ selectedSeats.length }} ghế đã chọn
+								</div>
+								<div class="text-sm text-gray-600">
+									{{ formatPrice(totalAmount) }}
+								</div>
+							</div>
+						</div>
+
+						<div class="text-center flex-shrink-0">
+							<div
+								class="text-lg font-bold text-orange-600 tabular-nums"
+							>
+								{{ formatTime(timeLeft) }}
+							</div>
+						</div>
+
+						<button
+							@click.stop="continueToCustomerInfo"
+							class="bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg hover:shadow-xl transform active:scale-95 transition-all flex-shrink-0"
+						>
+							Tiếp tục
+						</button>
 					</div>
 				</div>
-			</div>
-		</Teleport>
 
-		<!-- Seat Tooltip with Image -->
+				<div
+					v-if="bottomSheetState === 'expanded'"
+					class="px-4 pb-4 pt-2"
+				>
+					<div class="flex justify-center mb-3">
+						<button
+							@click="bottomSheetState = 'minimized'"
+							class="p-2 hover:bg-gray-100 rounded-full"
+						>
+							<svg
+								class="w-5 h-5 text-gray-400"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M19 9l-7 7-7-7"
+								/>
+							</svg>
+						</button>
+					</div>
+
+					<div class="grid grid-cols-4 gap-2 items-stretch mb-3">
+						<div
+							class="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border-2 border-yellow-300 p-3 text-center flex flex-col justify-center"
+						>
+							<div
+								class="text-xs text-yellow-800 font-semibold mb-1"
+							>
+								⏱️
+							</div>
+							<div
+								class="text-sm font-bold text-orange-600 mb-0.5"
+							>
+								{{ formatTime(timeLeft) }}
+							</div>
+							<div class="text-xs text-yellow-700">Giữ ghế</div>
+						</div>
+
+						<div
+							class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border-2 border-purple-300 p-3 text-center flex flex-col justify-center"
+						>
+							<div
+								class="text-xs text-purple-800 font-semibold mb-1"
+							>
+								🎫
+							</div>
+							<div
+								class="text-lg font-bold text-purple-600 mb-0.5"
+							>
+								{{ selectedSeats.length }}
+							</div>
+							<div class="text-xs text-purple-700">Đã chọn</div>
+						</div>
+
+						<div
+							class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-green-300 p-3 text-center flex flex-col justify-center"
+						>
+							<div
+								class="text-xs text-green-800 font-semibold mb-1"
+							>
+								💰
+							</div>
+							<div
+								class="text-sm font-bold text-green-600 mb-0.5 leading-tight"
+							>
+								{{ (totalAmount / 1000).toFixed(0) }}K
+							</div>
+							<div class="text-xs text-green-700">Tổng tiền</div>
+						</div>
+
+						<button
+							@click="continueToCustomerInfo"
+							class="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform active:scale-95 transition-all flex items-center justify-center px-2"
+						>
+							Tiếp tục →
+						</button>
+					</div>
+
+					<details class="mt-3">
+						<summary
+							class="text-xs text-gray-600 cursor-pointer hover:text-gray-800 text-center py-2"
+						>
+							Xem chi tiết ghế đã chọn ▼
+						</summary>
+						<div class="space-y-2 mt-2 max-h-40 overflow-y-auto">
+							<div
+								v-for="seat in selectedSeats"
+								:key="seat.id"
+								class="flex justify-between items-center bg-gradient-to-r from-purple-50 to-blue-50 p-2 rounded-lg border border-purple-200 text-xs"
+							>
+								<div>
+									<div class="font-bold text-gray-800">
+										{{ seat.full_label }}
+									</div>
+									<div class="text-gray-600">
+										{{ seat.section_name }}
+									</div>
+								</div>
+								<div class="font-bold text-purple-600">
+									{{ formatPrice(seat.price) }}
+								</div>
+							</div>
+						</div>
+					</details>
+				</div>
+			</div>
+		</div>
+
+		<!-- Seat Tooltip -->
 		<Teleport to="body">
 			<div
 				v-if="tooltipVisible"
 				:style="tooltipStyle"
-				class="fixed z-50 bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl shadow-2xl pointer-events-none border-2 border-gray-700"
-				style="min-width: 220px"
+				class="fixed z-50 pointer-events-none animate-fade-in"
 			>
-				<!-- Seat Image -->
 				<div
-					v-if="tooltipData.seat_image_url"
-					class="w-full h-32 rounded-t-lg overflow-hidden"
+					class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white rounded-2xl shadow-2xl border-2 border-gray-600 overflow-hidden"
+					style="min-width: 240px; max-width: 280px"
 				>
-					<img
-						:src="tooltipData.seat_image_url"
-						alt="Seat Image"
-						class="w-full h-full object-cover"
-					/>
-				</div>
-
-				<!-- Seat Info -->
-				<div class="p-4">
-					<div class="font-bold text-xl mb-2 text-yellow-300">
-						{{ tooltipData.full_label }}
+					<div
+						v-if="tooltipData.seat_image_url"
+						class="w-full h-36 overflow-hidden"
+					>
+						<img
+							:src="tooltipData.seat_image_url"
+							alt="Seat View"
+							class="w-full h-full object-cover"
+						/>
 					</div>
-					<div class="space-y-1 text-sm">
-						<div class="flex items-center justify-between">
-							<span class="text-gray-300">Giá:</span>
-							<span class="font-bold text-green-400 text-lg">{{
-								formatPrice(tooltipData.price)
-							}}</span>
+
+					<div class="p-4">
+						<div
+							class="font-bold text-xl mb-3 text-yellow-300 flex items-center gap-2"
+						>
+							<span>🎫</span>
+							<span>{{ tooltipData.full_label }}</span>
 						</div>
-						<div class="flex items-center justify-between">
-							<span class="text-gray-300">Loại:</span>
-							<span
-								class="font-semibold"
-								:style="{
-									color: tooltipData.price_category_color,
-								}"
+						<div class="space-y-2 text-sm">
+							<div
+								class="flex items-center justify-between bg-white/10 rounded-lg p-2"
 							>
-								{{ tooltipData.effective_price_category_name }}
-							</span>
-						</div>
-						<div
-							v-if="tooltipData.has_custom_price_category"
-							class="text-xs text-orange-300 mt-2 bg-orange-900 bg-opacity-30 rounded px-2 py-1 text-center"
-						>
-							⭐ Giá đặc biệt
-						</div>
-						<div
-							class="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-700"
-						>
-							{{ getSeatStatusText(tooltipData.status) }}
+								<span class="text-gray-300">Giá:</span>
+								<span
+									class="font-bold text-green-400 text-lg"
+									>{{ formatPrice(tooltipData.price) }}</span
+								>
+							</div>
+							<div
+								class="flex items-center justify-between bg-white/10 rounded-lg p-2"
+							>
+								<span class="text-gray-300">Loại:</span>
+								<span
+									class="font-semibold"
+									:style="{
+										color: tooltipData.price_category_color,
+									}"
+								>
+									{{
+										tooltipData.effective_price_category_name
+									}}
+								</span>
+							</div>
+							<div
+								class="text-xs text-gray-400 pt-2 border-t border-gray-700 text-center"
+							>
+								{{ getSeatStatusText(tooltipData.status) }}
+							</div>
 						</div>
 					</div>
 				</div>
@@ -789,15 +1124,24 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
+import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
+import { useRouter, useRoute, onBeforeRouteLeave } from "vue-router";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { useBookingStore } from "../stores/booking";
 import { bookingAPI } from "../api/booking";
+import { useToast } from "vue-toastification";
+import { useBookingCleanup } from "@/composables/useBookingCleanup";
 
+const { cleanup } = useBookingCleanup({
+	shouldRelease: true,
+	excludeRoutes: ["/booking/confirmation"],
+});
+const toast = useToast();
 const router = useRouter();
 const route = useRoute();
 const bookingStore = useBookingStore();
+
+const isMobile = ref(window.innerWidth < 1024);
 
 // State
 const loading = ref(true);
@@ -809,16 +1153,64 @@ const timeLeft = ref(0);
 const showLayoutModal = ref(false);
 let timer = null;
 
+// Zoom and Pan state
+const zoomLevel = ref(0.29);
+const panX = ref(0);
+const panY = ref(-770);
+const initialZoomLevel = ref(0.29);
+const initialPanX = ref(0);
+const initialPanY = ref(-770);
+
+const isDragging = ref(false);
+const dragStart = ref({ x: 0, y: 0 });
+const lastTouchDistance = ref(0);
+const lastTouchCenter = ref({ x: 0, y: 0 });
+
 // Tooltip state
 const tooltipVisible = ref(false);
 const tooltipData = ref({});
 const tooltipStyle = ref({});
+let tooltipTimer = null;
+
+// Row refs for calculating stage width
+const rowRefs = ref({});
+
+// Mobile bottom sheet state
+const bottomSheetState = ref("minimized");
+const touchStart = ref(null);
+const touchOffset = ref(0);
+
+// Zoom instructions state
+const showZoomInstructions = ref(false);
+const instructionsClosed = ref(false);
 
 // Computed properties
 const venueInfo = computed(() => seatMap.value?.venue || {});
 const showInfo = computed(() => seatMap.value?.show || {});
 const performanceData = computed(() => seatMap.value?.performance || {});
 const priceCategories = computed(() => seatMap.value?.price_categories || {});
+
+const goBack = async () => {
+	await cleanup();
+	router.push("/");
+};
+
+const stageWidth = computed(() => {
+	if (Object.keys(rowRefs.value).length === 0) return "90%";
+
+	let maxWidth = 0;
+	Object.values(rowRefs.value).forEach((rowEl) => {
+		if (rowEl && rowEl.offsetWidth) {
+			const seatsContainer = rowEl.querySelector(".flex.justify-center");
+			if (seatsContainer) {
+				const width = seatsContainer.offsetWidth;
+				if (width > maxWidth) maxWidth = width;
+			}
+		}
+	});
+
+	return maxWidth > 0 ? `${maxWidth + 40}px` : "90%";
+});
 
 const seatsBySections = computed(() => {
 	if (!seatMap.value) return [];
@@ -839,6 +1231,8 @@ const seatsBySections = computed(() => {
 				label: seat.row,
 				seats: [],
 				numbering_style: seat.numbering_style,
+				position_y: seat.row_position_y,
+				spacing_after: seat.row_spacing_after,
 			};
 		}
 
@@ -852,41 +1246,49 @@ const seatsBySections = computed(() => {
 				...row,
 				seats: sortSeatsForDisplay(row.seats, row.numbering_style),
 			}))
-			.sort((a, b) => {
-				const order = [
-					"A",
-					"B",
-					"C",
-					"D",
-					"E",
-					"F",
-					"G",
-					"H",
-					"I",
-					"J",
-					"K",
-					"L",
-					"M",
-					"N",
-					"O",
-					"P",
-					"Q",
-					"R",
-					"S",
-					"T",
-					"U",
-					"V",
-					"W",
-					"X",
-					"Y",
-					"Z",
-					"AA",
-					"BB",
-					"CC",
-				];
-				return order.indexOf(a.label) - order.indexOf(b.label);
-			}),
+			.sort((a, b) => a.position_y - b.position_y),
 	}));
+});
+
+const mainSections = computed(() => {
+	if (!seatsBySections.value) return [];
+	return seatsBySections.value.filter(
+		(s) => s.id !== "loge_left" && s.id !== "loge_right"
+	);
+});
+
+const logeLeftSection = computed(() => {
+	if (!seatsBySections.value) return null;
+	const section = seatsBySections.value.find((s) => s.id === "loge_left");
+	if (!section || !section.rows || section.rows.length === 0) return null;
+
+	const row = section.rows[0];
+	let seats =
+		row.seats.style === "linear"
+			? row.seats.seats || []
+			: [
+					...(row.seats.oddSeats || []),
+					...(row.seats.evenSeats || []),
+			  ].sort((a, b) => parseInt(a.number) - parseInt(b.number));
+
+	return { id: section.id, name: section.name, seats };
+});
+
+const logeRightSection = computed(() => {
+	if (!seatsBySections.value) return null;
+	const section = seatsBySections.value.find((s) => s.id === "loge_right");
+	if (!section || !section.rows || section.rows.length === 0) return null;
+
+	const row = section.rows[0];
+	let seats =
+		row.seats.style === "linear"
+			? row.seats.seats || []
+			: [
+					...(row.seats.oddSeats || []),
+					...(row.seats.evenSeats || []),
+			  ].sort((a, b) => parseInt(a.number) - parseInt(b.number));
+
+	return { id: section.id, name: section.name, seats };
 });
 
 const sortSeatsForDisplay = (seats, numberingStyle) => {
@@ -933,12 +1335,197 @@ const totalAmount = computed(() => {
 	);
 });
 
+const lgMarginTop = computed(() => {
+	const rowHeight = window.innerWidth < 768 ? 35 : 45;
+	const startFromRow = 24;
+	return `${startFromRow * rowHeight}px`;
+});
+
+// Wheel zoom for desktop
+const handleWheel = (event) => {
+	event.preventDefault();
+	const delta = event.deltaY * -0.0003;
+	const newZoom = Math.max(
+		isMobile.value ? 0.15 : 0.25,
+		Math.min(2, zoomLevel.value + delta)
+	);
+
+	if (newZoom !== zoomLevel.value) {
+		const container = event.currentTarget;
+		const rect = container.getBoundingClientRect();
+		const mouseX = event.clientX - rect.left;
+		const mouseY = event.clientY - rect.top;
+
+		const oldZoom = zoomLevel.value;
+		zoomLevel.value = newZoom;
+
+		const zoomRatio = newZoom / oldZoom - 1;
+		panX.value -= (mouseX - rect.width / 2 - panX.value) * zoomRatio;
+		panY.value -= (mouseY - rect.height / 2 - panY.value) * zoomRatio;
+	}
+};
+
+// Mouse pan functions for desktop
+const handleMouseDown = (event) => {
+	isDragging.value = true;
+	dragStart.value = {
+		x: event.clientX - panX.value,
+		y: event.clientY - panY.value,
+	};
+	event.currentTarget.style.cursor = "grabbing";
+};
+
+const handleMouseMove = (event) => {
+	if (isDragging.value) {
+		panX.value = event.clientX - dragStart.value.x;
+		panY.value = event.clientY - dragStart.value.y;
+	}
+};
+
+const handleMouseUp = (event) => {
+	if (isDragging.value) {
+		isDragging.value = false;
+		event.currentTarget.style.cursor = "grab";
+	}
+};
+
+const handleMouseLeave = (event) => {
+	if (isDragging.value) {
+		isDragging.value = false;
+		event.currentTarget.style.cursor = "grab";
+	}
+};
+
+// Touch events for mobile
+const getTouchDistance = (touches) => {
+	const dx = touches[0].clientX - touches[1].clientX;
+	const dy = touches[0].clientY - touches[1].clientY;
+	return Math.sqrt(dx * dx + dy * dy);
+};
+
+const getTouchCenter = (touches) => {
+	return {
+		x: (touches[0].clientX + touches[1].clientX) / 2,
+		y: (touches[0].clientY + touches[1].clientY) / 2,
+	};
+};
+
+const handleTouchStart = (event) => {
+	if (event.touches.length === 1) {
+		isDragging.value = true;
+		dragStart.value = {
+			x: event.touches[0].clientX - panX.value,
+			y: event.touches[0].clientY - panY.value,
+		};
+	} else if (event.touches.length === 2) {
+		event.preventDefault();
+		lastTouchDistance.value = getTouchDistance(event.touches);
+		lastTouchCenter.value = getTouchCenter(event.touches);
+	}
+};
+
+const handleTouchMove = (event) => {
+	if (event.touches.length === 1 && isDragging.value) {
+		panX.value = event.touches[0].clientX - dragStart.value.x;
+		panY.value = event.touches[0].clientY - dragStart.value.y;
+	} else if (event.touches.length === 2) {
+		event.preventDefault();
+		const currentDistance = getTouchDistance(event.touches);
+		const currentCenter = getTouchCenter(event.touches);
+
+		if (lastTouchDistance.value > 0) {
+			const scale = currentDistance / lastTouchDistance.value;
+			const newZoom = Math.max(
+				isMobile.value ? 0.15 : 0.25,
+				Math.min(2, zoomLevel.value * scale)
+			);
+
+			if (newZoom !== zoomLevel.value) {
+				const container = event.currentTarget;
+				const rect = container.getBoundingClientRect();
+
+				const oldZoom = zoomLevel.value;
+				zoomLevel.value = newZoom;
+
+				const zoomRatio = newZoom / oldZoom - 1;
+				panX.value -=
+					(currentCenter.x -
+						rect.left -
+						rect.width / 2 -
+						panX.value) *
+					zoomRatio;
+				panY.value -=
+					(currentCenter.y -
+						rect.top -
+						rect.height / 2 -
+						panY.value) *
+					zoomRatio;
+			}
+		}
+
+		lastTouchDistance.value = currentDistance;
+		lastTouchCenter.value = currentCenter;
+	}
+};
+
+const handleTouchEnd = (event) => {
+	if (event.touches.length === 0) {
+		isDragging.value = false;
+		lastTouchDistance.value = 0;
+	} else if (event.touches.length === 1) {
+		lastTouchDistance.value = 0;
+		dragStart.value = {
+			x: event.touches[0].clientX - panX.value,
+			y: event.touches[0].clientY - panY.value,
+		};
+	}
+};
+
+// Bottom sheet handlers
+const getBottomSheetTransform = () => {
+	if (bottomSheetState.value === "minimized") {
+		return `translateY(calc(100% - 80px + ${touchOffset.value}px))`;
+	}
+	if (bottomSheetState.value === "expanded") {
+		return `translateY(${touchOffset.value}px)`;
+	}
+	return "translateY(100%)";
+};
+
+const handleBottomSheetTouchStart = (e) => {
+	touchStart.value = e.touches[0].clientY;
+};
+
+const handleBottomSheetTouchMove = (e) => {
+	if (touchStart.value === null) return;
+	const currentTouch = e.touches[0].clientY;
+	const diff = currentTouch - touchStart.value;
+
+	if (bottomSheetState.value === "expanded" && diff > 0) {
+		touchOffset.value = Math.min(diff, 100);
+	} else if (bottomSheetState.value === "minimized" && diff < 0) {
+		touchOffset.value = Math.max(diff, -100);
+	}
+};
+
+const handleBottomSheetTouchEnd = () => {
+	if (Math.abs(touchOffset.value) > 50) {
+		if (touchOffset.value > 0 && bottomSheetState.value === "expanded") {
+			bottomSheetState.value = "minimized";
+		} else if (
+			touchOffset.value < 0 &&
+			bottomSheetState.value === "minimized"
+		) {
+			bottomSheetState.value = "expanded";
+		}
+	}
+	touchStart.value = null;
+	touchOffset.value = 0;
+};
+
 // Seat styling
 const getSeatBackgroundColor = (seat) => {
-	if (isSelected(seat)) {
-		return "#EAB308";
-	}
-
+	if (isSelected(seat)) return "#EAB308";
 	switch (seat.status) {
 		case "available":
 			return seat.price_category_color || "#10B981";
@@ -952,27 +1539,22 @@ const getSeatBackgroundColor = (seat) => {
 };
 
 const getSeatBorderColor = (seat) => {
-	if (isSelected(seat)) {
-		return "#CA8A04";
-	}
+	if (isSelected(seat)) return "#CA8A04";
 	return seat.price_category_color || "#10B981";
 };
 
 const getSeatClass = (seat) => {
 	const classes = [];
-
 	if (seat.status === "available") {
 		classes.push(
-			"hover:scale-110 cursor-pointer shadow-md hover:shadow-lg"
+			"hover:scale-110 cursor-pointer shadow-md hover:shadow-xl"
 		);
 	} else if (!isSelected(seat)) {
 		classes.push("cursor-not-allowed opacity-60");
 	}
-
 	if (isSelected(seat)) {
 		classes.push("ring-4 ring-yellow-400 scale-110 shadow-xl");
 	}
-
 	return classes.join(" ");
 };
 
@@ -982,20 +1564,33 @@ const isSelected = (seat) => {
 
 // Tooltip functions
 const showSeatTooltip = (seat, event) => {
+	if (tooltipTimer) {
+		clearTimeout(tooltipTimer);
+		tooltipTimer = null;
+	}
+
 	tooltipVisible.value = true;
 	tooltipData.value = seat;
 
 	const rect = event.target.getBoundingClientRect();
-	const tooltipWidth = 220;
-
 	tooltipStyle.value = {
 		left: `${rect.left + rect.width / 2}px`,
 		top: `${rect.top - 10}px`,
 		transform: "translate(-50%, -100%)",
 	};
+
+	if (window.innerWidth < 1024) {
+		tooltipTimer = setTimeout(() => {
+			hideSeatTooltip();
+		}, 3000);
+	}
 };
 
 const hideSeatTooltip = () => {
+	if (tooltipTimer) {
+		clearTimeout(tooltipTimer);
+		tooltipTimer = null;
+	}
 	tooltipVisible.value = false;
 };
 
@@ -1009,7 +1604,52 @@ const getSeatStatusText = (status) => {
 	return statusMap[status] || status;
 };
 
-// Seat selection
+const loadSessionReservations = async () => {
+	try {
+		const response = await bookingAPI.getSessionReservations(
+			performanceInfo.value.id,
+			bookingStore.sessionId
+		);
+
+		if (response.data.seats && response.data.seats.length > 0) {
+			console.log("✅ Restored", response.data.seats.length, "seats");
+
+			selectedSeats.value = response.data.seats;
+			bookingStore.selectedSeats = response.data.seats;
+
+			reservationExpiry.value = new Date(response.data.expires_at);
+			bookingStore.reservationExpiry = response.data.expires_at;
+
+			sessionStorage.setItem(
+				"selectedSeats",
+				JSON.stringify(response.data.seats)
+			);
+			sessionStorage.setItem(
+				"reservationExpiry",
+				response.data.expires_at
+			);
+
+			startTimer();
+
+			// Show success toast
+			toast.success(`Đã khôi phục ${response.data.seats.length} ghế`);
+			return true;
+		} else {
+			// No reservations - clean up
+			console.log("No reservations found");
+			selectedSeats.value = [];
+			reservationExpiry.value = null;
+			sessionStorage.removeItem("selectedSeats");
+			sessionStorage.removeItem("reservationExpiry");
+			return false;
+		}
+	} catch (error) {
+		// Silent fail - just log, don't show toast
+		console.error("Failed to load reservations:", error);
+		return false;
+	}
+};
+
 const toggleSeat = async (seat) => {
 	if (seat.status !== "available" && !isSelected(seat)) return;
 
@@ -1020,12 +1660,19 @@ const toggleSeat = async (seat) => {
 
 		try {
 			await bookingAPI.releaseSeats([seat.id], bookingStore.sessionId);
+
+			sessionStorage.setItem(
+				"selectedSeats",
+				JSON.stringify(selectedSeats.value)
+			);
+			bookingStore.selectedSeats = selectedSeats.value;
 		} catch (error) {
 			console.error("Failed to release seat:", error);
+			toast.error("Không thể bỏ chọn ghế");
 		}
 	} else {
 		if (selectedSeats.value.length >= 8) {
-			alert("Bạn chỉ có thể chọn tối đa 8 ghế");
+			toast.warning("Bạn chỉ có thể chọn tối đa 8 ghế");
 			return;
 		}
 
@@ -1037,11 +1684,32 @@ const toggleSeat = async (seat) => {
 			);
 
 			selectedSeats.value = response.data.seats;
-			reservationExpiry.value = new Date(response.data.expires_at);
+			bookingStore.selectedSeats = response.data.seats;
 
-			startTimer();
+			if (!reservationExpiry.value) {
+				reservationExpiry.value = new Date(response.data.expires_at);
+				sessionStorage.setItem(
+					"reservationExpiry",
+					response.data.expires_at
+				);
+				bookingStore.reservationExpiry = response.data.expires_at;
+				startTimer();
+			}
+
+			sessionStorage.setItem(
+				"selectedSeats",
+				JSON.stringify(selectedSeats.value)
+			);
 		} catch (error) {
-			alert("Không thể giữ ghế này");
+			console.error("Failed to reserve seat:", error);
+
+			const errorMsg =
+				error.response?.data?.error || "Không thể giữ ghế này";
+			toast.error(errorMsg);
+
+			if (errorMsg.includes("quá 8 ghế")) {
+				await loadSessionReservations();
+			}
 		}
 	}
 };
@@ -1052,38 +1720,93 @@ const startTimer = () => {
 	timer = setInterval(() => {
 		if (reservationExpiry.value) {
 			const now = new Date();
-			const diff = Math.floor((reservationExpiry.value - now) / 1000);
+			const expiry = new Date(reservationExpiry.value);
+			const diff = Math.floor((expiry - now) / 1000);
 			timeLeft.value = Math.max(0, diff);
 
 			if (timeLeft.value === 0) {
 				clearInterval(timer);
 				alert("Hết thời gian giữ ghế. Vui lòng chọn lại.");
 				selectedSeats.value = [];
-				loadSeatMap();
+				reservationExpiry.value = null;
+				sessionStorage.removeItem("reservationExpiry");
+				sessionStorage.removeItem("selectedSeats");
+				bookingStore.reservationExpiry = null;
+				setTimeout(() => {
+					window.location.reload();
+				}, 500);
 			}
 		}
 	}, 1000);
 };
-
 const continueToCustomerInfo = () => {
-	if (selectedSeats.value.length > 0) {
-		bookingStore.selectedSeats = selectedSeats.value;
-		sessionStorage.setItem(
-			"selectedSeats",
-			JSON.stringify(selectedSeats.value)
-		);
-		router.push(`/booking/${route.params.showId}/customer-info`);
+	if (selectedSeats.value.length === 0) {
+		toast.warning("Vui lòng chọn ghế trước");
+		return;
 	}
+
+	console.log("🚀 [SelectSeats] Continue to CustomerInfo");
+
+	bookingStore.selectedSeats = selectedSeats.value;
+	sessionStorage.setItem(
+		"selectedSeats",
+		JSON.stringify(selectedSeats.value)
+	);
+	console.log("✅ Saved seats:", selectedSeats.value.length);
+
+	if (reservationExpiry.value) {
+		const expiryISO = reservationExpiry.value.toISOString
+			? reservationExpiry.value.toISOString()
+			: new Date(reservationExpiry.value).toISOString();
+
+		sessionStorage.setItem("reservationExpiry", expiryISO);
+		bookingStore.reservationExpiry = expiryISO;
+		console.log("✅ Saved expiry:", expiryISO);
+	}
+
+	const performanceToSave = {
+		...performanceInfo.value,
+		service_fee_per_ticket:
+			performanceInfo.value.service_fee_per_ticket ||
+			bookingStore.currentShow?.service_fee_per_ticket ||
+			0,
+		show_name:
+			performanceInfo.value.show_name || bookingStore.currentShow?.name,
+	};
+
+	sessionStorage.setItem(
+		"selectedPerformance",
+		JSON.stringify(performanceToSave)
+	);
+	// Navigate
+	router.push(`/booking/${route.params.showId}/customer-info`);
 };
 
 const loadSeatMap = async () => {
 	try {
 		const response = await bookingAPI.getSeatMap(performanceInfo.value.id);
 		seatMap.value = response.data;
-		console.log("Seat map data:", response.data);
+		await nextTick();
 	} catch (error) {
 		console.error("Failed to load seat map:", error);
 	}
+};
+
+const closeInstructions = () => {
+	instructionsClosed.value = true;
+	showZoomInstructions.value = false;
+	localStorage.setItem("zoom_instructions_seen", "true");
+};
+
+let instructionsTimer = null;
+const startInstructionsTimer = () => {
+	if (instructionsTimer) clearTimeout(instructionsTimer);
+
+	instructionsTimer = setTimeout(() => {
+		if (showZoomInstructions.value) {
+			closeInstructions();
+		}
+	}, 10000);
 };
 
 // Formatting
@@ -1100,28 +1823,293 @@ const formatTime = (seconds) => {
 	return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
 
+// Global touch handler
+const handleGlobalTouch = (event) => {
+	if (window.innerWidth >= 1024) return;
+
+	const target = event.target;
+	const isSeatButton =
+		target.closest('button[class*="w-10 h-10"]') ||
+		target.closest('button[class*="w-12 h-12"]');
+
+	if (!isSeatButton && tooltipVisible.value) {
+		hideSeatTooltip();
+	}
+};
+
+// Zoom In Handler
+const handleZoomIn = () => {
+	const newZoom = Math.min(2, zoomLevel.value + 0.1);
+	zoomLevel.value = newZoom;
+};
+
+// Zoom Out Handler
+const handleZoomOut = () => {
+	const minZoom = isMobile.value ? 0.15 : 0.25;
+	const newZoom = Math.max(minZoom, zoomLevel.value - 0.1);
+	zoomLevel.value = newZoom;
+};
+
+// Reset View Handler
+// const handleResetView = async () => {
+// 	await calculateAutoFit();
+// };
+
+const calculateAutoFit = async () => {
+	const container = document.getElementById("seat-map-container");
+	if (!container) return;
+
+	await nextTick();
+	await new Promise((resolve) => setTimeout(resolve, 100));
+
+	const containerRect = container.getBoundingClientRect();
+	const containerWidth = containerRect.width;
+	const containerHeight = containerRect.height;
+
+	const contentElement = container.querySelector('[style*="transform"]');
+	if (!contentElement) return;
+
+	zoomLevel.value = 1;
+	panX.value = 0;
+	panY.value = 0;
+
+	await nextTick();
+
+	const contentRect = contentElement.getBoundingClientRect();
+	const actualContentWidth = contentRect.width;
+	const actualContentHeight = contentRect.height;
+
+	// Padding (desktop: 60px, mobile: 20px)
+	const padding = window.innerWidth >= 1024 ? 60 : 20;
+
+	const zoomX = (containerWidth - padding * 2) / actualContentWidth;
+	const zoomY = (containerHeight - padding * 2) / actualContentHeight;
+	const optimalZoom = Math.min(zoomX, zoomY, 1);
+
+	const scaledContentWidth = actualContentWidth * optimalZoom;
+	const scaledContentHeight = actualContentHeight * optimalZoom;
+	const spaceX = containerWidth - scaledContentWidth;
+	const spaceY = containerHeight - scaledContentHeight;
+	const optimalPanX = spaceX / 2;
+	const optimalPanY = spaceY / 2;
+
+	zoomLevel.value = optimalZoom;
+	panX.value = optimalPanX;
+	panY.value = optimalPanY;
+
+	initialZoomLevel.value = optimalZoom;
+	initialPanX.value = optimalPanX;
+	initialPanY.value = optimalPanY;
+};
+
 // Lifecycle
 onMounted(async () => {
+	loading.value = true;
+
 	try {
-		const savedPerformance = sessionStorage.getItem("selectedPerformance");
-		if (savedPerformance) {
-			performanceInfo.value = JSON.parse(savedPerformance);
+		const existingSessionId = sessionStorage.getItem("session_id");
+		if (existingSessionId) {
+			bookingStore.sessionId = existingSessionId;
 		} else {
+			bookingStore.initSession();
+		}
+
+		let performanceData = null;
+		const savedPerformance = sessionStorage.getItem("selectedPerformance");
+
+		if (savedPerformance) {
+			try {
+				performanceData = JSON.parse(savedPerformance);
+			} catch (e) {
+				console.error("Failed to parse savedPerformance:", e);
+			}
+		}
+
+		if (!performanceData || !performanceData.id) {
+			await bookingStore.loadShowDetail(route.params.showId);
+
+			if (
+				!bookingStore.performances ||
+				bookingStore.performances.length === 0
+			) {
+				throw new Error("No performances available");
+			}
+
+			if (bookingStore.performances.length === 1) {
+				performanceData = bookingStore.performances[0];
+			} else {
+				toast.info("Vui lòng chọn suất diễn");
+				router.push(`/booking/${route.params.showId}`);
+				return;
+			}
+
+			performanceData.service_fee_per_ticket =
+				bookingStore.currentShow?.service_fee_per_ticket || 10000;
+			performanceData.show_name = bookingStore.currentShow?.name;
+
+			sessionStorage.setItem(
+				"selectedPerformance",
+				JSON.stringify(performanceData)
+			);
+		}
+
+		if (!performanceData || !performanceData.id) {
+			toast.error("Dữ liệu suất diễn không hợp lệ");
 			router.push(`/booking/${route.params.showId}`);
 			return;
 		}
 
+		performanceInfo.value = performanceData;
+
 		await loadSeatMap();
+
+		console.log("Checking for existing reservations...");
+		await loadSessionReservations();
 	} catch (error) {
-		console.error("Failed to load:", error);
+		console.error("SelectSeats onMounted error:", error);
+		// Only show toast for critical errors
+		if (error.message !== "No performances available") {
+			toast.error("Không thể tải dữ liệu. Vui lòng thử lại.");
+		}
 	} finally {
 		loading.value = false;
 	}
 });
 
 onUnmounted(() => {
-	if (timer) {
-		clearInterval(timer);
+	if (timer) clearInterval(timer);
+
+	if (tooltipTimer) {
+		clearTimeout(tooltipTimer);
+		tooltipTimer = null;
 	}
+
+	if (instructionsTimer) {
+		clearTimeout(instructionsTimer);
+		instructionsTimer = null;
+	}
+
+	document.removeEventListener("touchstart", handleGlobalTouch);
+});
+onBeforeRouteLeave((to, from, next) => {
+	// Nếu KHÔNG đi sang CustomerInfo thì release seats
+	if (!to.path.includes("/customer-info")) {
+		if (selectedSeats.value.length > 0 && bookingStore.sessionId) {
+			bookingAPI
+				.releaseSeats(
+					selectedSeats.value.map((s) => s.id),
+					bookingStore.sessionId
+				)
+				.catch((err) => console.error("Failed to release seats:", err));
+		}
+	}
+	next();
 });
 </script>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+	width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+	background: #f1f1f1;
+	border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+	background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+	border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: linear-gradient(180deg, #764ba2 0%, #667eea 100%);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+	display: none;
+}
+
+.no-scrollbar {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+
+#seat-map-container {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
+	overscroll-behavior: contain;
+}
+
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes scale-in {
+	from {
+		transform: scale(0.95);
+		opacity: 0;
+	}
+	to {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+.animate-fade-in {
+	animation: fade-in 0.2s ease-out;
+}
+
+.animate-scale-in {
+	animation: scale-in 0.3s ease-out;
+}
+
+/* Zoom Instructions Animations */
+.slide-up-fade-enter-active,
+.slide-up-fade-leave-active {
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-up-fade-enter-from {
+	opacity: 0;
+	transform: translateY(20px);
+}
+
+.slide-up-fade-leave-to {
+	opacity: 0;
+	transform: translateY(10px) scale(0.95);
+}
+
+.scale-fade-enter-active,
+.scale-fade-leave-active {
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scale-fade-enter-from,
+.scale-fade-leave-to {
+	opacity: 0;
+	transform: scale(0.8);
+}
+
+@keyframes float {
+	0%,
+	100% {
+		transform: translateY(0px);
+	}
+	50% {
+		transform: translateY(-5px);
+	}
+}
+
+.fixed.bottom-6.right-6 button {
+	animation: float 3s ease-in-out infinite;
+}
+</style>

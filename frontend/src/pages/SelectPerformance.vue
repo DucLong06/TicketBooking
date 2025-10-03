@@ -214,12 +214,27 @@ const selectPerformance = (performance) => {
 
 const continueToSeatSelection = () => {
 	if (selectedPerformance.value) {
+		const performanceData = {
+			...selectedPerformance.value,
+			service_fee_per_ticket: showInfo.value.service_fee_per_ticket || 0,
+			show_name: showInfo.value.name,
+		};
+
 		sessionStorage.setItem(
 			"selectedPerformance",
-			JSON.stringify(selectedPerformance.value)
+			JSON.stringify(performanceData)
 		);
+
 		router.push(`/booking/${route.params.showId}/seats`);
 	}
+};
+
+const parseRules = (rulesText) => {
+	if (!rulesText) return [];
+	return rulesText
+		.split("\n")
+		.map((rule) => rule.trim())
+		.filter((rule) => rule.length > 0);
 };
 
 onMounted(async () => {

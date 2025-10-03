@@ -5,9 +5,15 @@
 				<!-- Contact Info -->
 				<div>
 					<h3 class="text-lg font-semibold mb-4">Liên hệ</h3>
-					<p class="text-gray-300">📍 40 Hàng Bài, Hà Nội</p>
-					<p class="text-gray-300">📞 0835.661.999</p>
-					<p class="text-gray-300">✉️ contact@hoguomopera.com</p>
+					<p
+						class="text-gray-300"
+						v-if="contactInfo?.hotline_display"
+					>
+						📞 {{ contactInfo.hotline_display }}
+					</p>
+					<p class="text-gray-300" v-if="contactInfo?.support_email">
+						✉️ {{ contactInfo.support_email }}
+					</p>
 				</div>
 
 				<!-- Quick Links -->
@@ -15,19 +21,25 @@
 					<h3 class="text-lg font-semibold mb-4">Liên kết nhanh</h3>
 					<ul class="space-y-2 text-gray-300">
 						<li>
-							<a href="#" class="hover:text-white transition"
-								>Lịch diễn</a
-							>
+							<a href="/" class="hover:text-white transition">
+								Trang chủ
+							</a>
 						</li>
 						<li>
-							<a href="#" class="hover:text-white transition"
-								>Đặt vé</a
+							<a
+								href="/#shows"
+								class="hover:text-white transition"
 							>
+								Lịch diễn
+							</a>
 						</li>
 						<li>
-							<a href="#" class="hover:text-white transition"
-								>Hướng dẫn</a
+							<a
+								href="/#about"
+								class="hover:text-white transition"
 							>
+								Giới thiệu
+							</a>
 						</li>
 					</ul>
 				</div>
@@ -39,20 +51,32 @@
 					</h3>
 					<div class="flex space-x-4">
 						<a
-							href="#"
+							v-if="contactInfo?.facebook_url"
+							:href="contactInfo.facebook_url"
+							target="_blank"
+							rel="noopener noreferrer"
 							class="text-gray-300 hover:text-white transition"
-							>Facebook</a
 						>
+							Facebook
+						</a>
 						<a
-							href="#"
+							v-if="contactInfo?.instagram_url"
+							:href="contactInfo.instagram_url"
+							target="_blank"
+							rel="noopener noreferrer"
 							class="text-gray-300 hover:text-white transition"
-							>Instagram</a
 						>
+							Instagram
+						</a>
 						<a
-							href="#"
+							v-if="contactInfo?.tiktok_url"
+							:href="contactInfo.tiktok_url"
+							target="_blank"
+							rel="noopener noreferrer"
 							class="text-gray-300 hover:text-white transition"
-							>Youtube</a
 						>
+							TikTok
+						</a>
 					</div>
 				</div>
 			</div>
@@ -60,10 +84,22 @@
 			<div
 				class="border-t border-gray-700 mt-8 pt-4 text-center text-gray-400"
 			>
-				<p>&copy; 2024 Hồ Gươm Opera. All rights reserved.</p>
+				<p>
+					&copy;
+					{{ contactInfo?.copyright_text || "Theater Booking" }}
+				</p>
 			</div>
 		</div>
 	</footer>
 </template>
 
-<script setup></script>
+<script setup>
+import { onMounted } from "vue";
+import { useContact } from "@/composables/useContact";
+
+const { contactInfo, fetchContactInfo } = useContact();
+
+onMounted(async () => {
+	await fetchContactInfo();
+});
+</script>

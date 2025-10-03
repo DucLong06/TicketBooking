@@ -221,7 +221,11 @@ import QRCode from "qrcode";
 import jsPDF from "jspdf";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { bookingAPI } from "../api/booking";
+import { useToast } from "vue-toastification";
+import { useBookingStore } from "../stores/booking";
+const bookingStore = useBookingStore();
 
+const toast = useToast();
 const router = useRouter();
 const route = useRoute();
 
@@ -231,12 +235,22 @@ const bookingCode = ref("");
 const bookingData = ref({});
 const qrcodeCanvas = ref(null);
 
-// Computed
 const seatsList = computed(() => {
-	if (!bookingData.value.selectedSeats) return "";
-	return bookingData.value.selectedSeats
-		.map((seat) => `${seat.row}${seat.number}`)
-		.join(", ");
+	if (!bookingData.value?.seat_reservations) return "";
+
+	// Group by section
+	const seatsBySection = {};
+	bookingData.value.seat_reservations.forEach((seat) => {
+		const sectionName = seat.section_name || "Khán phòng chính";
+		if (!seatsBySection[sectionName]) {
+			seatsBySection[sectionName] = [];
+		}
+		seatsBySection[sectionName].push(seat.seat_label);
+	});
+
+	return Object.entries(seatsBySection)
+		.map(([section, seats]) => `${section}: ${seats.join(", ")}`)
+		.join(" | ");
 });
 
 // Methods
@@ -324,9 +338,11 @@ const sendEmail = async () => {
 		const response = await bookingAPI.resendEmail(bookingCode.value);
 
 		if (response.data.success) {
-			alert(response.data.message || "Email đã được gửi lại thành công!");
+			toast.success(
+				response.data.message || "Email đã được gửi lại thành công!"
+			);
 		} else {
-			alert(response.data.error || "Có lỗi xảy ra khi gửi email");
+			toast.error(response.data.error || "Có lỗi xảy ra khi gửi email");
 		}
 	} catch (error) {
 		console.error("Error resending email:", error);
@@ -337,9 +353,9 @@ const sendEmail = async () => {
 			error.response.data &&
 			error.response.data.error
 		) {
-			alert(error.response.data.error);
+			toast.error(error.response.data.error);
 		} else {
-			alert("Không thể gửi email. Vui lòng thử lại sau.");
+			toast.error("Không thể gửi email. Vui lòng thử lại sau.");
 		}
 	} finally {
 		isResendingEmail.value = false;
@@ -347,70 +363,88 @@ const sendEmail = async () => {
 };
 
 const goHome = () => {
-	// Clear all session data
 	sessionStorage.clear();
+
+	bookingStore.clearBooking();
+
+	bookingStore.initSession();
+
 	router.push("/");
 };
+function transformBookingData(rawData) {
+	const required = [
+		"booking_code",
+		"customer_email",
+		"performance_datetime",
+		"seat_reservations",
+	];
+	for (const field of required) {
+		if (!rawData[field]) {
+			throw new Error(`Missing required field: ${field}`);
+		}
+	}
+
+	return {
+		showInfo: { name: rawData.show_name },
+		performance: {
+			date: new Date(rawData.performance_datetime).toLocaleDateString(
+				"vi-VN"
+			),
+			time: new Date(rawData.performance_datetime).toLocaleTimeString(
+				"vi-VN",
+				{
+					hour: "2-digit",
+					minute: "2-digit",
+				}
+			),
+		},
+		customerInfo: {
+			fullName: rawData.customer_name,
+			email: rawData.customer_email,
+			phone: rawData.customer_phone,
+		},
+		amount: rawData.final_amount,
+		selectedSeats: rawData.seat_reservations.map((sr) => ({
+			id: sr.seat.id,
+			row: sr.seat.row,
+			number: sr.seat.number,
+			price: sr.price,
+		})),
+		...rawData,
+	};
+}
 
 onMounted(async () => {
 	bookingCode.value = route.params.bookingCode;
 
+	sessionStorage.removeItem("session_id");
+	sessionStorage.removeItem("selectedSeats");
+	sessionStorage.removeItem("reservationExpiry");
+	sessionStorage.removeItem("currentBooking");
+
+	bookingStore.clearBooking();
+
+	bookingStore.initSession();
+
 	try {
 		const response = await bookingAPI.getBooking(bookingCode.value);
-		const rawData = response.data;
+		bookingData.value = transformBookingData(response.data);
 
-		// Transform backend data to frontend expected structure
-		bookingData.value = {
-			showInfo: {
-				name: rawData.show_name,
-			},
-			performance: {
-				date: new Date(rawData.performance_datetime).toLocaleDateString(
-					"vi-VN"
-				),
-				time: new Date(rawData.performance_datetime).toLocaleTimeString(
-					"vi-VN",
-					{
-						hour: "2-digit",
-						minute: "2-digit",
-					}
-				),
-			},
-			customerInfo: {
-				fullName: rawData.customer_name,
-				email: rawData.customer_email,
-				phone: rawData.customer_phone,
-			},
-			amount: rawData.final_amount,
-			selectedSeats: rawData.seat_reservations.map((sr) => ({
-				id: sr.seat.id,
-				row: sr.seat.row,
-				number: sr.seat.number,
-				price: sr.price,
-			})),
-			// Keep original data for reference
-			...rawData,
-		};
-
-		// Save the transformed data to sessionStorage for backup
 		sessionStorage.setItem(
 			"bookingData",
 			JSON.stringify(bookingData.value)
 		);
 	} catch (error) {
-		console.error("Failed to load booking data:", error);
+		console.error("Failed to load booking:", error);
 
-		// Fallback to sessionStorage
 		const savedData = sessionStorage.getItem("bookingData");
-		if (savedData) {
-			bookingData.value = JSON.parse(savedData);
-		} else {
-			alert("Không tìm thấy thông tin đặt vé");
+		if (!savedData) {
+			toast.error("Không tìm thấy thông tin đặt vé");
 			router.push("/");
 			return;
 		}
-	}
 
-	// await generateQRCode();
+		bookingData.value = JSON.parse(savedData);
+	}
 });
 </script>

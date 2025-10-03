@@ -1,4 +1,3 @@
-
 import axios from 'axios'
 import { useToast } from 'vue-toastification'
 
@@ -6,7 +5,7 @@ const toast = useToast()
 
 // Create axios instance
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || '/api',  
+    baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
     timeout: 30000,
     headers: {
         'Content-Type': 'application/json',
@@ -32,16 +31,22 @@ api.interceptors.request.use(
     }
 )
 
-// Response interceptor
+// Response interceptor with skipToast support
 api.interceptors.response.use(
     response => response,
     error => {
-        if (error.response) {
-            const message = error.response.data?.error || error.response.data?.message || 'Có lỗi xảy ra'
-            toast.error(message)
-        } else {
-            toast.error('Không thể kết nối đến server')
+        // ✅ Check if this request should skip toast
+        const skipToast = error.config?.skipToast || false
+
+        if (!skipToast) {
+            if (error.response) {
+                const message = error.response.data?.error || error.response.data?.message || 'Có lỗi xảy ra'
+                toast.error(message)
+            } else {
+                toast.error('Không thể kết nối đến server')
+            }
         }
+
         return Promise.reject(error)
     }
 )

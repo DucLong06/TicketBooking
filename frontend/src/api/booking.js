@@ -48,6 +48,15 @@ export const bookingAPI = {
         return api.get(`/bookings/${bookingCode}/`)
     },
 
+    // Search for bookings
+    searchBookings(searchTerm) {
+        return api.get('/bookings/search/', {
+            params: {
+                search: searchTerm
+            }
+        })
+    },
+
     // Create payment
     createPayment(bookingCode, paymentMethod) {
         return api.post(`/bookings/${bookingCode}/payment/`, {
@@ -63,5 +72,24 @@ export const bookingAPI = {
     // Resend confirmation email
     resendEmail(bookingCode) {
         return api.post(`/bookings/${bookingCode}/resend-email/`)
-    }
+    },
+
+    // Apply discount code
+    applyDiscountCode(bookingCode, discountCode) {
+        const sessionId = sessionStorage.getItem('session_id');
+        return api.post('/discounts/apply/', {
+            booking_code: bookingCode,
+            code: discountCode,
+            session_id: sessionId
+        });
+    },
+
+    getSessionReservations(performanceId, sessionId) {
+        return api.get('/seats/session-reservations/', {
+            params: {
+                performance_id: performanceId,
+                session_id: sessionId
+            }
+        })
+    },
 }
