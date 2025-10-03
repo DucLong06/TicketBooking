@@ -86,12 +86,11 @@ INSTALLED_APPS = [
     'payments',
 ]
 
-# MIDDLEWARE - THỨ TỰ QUAN TRỌNG!
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',  # ✅ DI CHUYỂN LÊN TRƯỚC CSRF
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -192,25 +191,19 @@ CORS_ALLOW_METHODS = [
 ]
 
 
-def ensure_scheme(url):
-    if not url.startswith(('http://', 'https://')):
-        return f'http://{url}' if DEBUG else f'https://{url}'
-    return url
-
-
 CSRF_TRUSTED_ORIGINS = [
-    ensure_scheme(FRONTEND_URL),
-    ensure_scheme(BACKEND_URL),
+    FRONTEND_URL,
+    BACKEND_URL,
 ]
 
-# CSRF settings bổ sung
-CSRF_COOKIE_HTTPONLY = False  # Cần False để JavaScript có thể đọc
-CSRF_COOKIE_SAMESITE = 'Lax'  # 'Lax' hoặc 'None' nếu cross-site
-CSRF_USE_SESSIONS = False  # Dùng cookie thay vì session
 
-if not DEBUG:
-    CSRF_COOKIE_SECURE = True  # Chỉ gửi qua HTTPS
-    CSRF_COOKIE_SAMESITE = 'None'  # Cần 'None' cho cross-site với credentials
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_USE_SESSIONS = False
+
+# if not DEBUG:
+#     CSRF_COOKIE_SECURE = True
+#     CSRF_COOKIE_SAMESITE = 'None'
 
 # REST Framework settings
 REST_FRAMEWORK = {
