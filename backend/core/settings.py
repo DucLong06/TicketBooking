@@ -43,9 +43,9 @@ else:
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@example.com')
     logger.info(f"Using email host: {EMAIL_HOST} with user: {EMAIL_HOST_USER}")
 
-    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True'
-    SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False') == 'True'
-    CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False') == 'True'
+    # SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True'
+    # SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False') == 'True'
+    # CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False') == 'True'
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     DATABASES = {
@@ -180,8 +180,8 @@ REST_FRAMEWORK = {
 }
 
 # Booking settings
-BOOKING_TIMEOUT_MINUTES = 10 
-PAYMENT_TIMEOUT_MINUTES = 15 
+BOOKING_TIMEOUT_MINUTES = 10
+PAYMENT_TIMEOUT_MINUTES = 15
 
 # Email settings (config sau)
 VNP_TMNCODE = os.getenv('VNP_TMNCODE', '')

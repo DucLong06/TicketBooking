@@ -57,9 +57,6 @@
 							<p class="text-gray-600 mb-4">
 								{{ show.category }}
 							</p>
-							<p class="text-gray-600 mb-4">
-								bookingStore: {{ bookingStore.shows }} >
-							</p>
 
 							<div class="flex justify-between items-center">
 								<!-- <span class="text-primary-600 font-bold">
