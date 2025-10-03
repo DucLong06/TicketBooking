@@ -8,6 +8,7 @@ class ShowListSerializer(serializers.ModelSerializer):
     venue_name = serializers.CharField(source='venue.name', read_only=True)
     min_price = serializers.SerializerMethodField()
     max_price = serializers.SerializerMethodField()
+    poster = serializers.SerializerMethodField()
 
     class Meta:
         model = Show
@@ -15,6 +16,14 @@ class ShowListSerializer(serializers.ModelSerializer):
             'id', 'name', 'slug', 'category', 'duration_minutes',
             'description', 'poster', 'venue_name', 'min_price', 'max_price'
         ]
+
+    def get_poster(self, obj):
+        if obj.poster:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.poster.url)
+            return obj.poster.url
+        return None
 
     def get_min_price(self, obj):
         prices = PerformancePrice.objects.filter(
