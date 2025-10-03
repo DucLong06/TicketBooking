@@ -5,7 +5,6 @@ from django.shortcuts import redirect
 from django.urls import path, reverse
 from django.http import JsonResponse
 from django.db import models
-from .venue_templates import VENUE_TEMPLATES
 
 
 @admin.register(VenueLayout)

@@ -4,6 +4,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404, redirect
 from django.db import transaction
 from django.utils import timezone
+from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from logzero import logger
 from .constant import VNPAY_RESPONSE_CODES
@@ -107,7 +108,7 @@ def vnpay_return(request):
                         logger.debug(f"Failed to send email: {e}")
 
                 # Redirect to success page
-                return redirect(f'http://54.169.68.183/booking/confirmation/{booking.booking_code}')
+                return redirect(f'{settings.FRONTEND_URL}/booking/confirmation/{booking.booking_code}')
 
             else:  # Failed
                 payment.status = 'failed'
@@ -115,15 +116,15 @@ def vnpay_return(request):
                 payment.save()
 
                 error_message = VNPAY_RESPONSE_CODES.get(response_code, f'Lỗi không xác định (Mã lỗi: {response_code})')
-                failure_url = f'http://54.169.68.183/payment/failed?code={response_code}&message={error_message}'
+                failure_url = f'{settings.FRONTEND_URL}/payment/failed?code={response_code}&message={error_message}'
                 return redirect(failure_url)
 
         except Payment.DoesNotExist:
-            return redirect('http://54.169.68.183/payment/error')
+            return redirect(f'{settings.FRONTEND_URL}/payment/error')
 
     else:
         # Invalid signature
-        return redirect('http://54.169.68.183/payment/error')
+        return redirect(f'{settings.FRONTEND_URL}/payment/error')
 
 
 @api_view(['GET'])
