@@ -57,6 +57,7 @@
 							<p class="text-gray-600 mb-4">
 								{{ show.category }}
 							</p>
+
 							<div class="flex justify-between items-center">
 								<!-- <span class="text-primary-600 font-bold">
 									{{ formatPrice(show.min_price) }} -

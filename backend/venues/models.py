@@ -11,7 +11,6 @@ VENUE_TYPES = [
 
 
 class VenueLayout(models.Model):
-    """Template layout cho các loại nhà hát"""
     name = models.CharField(max_length=100, verbose_name='Tên layout')
     venue_type = models.CharField(
         max_length=20,
@@ -33,7 +32,6 @@ class VenueLayout(models.Model):
 
     @property
     def total_seats(self):
-        """Tính tổng số ghế từ config"""
         total = 0
         for floor in self.config.get('floors', []):
             for section in floor.get('sections', []):
@@ -228,7 +226,7 @@ class Section(models.Model):
 
 class PriceCategory(models.Model):
     # Keep as global model - no venue field for backward compatibility
-    name = models.CharField(max_length=100, verbose_name='Tên loại vé')
+    name = models.TextField(verbose_name='Tên loại vé')
     code = models.CharField(max_length=20, unique=True, verbose_name='Mã')
     base_price = models.DecimalField(
         max_digits=10,
@@ -265,7 +263,6 @@ class Row(models.Model):
         verbose_name='Loại giá'
     )
 
-    # NEW FIELDS
     numbering_style = models.CharField(
         max_length=20,
         choices=NUMBERING_CHOICES,
@@ -301,7 +298,6 @@ class Row(models.Model):
 
     @property
     def actual_seat_positions(self):
-        """Tính toán vị trí thực tế của ghế theo numbering system"""
         if self.numbering_style == 'center_out':
             return self._calculate_center_out_positions()
         elif self.numbering_style == 'left_to_right':
@@ -312,12 +308,10 @@ class Row(models.Model):
             return self._calculate_left_to_right_positions()
 
     def _calculate_center_out_positions(self):
-        """Tính vị trí cho center-out numbering WITH GAPS"""
         positions = {}
         seat_width = 22
         gaps = set(self.gaps) if self.gaps else set()
 
-        # 🔧 FIX: Chỉ process seats KHÔNG trong gaps
         available_seats = []
         for i in range(1, self.seat_count + 1):
             if i not in gaps:
@@ -343,7 +337,6 @@ class Row(models.Model):
         return positions
 
     def _calculate_left_to_right_positions(self):
-        """Tính vị trí cho left-to-right numbering"""
         positions = {}
         seat_width = 22
         start_x = self.center_x - (self.seat_count * seat_width // 2)
@@ -370,6 +363,30 @@ class Row(models.Model):
 
         return positions
 
+    def create_default_seats(self):
+        from venues.models import Seat
+
+        self.seats.all().delete()
+
+        positions = self.actual_seat_positions
+
+        for seat_num, pos in positions.items():
+            if seat_num in (self.gaps or []):
+                continue
+
+            Seat.objects.create(
+                row=self,
+                number=str(seat_num),              # BE number
+                display_number=str(seat_num),      # FE display (ban đầu giống BE)
+                position_x=pos['x'],
+                position_y=pos['y'],
+                price_category=self.price_category,  # Inherit từ row
+                spacing_after=0,                   # Không có spacing
+                status='active'
+            )
+
+        return self.seats.count()
+
 
 class Seat(models.Model):
     STATUS_CHOICES = [
@@ -381,14 +398,48 @@ class Seat(models.Model):
 
     row = models.ForeignKey(Row, on_delete=models.CASCADE, related_name='seats')
     number = models.CharField(max_length=10, verbose_name='Số ghế')
+
+    display_number = models.CharField(
+        max_length=10,
+        verbose_name='Số hiển thị',
+        help_text='Số ghế hiển thị trên FE (có thể khác với number trong BE)',
+        blank=True,
+        null=True
+    )
+
     position_x = models.IntegerField(default=0, verbose_name='Vị trí X')
     position_y = models.IntegerField(default=0, verbose_name='Vị trí Y')
+
+    price_category = models.ForeignKey(
+        PriceCategory,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Loại giá',
+        help_text='Để trống sẽ lấy từ hàng ghế'
+    )
+
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default='active',
         verbose_name='Trạng thái'
     )
+
+    spacing_after = models.IntegerField(
+        default=0,
+        verbose_name='Khoảng cách sau ghế (px)',
+        help_text='Khoảng trống sau ghế này (không ẩn ghế)'
+    )
+
+    seat_image = models.ImageField(
+        upload_to='seats/',
+        blank=True,
+        null=True,
+        verbose_name='Ảnh ghế thực tế',
+        help_text='Ảnh chụp ghế thực tế để khách hàng xem'
+    )
+
     is_accessible = models.BooleanField(default=False, verbose_name='Ghế người khuyết tật')
 
     class Meta:
@@ -398,13 +449,26 @@ class Seat(models.Model):
         ordering = ['row', 'number']
 
     def __str__(self):
-        return f"{self.row.section.name}-{self.row.label}{self.number}"
+        return f"{self.row.section.name}-{self.row.label}{self.display_label}"
+
+    @property
+    def display_label(self):
+        return self.display_number if self.display_number else self.number
+
+    @property
+    def effective_price_category(self):
+        """Price category thực tế của ghế"""
+        return self.price_category if self.price_category else self.row.price_category
 
     @property
     def seat_code(self):
-        return f"{self.row.label}{self.number}"
+        return f"{self.row.label}{self.display_label}"
 
     @property
     def full_label(self):
-        """For backward compatibility with existing admin"""
-        return f"{self.row.label}{self.number}"
+        """For backward compatibility"""
+        return f"{self.row.label}{self.display_label}"
+
+    @property
+    def full_display_label(self):
+        return f"{self.row.label}{self.display_label}"

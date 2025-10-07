@@ -22,36 +22,58 @@ from django.utils.decorators import method_decorator
 
 
 def get_performance_seat_map(performance):
-    """Get complete seat map for a performance with safe fallbacks"""
+    """Get complete seat map for a performance"""
     venue = performance.show.venue
 
-    # Get all seats in venue
+    # Get all seats
     seats = Seat.objects.filter(
         row__section__venue=venue,
         status='active'
-    ).select_related('row', 'row__section', 'row__price_category')
+    ).select_related(
+        'row',
+        'row__section',
+        'row__price_category',
+        'price_category'  # ← SELECT seat's price_category
+    )
 
-    # Get existing reservations
+    # Get reservations
     reservations = SeatReservation.objects.filter(
         performance=performance,
         status__in=['reserved', 'sold', 'blocked']
     ).values('seat_id', 'status')
-
     reservation_map = {r['seat_id']: r['status'] for r in reservations}
 
-    # Get prices for this performance
+    # Get performance prices
     performance_prices = PerformancePrice.objects.filter(
         performance=performance
     ).values('price_category_id', 'price')
-
     price_map = {pp['price_category_id']: pp['price'] for pp in performance_prices}
 
     # Build seat map data
     seat_map_data = {
         'venue': {
             'name': venue.name,
+            'address': venue.address,
+            'phone': venue.phone,
+            'hotline': venue.hotline_display,
+            # ===== THÊM LAYOUT IMAGE URL =====
+            'layout_image_url': venue.layout_image.url if venue.layout_image else None,
+            'checkin_minutes_before': venue.checkin_minutes_before,
             'width': 800,
             'height': 900
+        },
+        'show': {
+            'name': performance.show.name,
+            'description': performance.show.description,
+            'duration_minutes': performance.show.duration_minutes,
+        },
+        'performance': {
+            'id': performance.id,
+            'datetime': performance.datetime.isoformat(),
+            'date': performance.datetime.strftime('%d/%m/%Y'),
+            'time': performance.datetime.strftime('%H:%M'),
+            # ===== THÊM DAY OF WEEK =====
+            'day_of_week': ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'][performance.datetime.weekday()],
         },
         'sections': [],
         'seats': [],
@@ -77,7 +99,7 @@ def get_performance_seat_map(performance):
             }
             seat_map_data['sections'].append(sections_dict[section.id])
 
-        # Track row info for numbering
+        # Track row info
         if row.id not in rows_dict:
             rows_dict[row.id] = {
                 'row': row,
@@ -86,16 +108,18 @@ def get_performance_seat_map(performance):
         rows_dict[row.id]['seats'].append(seat)
 
         # Determine seat status
-        if seat.id in reservation_map:
-            seat_status = reservation_map[seat.id]
-        else:
-            seat_status = 'available'
+        seat_status = reservation_map.get(seat.id, 'available')
 
-        # Get price for this seat
-        price_category_id = seat.row.price_category_id
-        price = price_map.get(price_category_id, seat.row.price_category.base_price if seat.row.price_category else 0)
+        # Get price per seat
+        effective_pc = seat.effective_price_category
+        price_category_id = effective_pc.id if effective_pc else None
 
-        # Safe calculation of seat properties
+        seat_price = price_map.get(
+            price_category_id,
+            effective_pc.base_price if effective_pc else 0
+        )
+
+        # Safe number conversion
         try:
             seat_number = int(seat.number)
             remainder = seat_number % 2
@@ -103,27 +127,36 @@ def get_performance_seat_map(performance):
             is_even_number = remainder == 0
             seat_side = 'left' if is_odd_number else 'right'
         except (ValueError, TypeError):
-            # Fallback for non-numeric seat numbers
-            seat_number = seat.number
+            seat_number = seat.display_label
             is_odd_number = False
             is_even_number = False
             seat_side = 'center'
 
-        # Add seat data with safe field access
+        # Build seat data
         seat_data = {
             'id': seat.id,
             'section_id': section.code,
             'section_name': section.name,
             'row': seat.row.label,
-            'number': seat_number,
+            'number': seat.number,
+            'display_number': seat.display_label,
+            'full_label': seat.full_display_label,
             'x': seat.position_x,
             'y': seat.position_y,
+            'spacing_after': seat.spacing_after,
             'status': seat_status,
-            'price': float(price),
-            'price_category': seat.row.price_category.code if seat.row.price_category else 'standard',
-            'price_category_color': seat.row.price_category.color if seat.row.price_category else '#10B981',
+
+            # Price & Category
+            'price': float(seat_price),
+            'price_category': effective_pc.code if effective_pc else 'standard',
+            'price_category_color': effective_pc.color if effective_pc else '#10B981',
+            'effective_price_category_name': effective_pc.name if effective_pc else 'Standard',
+            'has_custom_price_category': seat.price_category is not None,
+
+            # ===== THÊM SEAT IMAGE URL =====
+            'seat_image_url': seat.seat_image.url if seat.seat_image else None,
+
             'is_accessible': seat.is_accessible,
-            # Safe numbering info with fallbacks
             'numbering_style': safe_getattr(seat.row, 'numbering_style', 'left_to_right'),
             'is_odd': is_odd_number,
             'is_even': is_even_number,
@@ -132,10 +165,10 @@ def get_performance_seat_map(performance):
 
         seat_map_data['seats'].append(seat_data)
 
-    # Add numbering info per row with safe access
+    # Add numbering info per row
     for row_id, row_data in rows_dict.items():
         row = row_data['row']
-        row_key = "{}-{}".format(row.section.code, row.label)
+        row_key = f"{row.section.code}-{row.label}"
 
         seat_map_data['numbering_info'][row_key] = {
             'numbering_style': safe_getattr(row, 'numbering_style', 'left_to_right'),
@@ -194,7 +227,7 @@ def reserve_seats(request):
     performance = Performance.objects.get(id=performance_id)
 
     with transaction.atomic():
-        # Release any expired reservations first
+        # Release expired reservations
         expired_reservations = SeatReservation.objects.filter(
             performance=performance,
             status='reserved',
@@ -202,7 +235,7 @@ def reserve_seats(request):
         )
         expired_reservations.update(status='available', session_id='', expires_at=None)
 
-        # Check if seats are available
+        # Check availability
         existing_reservations = SeatReservation.objects.filter(
             performance=performance,
             seat_id__in=seat_ids,
@@ -219,7 +252,6 @@ def reserve_seats(request):
         performance_prices = PerformancePrice.objects.filter(
             performance=performance
         ).values('price_category_id', 'price')
-
         price_map = {pp['price_category_id']: pp['price'] for pp in performance_prices}
 
         # Reserve seats
@@ -228,9 +260,19 @@ def reserve_seats(request):
         expires_at = timezone.now() + timedelta(minutes=timeout_minutes)
 
         for seat_id in seat_ids:
-            seat = Seat.objects.get(id=seat_id)
-            price_category_id = seat.row.price_category_id
-            price = price_map.get(price_category_id, seat.row.price_category.base_price)
+            seat = Seat.objects.select_related(
+                'row',
+                'row__price_category',
+                'price_category'
+            ).get(id=seat_id)
+
+            # ===== GET PRICE FROM SEAT'S PRICE_CATEGORY =====
+            effective_pc = seat.effective_price_category
+            price_category_id = effective_pc.id if effective_pc else None
+            seat_price = price_map.get(
+                price_category_id,
+                effective_pc.base_price if effective_pc else 0
+            )
 
             reservation, created = SeatReservation.objects.update_or_create(
                 performance=performance,
@@ -238,7 +280,7 @@ def reserve_seats(request):
                 defaults={
                     'status': 'reserved',
                     'session_id': session_id,
-                    'price': price,
+                    'price': seat_price,  # ← Giá theo price_category của ghế
                     'expires_at': expires_at
                 }
             )
@@ -246,9 +288,10 @@ def reserve_seats(request):
             reserved_seats.append({
                 'id': seat.id,
                 'row': seat.row.label,
-                'number': seat.number,
+                'number': seat.display_label,      # ← Display number
+                'full_label': seat.full_display_label,
                 'section_name': seat.row.section.name,
-                'price': float(price)
+                'price': float(seat_price)
             })
 
     return Response({

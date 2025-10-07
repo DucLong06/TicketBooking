@@ -9,7 +9,7 @@ static/
 # C extensions
 *.so
 node_modules/
-
+media/
 # Distribution / packaging
 .Python
 build/
