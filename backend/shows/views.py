@@ -2,8 +2,13 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
-from .models import Show, Performance
-from .serializers import ShowListSerializer, ShowDetailSerializer, PerformanceSerializer
+from .models import Show, Performance, Poster
+from .serializers import (
+    ShowListSerializer,
+    ShowDetailSerializer,
+    PerformanceSerializer,
+    PosterSerializer
+)
 
 
 class ShowViewSet(viewsets.ReadOnlyModelViewSet):
@@ -43,3 +48,12 @@ class PerformanceViewSet(viewsets.ReadOnlyModelViewSet):
         performance = self.get_object()
         seat_map_data = get_performance_seat_map(performance)
         return Response(seat_map_data)
+
+
+class PosterViewSet(viewsets.ReadOnlyModelViewSet):
+    """API for Homepage Posters/Banners"""
+    queryset = Poster.objects.filter(is_active=True).select_related('show')
+    serializer_class = PosterSerializer
+
+    def get_queryset(self):
+        return super().get_queryset().order_by('order', '-created_at')

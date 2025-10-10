@@ -56,7 +56,7 @@ def get_performance_seat_map(performance):
             'address': venue.address,
             'phone': venue.phone,
             'hotline': venue.hotline_display,
-            # ===== THÊM LAYOUT IMAGE URL =====
+
             'layout_image_url': venue.layout_image.url if venue.layout_image else None,
             'checkin_minutes_before': venue.checkin_minutes_before,
             'width': 800,
@@ -72,7 +72,6 @@ def get_performance_seat_map(performance):
             'datetime': performance.datetime.isoformat(),
             'date': performance.datetime.strftime('%d/%m/%Y'),
             'time': performance.datetime.strftime('%H:%M'),
-            # ===== THÊM DAY OF WEEK =====
             'day_of_week': ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'][performance.datetime.weekday()],
         },
         'sections': [],
@@ -143,7 +142,7 @@ def get_performance_seat_map(performance):
             'number': seat.number,
             'display_number': seat.display_label,
             'full_label': seat.full_display_label,
-            'position_x': seat.position_x, 
+            'position_x': seat.position_x,
             'position_y': seat.position_y,
             'spacing_after': seat.spacing_after,
             'status': seat_status,
@@ -185,9 +184,9 @@ def get_performance_seat_map(performance):
     # Add price categories
     from venues.models import PriceCategory
     all_categories = PriceCategory.objects.all()
-
+    sorted_categories = all_categories.order_by('base_price')
     seat_map_data['price_categories'] = {}
-    for pc in all_categories:
+    for pc in sorted_categories:
         performance_price = price_map.get(pc.id, pc.base_price)
         seat_map_data['price_categories'][pc.code] = {
             'name': pc.name,

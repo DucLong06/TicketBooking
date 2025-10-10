@@ -37,19 +37,19 @@
 						<!-- Enhanced Header -->
 						<div class="text-center mb-6 relative z-10">
 							<h2
-								class="text-3xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-3"
+								class="text-2xl lg:text-3xl font-bold text-gray-800 mb-3 lg:mb-4 flex items-center justify-center gap-2 lg:gap-3"
 							>
-								<span class="text-4xl">🎭</span>
+								<span class="text-3xl lg:text-4xl">🎭</span>
 								<span>{{ showInfo.name }}</span>
 							</h2>
 							<div
-								class="flex flex-wrap justify-center gap-3 text-sm"
+								class="flex flex-wrap justify-center gap-2 lg:gap-3 text-xs lg:text-sm"
 							>
 								<div
-									class="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-200"
+									class="flex items-center gap-1.5 lg:gap-2 bg-white/80 backdrop-blur-sm px-3 lg:px-4 py-1.5 lg:py-2 rounded-full shadow-sm border border-gray-200"
 								>
 									<svg
-										class="w-4 h-4 text-primary-600"
+										class="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary-600"
 										fill="none"
 										stroke="currentColor"
 										viewBox="0 0 24 24"
@@ -66,10 +66,10 @@
 									}}</span>
 								</div>
 								<div
-									class="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-200"
+									class="flex items-center gap-1.5 lg:gap-2 bg-white/80 backdrop-blur-sm px-3 lg:px-4 py-1.5 lg:py-2 rounded-full shadow-sm border border-gray-200"
 								>
 									<svg
-										class="w-4 h-4 text-primary-600"
+										class="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary-600"
 										fill="none"
 										stroke="currentColor"
 										viewBox="0 0 24 24"
@@ -86,7 +86,7 @@
 									}}</span>
 								</div>
 								<div
-									class="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-200"
+									class="hidden lg:flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-200"
 								>
 									<svg
 										class="w-4 h-4 text-primary-600"
@@ -113,7 +113,7 @@
 								</div>
 								<div
 									v-if="showInfo.duration_minutes"
-									class="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-200"
+									class="hidden lg:flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-200"
 								>
 									<svg
 										class="w-4 h-4 text-primary-600"
@@ -138,99 +138,45 @@
 							</div>
 							<div
 								v-if="venueInfo.checkin_minutes_before"
-								class="mt-3 inline-block"
+								class="mt-2 lg:mt-3 inline-block"
 							>
 								<div
-									class="bg-amber-100/80 backdrop-blur-sm border-2 border-amber-300 rounded-full px-4 py-2 shadow-sm"
+									class="bg-amber-100/80 backdrop-blur-sm border-2 border-amber-300 rounded-full px-3 lg:px-4 py-1.5 lg:py-2 shadow-sm"
 								>
 									<span
 										class="text-xs text-amber-800 font-semibold"
 									>
-										⏰ Vui lòng có mặt trước
-										{{ venueInfo.checkin_minutes_before }}
-										phút
+										Vé không kèm trẻ em, chương trình không
+										dành cho trẻ em dưới 6 tuổi
 									</span>
 								</div>
 							</div>
 						</div>
 
-						<!-- Compact Floating Zoom Controls -->
-						<div class="absolute top-4 right-4 z-20">
-							<div
-								class="bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-200 p-2"
-							>
-								<div class="flex flex-col gap-1">
-									<!-- Zoom In -->
-									<button
-										@click="zoomIn"
-										:disabled="zoomLevel >= 1.5"
-										class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-50 to-primary-100 hover:from-primary-100 hover:to-primary-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center group"
-										title="Phóng to"
-									>
-										<svg
-											class="w-5 h-5 text-primary-600 group-disabled:text-gray-400"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2.5"
-												d="M12 4v16m8-8H4"
-											/>
-										</svg>
-									</button>
-
-									<!-- Zoom Level Display -->
+						<!-- Price Categories - Mobile horizontal scroll -->
+						<div class="lg:hidden mb-4">
+							<div class="grid grid-cols-2 gap-2">
+								<div
+									v-for="(category, code) in priceCategories"
+									:key="code"
+									class="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-lg px-2.5 py-2 shadow-sm border border-gray-200"
+								>
 									<div
-										class="text-center py-1 px-2 text-xs font-bold text-primary-600 bg-primary-50 rounded"
-									>
-										{{ Math.round(zoomLevel * 100) }}%
+										class="w-3.5 h-3.5 rounded border border-white shadow-sm flex-shrink-0"
+										:style="{
+											backgroundColor: category.color,
+										}"
+									></div>
+									<div class="text-xs flex-1 min-w-0">
+										<div
+											class="font-semibold text-gray-800 truncate"
+										>
+											{{ category.name }}
+										</div>
+										<div class="text-gray-600 text-xs">
+											{{ formatPrice(category.price) }}
+										</div>
 									</div>
-
-									<!-- Zoom Out -->
-									<button
-										@click="zoomOut"
-										:disabled="zoomLevel <= 0.25"
-										class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-50 to-primary-100 hover:from-primary-100 hover:to-primary-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center group"
-										title="Thu nhỏ"
-									>
-										<svg
-											class="w-5 h-5 text-primary-600 group-disabled:text-gray-400"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2.5"
-												d="M20 12H4"
-											/>
-										</svg>
-									</button>
-
-									<!-- Reset -->
-									<button
-										@click="resetZoom"
-										class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-200 transition-all flex items-center justify-center group mt-1 border-t border-gray-200 pt-1"
-										title="Đặt lại"
-									>
-										<svg
-											class="w-4 h-4 text-amber-600"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2.5"
-												d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-											/>
-										</svg>
-									</button>
 								</div>
 							</div>
 						</div>
@@ -240,45 +186,59 @@
 							class="relative bg-white rounded-2xl shadow-inner border-2 border-gray-200 overflow-hidden"
 							style="min-height: 500px; max-height: 650px"
 						>
-							<!-- Theater ambiance overlay -->
 							<div
 								class="absolute inset-0 bg-gradient-to-b from-purple-900/5 via-transparent to-gray-900/5 pointer-events-none"
 							></div>
 
 							<div
-								class="overflow-auto h-full p-6"
+								class="h-full p-6 flex items-center justify-center"
 								id="seat-map-container"
+								@wheel="handleWheel"
+								@mousedown="handleMouseDown"
+								@mousemove="handleMouseMove"
+								@mouseup="handleMouseUp"
+								@mouseleave="handleMouseLeave"
+								@touchstart="handleTouchStart"
+								@touchmove="handleTouchMove"
+								@touchend="handleTouchEnd"
+								:style="{
+									cursor: isDragging ? 'grabbing' : 'grab',
+									userSelect: 'none',
+									touchAction: 'none',
+								}"
 							>
 								<div
-									class="transition-transform duration-300 ease-out"
+									:class="[
+										'ease-out',
+										{
+											'transition-transform duration-200':
+												!isDragging,
+											'transition-transform duration-500':
+												zoomLevel <= 0.25,
+										},
+									]"
 									:style="{
-										transform: `scale(${zoomLevel})`,
-										transformOrigin: 'top center',
+										transform: `translate(${panX}px, ${panY}px) scale(${zoomLevel})`,
+										transformOrigin: 'center center',
 										minWidth: 'fit-content',
 										margin: '0 auto',
 									}"
 								>
-									<!-- Stage - Now inside zoom area -->
+									<!-- Stage -->
 									<div class="mb-12 flex justify-center">
 										<div
 											class="relative"
 											:style="{ width: stageWidth }"
 										>
-											<!-- Stage lighting effect -->
 											<div
 												class="absolute -top-8 left-1/2 transform -translate-x-1/2 w-3/4 h-16 bg-gradient-radial from-yellow-200/30 via-transparent to-transparent blur-xl"
 											></div>
-
-											<!-- Main stage -->
 											<div
 												class="relative bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white py-6 px-8 rounded-t-2xl text-center shadow-2xl border-t-4 border-yellow-500/50"
 											>
-												<!-- Curtain effect -->
 												<div
 													class="absolute inset-0 bg-gradient-to-b from-red-900/20 to-transparent rounded-t-2xl"
 												></div>
-
-												<!-- Stage content -->
 												<div class="relative z-10">
 													<div
 														class="text-2xl font-bold tracking-wider mb-1 text-yellow-100"
@@ -291,14 +251,10 @@
 														STAGE
 													</div>
 												</div>
-
-												<!-- Stage floor line -->
 												<div
 													class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"
 												></div>
 											</div>
-
-											<!-- Stage apron/edge -->
 											<div
 												class="h-2 bg-gradient-to-b from-gray-700 to-gray-600 rounded-b-sm shadow-lg"
 											></div>
@@ -370,6 +326,7 @@
 												</div>
 											</div>
 										</div>
+
 										<!-- Main Sections -->
 										<div
 											class="flex-1"
@@ -383,7 +340,6 @@
 												:key="section.id"
 												class="mb-10"
 											>
-												<!-- Section header -->
 												<div class="text-center mb-6">
 													<div
 														class="inline-block bg-gradient-to-r from-primary-500 to-purple-500 text-white px-6 py-2 rounded-full shadow-lg"
@@ -396,7 +352,6 @@
 													</div>
 												</div>
 
-												<!-- Rows -->
 												<div
 													class="flex flex-col items-center"
 												>
@@ -419,18 +374,15 @@
 																	: '16px',
 														}"
 													>
-														<!-- Row Label Left -->
 														<span
 															class="w-12 text-right mr-6 font-bold text-gray-600 text-base"
 														>
 															{{ row.label }}
 														</span>
 
-														<!-- Seats Container -->
 														<div
 															class="flex justify-center"
 														>
-															<!-- Center-out layout -->
 															<div
 																v-if="
 																	row.seats
@@ -439,7 +391,6 @@
 																"
 																class="flex gap-2 items-center"
 															>
-																<!-- Left side (odd) -->
 																<button
 																	v-for="seat in row
 																		.seats
@@ -494,7 +445,6 @@
 																	}}
 																</button>
 
-																<!-- Center aisle -->
 																<div
 																	class="w-12 flex items-center justify-center"
 																>
@@ -503,7 +453,6 @@
 																	></div>
 																</div>
 
-																<!-- Right side (even) -->
 																<button
 																	v-for="seat in row
 																		.seats
@@ -559,7 +508,6 @@
 																</button>
 															</div>
 
-															<!-- Linear layout -->
 															<div
 																v-else
 																class="flex gap-2 items-center"
@@ -620,7 +568,6 @@
 															</div>
 														</div>
 
-														<!-- Row Label Right -->
 														<span
 															class="w-12 text-left ml-6 font-bold text-gray-600 text-base"
 														>
@@ -756,18 +703,11 @@
 					</div>
 				</div>
 
-				<!-- Right Column: Price Categories & Booking Summary -->
-				<div class="lg:col-span-1">
-					<!-- Price Categories -->
+				<!-- Right Column: Price Categories & Booking Summary - DESKTOP ONLY -->
+				<div class="hidden lg:block lg:col-span-1">
 					<div
 						class="mb-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl shadow-xl p-5 border-2 border-blue-100"
 					>
-						<h3
-							class="font-bold mb-4 text-gray-800 text-center text-lg flex items-center justify-center gap-2"
-						>
-							<span class="text-xl">📋</span>
-							<span>Phân loại vé</span>
-						</h3>
 						<div class="space-y-3">
 							<div
 								v-for="(category, code) in priceCategories"
@@ -794,34 +734,9 @@
 						</div>
 					</div>
 
-					<!-- Booking Summary -->
 					<div
 						class="bg-white rounded-2xl shadow-2xl p-6 sticky top-4 border-2 border-gray-100"
 					>
-						<!-- Layout Image Button -->
-						<div v-if="venueInfo.layout_image_url" class="mb-6">
-							<button
-								@click="showLayoutModal = true"
-								class="w-full py-3 px-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
-							>
-								<svg
-									class="w-5 h-5"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-									/>
-								</svg>
-								Xem sơ đồ nhà hát
-							</button>
-						</div>
-
-						<!-- Selected Seats -->
 						<div class="mb-4 pb-4 border-b-2 border-gray-100">
 							<h4
 								class="font-bold mb-3 text-gray-800 flex items-center gap-2"
@@ -829,27 +744,8 @@
 								<span class="text-lg">🎫</span>
 								<span>Ghế đã chọn</span>
 							</h4>
+
 							<div
-								v-if="selectedSeats.length === 0"
-								class="text-center py-8 text-gray-400 bg-gray-50 rounded-xl"
-							>
-								<svg
-									class="w-12 h-12 mx-auto mb-2 opacity-50"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-									/>
-								</svg>
-								<p class="text-sm">Chưa chọn ghế nào</p>
-							</div>
-							<div
-								v-else
 								class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"
 							>
 								<div
@@ -858,7 +754,9 @@
 									class="flex justify-between items-center text-sm bg-gradient-to-r from-primary-50 to-purple-50 p-3 rounded-xl border-2 border-primary-200 shadow-sm hover:shadow-md transition-shadow"
 								>
 									<span class="font-bold text-gray-800">{{
-										seat.full_label
+										seat.full_label +
+										" - " +
+										seat.section_name
 									}}</span>
 									<span class="text-primary-600 font-bold">{{
 										formatPrice(seat.price)
@@ -867,9 +765,9 @@
 							</div>
 						</div>
 
-						<!-- Total -->
-						<div class="mb-4 pb-4 border-b-2 border-gray-100">
+						<div class="mb-4">
 							<div
+								v-if="selectedSeats.length !== 0"
 								class="flex justify-between items-center bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl shadow-md border-2 border-green-200"
 							>
 								<span class="font-bold text-gray-700 text-lg"
@@ -882,7 +780,6 @@
 							</div>
 						</div>
 
-						<!-- Timer -->
 						<div
 							v-if="timeLeft > 0"
 							class="mb-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border-2 border-yellow-300 shadow-md"
@@ -902,7 +799,6 @@
 							</div>
 						</div>
 
-						<!-- Continue Button -->
 						<button
 							@click="continueToCustomerInfo"
 							:disabled="selectedSeats.length === 0"
@@ -924,51 +820,173 @@
 			</div>
 		</div>
 
-		<!-- Layout Image Modal -->
-		<Teleport to="body">
+		<!-- Mobile Bottom Sheet -->
+		<div class="lg:hidden">
 			<div
-				v-if="showLayoutModal"
-				class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in"
-				@click="showLayoutModal = false"
+				v-if="bottomSheetState === 'expanded'"
+				class="fixed inset-0 bg-black/40 z-40 transition-opacity"
+				@click="bottomSheetState = 'minimized'"
+			></div>
+
+			<div
+				v-if="selectedSeats.length > 0"
+				class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-50 transition-transform duration-300"
+				:style="{
+					transform: getBottomSheetTransform(),
+				}"
+				@touchstart="handleBottomSheetTouchStart"
+				@touchmove="handleBottomSheetTouchMove"
+				@touchend="handleBottomSheetTouchEnd"
 			>
-				<div
-					class="relative max-w-5xl w-full bg-white rounded-2xl shadow-2xl animate-scale-in"
-					@click.stop
-				>
-					<button
-						@click="showLayoutModal = false"
-						class="absolute -top-4 -right-4 bg-white rounded-full p-3 shadow-2xl hover:bg-gray-100 transition-all hover:scale-110 z-10"
-					>
-						<svg
-							class="w-6 h-6 text-gray-700"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
+				<div class="flex justify-center pt-3 pb-2">
+					<div class="w-12 h-1 bg-gray-300 rounded-full"></div>
+				</div>
+
+				<div v-if="bottomSheetState === 'minimized'" class="px-4 pb-4">
+					<div class="flex items-center justify-between gap-3">
+						<div
+							class="flex-1 cursor-pointer flex items-center gap-3"
+							@click="bottomSheetState = 'expanded'"
 						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M6 18L18 6M6 6l12 12"
-							/>
-						</svg>
-					</button>
-					<div class="p-6">
-						<h3
-							class="text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2"
+							<span class="text-purple-600 text-xl">🎫</span>
+							<div>
+								<div class="font-bold text-gray-800">
+									{{ selectedSeats.length }} ghế đã chọn
+								</div>
+								<div class="text-sm text-gray-600">
+									{{ formatPrice(totalAmount) }}
+								</div>
+							</div>
+						</div>
+
+						<div class="text-center flex-shrink-0">
+							<div
+								class="text-lg font-bold text-orange-600 tabular-nums"
+							>
+								{{ formatTime(timeLeft) }}
+							</div>
+						</div>
+
+						<button
+							@click.stop="continueToCustomerInfo"
+							class="bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg hover:shadow-xl transform active:scale-95 transition-all flex-shrink-0"
 						>
-							<span class="text-3xl">🏛️</span>
-							<span>Sơ đồ {{ venueInfo.name }}</span>
-						</h3>
-						<img
-							:src="venueInfo.layout_image_url"
-							alt="Venue Layout"
-							class="w-full rounded-xl shadow-2xl"
-						/>
+							Tiếp tục
+						</button>
 					</div>
 				</div>
+
+				<div
+					v-if="bottomSheetState === 'expanded'"
+					class="px-4 pb-4 pt-2"
+				>
+					<div class="flex justify-center mb-3">
+						<button
+							@click="bottomSheetState = 'minimized'"
+							class="p-2 hover:bg-gray-100 rounded-full"
+						>
+							<svg
+								class="w-5 h-5 text-gray-400"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M19 9l-7 7-7-7"
+								/>
+							</svg>
+						</button>
+					</div>
+
+					<div class="grid grid-cols-4 gap-2 items-stretch mb-3">
+						<div
+							class="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border-2 border-yellow-300 p-3 text-center flex flex-col justify-center"
+						>
+							<div
+								class="text-xs text-yellow-800 font-semibold mb-1"
+							>
+								⏱️
+							</div>
+							<div
+								class="text-sm font-bold text-orange-600 mb-0.5"
+							>
+								{{ formatTime(timeLeft) }}
+							</div>
+							<div class="text-xs text-yellow-700">Giữ ghế</div>
+						</div>
+
+						<div
+							class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border-2 border-purple-300 p-3 text-center flex flex-col justify-center"
+						>
+							<div
+								class="text-xs text-purple-800 font-semibold mb-1"
+							>
+								🎫
+							</div>
+							<div
+								class="text-lg font-bold text-purple-600 mb-0.5"
+							>
+								{{ selectedSeats.length }}
+							</div>
+							<div class="text-xs text-purple-700">Đã chọn</div>
+						</div>
+
+						<div
+							class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-green-300 p-3 text-center flex flex-col justify-center"
+						>
+							<div
+								class="text-xs text-green-800 font-semibold mb-1"
+							>
+								💰
+							</div>
+							<div
+								class="text-sm font-bold text-green-600 mb-0.5 leading-tight"
+							>
+								{{ (totalAmount / 1000).toFixed(0) }}K
+							</div>
+							<div class="text-xs text-green-700">Tổng tiền</div>
+						</div>
+
+						<button
+							@click="continueToCustomerInfo"
+							class="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform active:scale-95 transition-all flex items-center justify-center px-2"
+						>
+							Tiếp tục →
+						</button>
+					</div>
+
+					<details class="mt-3">
+						<summary
+							class="text-xs text-gray-600 cursor-pointer hover:text-gray-800 text-center py-2"
+						>
+							Xem chi tiết ghế đã chọn ▼
+						</summary>
+						<div class="space-y-2 mt-2 max-h-40 overflow-y-auto">
+							<div
+								v-for="seat in selectedSeats"
+								:key="seat.id"
+								class="flex justify-between items-center bg-gradient-to-r from-purple-50 to-blue-50 p-2 rounded-lg border border-purple-200 text-xs"
+							>
+								<div>
+									<div class="font-bold text-gray-800">
+										{{ seat.full_label }}
+									</div>
+									<div class="text-gray-600">
+										{{ seat.section_name }}
+									</div>
+								</div>
+								<div class="font-bold text-purple-600">
+									{{ formatPrice(seat.price) }}
+								</div>
+							</div>
+						</div>
+					</details>
+				</div>
 			</div>
-		</Teleport>
+		</div>
 
 		<!-- Seat Tooltip -->
 		<Teleport to="body">
@@ -981,7 +999,6 @@
 					class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white rounded-2xl shadow-2xl border-2 border-gray-600 overflow-hidden"
 					style="min-width: 240px; max-width: 280px"
 				>
-					<!-- Seat Image -->
 					<div
 						v-if="tooltipData.seat_image_url"
 						class="w-full h-36 overflow-hidden"
@@ -993,7 +1010,6 @@
 						/>
 					</div>
 
-					<!-- Seat Info -->
 					<div class="p-4">
 						<div
 							class="font-bold text-xl mb-3 text-yellow-300 flex items-center gap-2"
@@ -1036,6 +1052,152 @@
 				</div>
 			</div>
 		</Teleport>
+
+		<!-- Zoom Instructions - Floating Guide -->
+		<Teleport to="body">
+			<Transition name="slide-up-fade">
+				<div
+					v-if="showZoomInstructions && !instructionsClosed"
+					class="fixed bottom-6 right-6 z-40 max-w-sm"
+				>
+					<div
+						class="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-2xl shadow-2xl p-[2px]"
+					>
+						<div class="bg-white rounded-2xl p-5 relative">
+							<button
+								@click="closeInstructions"
+								class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors"
+							>
+								<svg
+									class="w-5 h-5"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M6 18L18 6M6 6l12 12"
+									/>
+								</svg>
+							</button>
+
+							<div class="mb-4 pr-6">
+								<div class="flex items-center gap-2 mb-1">
+									<span class="text-2xl">🔍</span>
+									<h3 class="text-lg font-bold text-gray-800">
+										Cách zoom sơ đồ ghế
+									</h3>
+								</div>
+								<p class="text-xs text-gray-500">
+									Phóng to/thu nhỏ để xem rõ hơn
+								</p>
+							</div>
+
+							<div class="space-y-3">
+								<div
+									class="hidden lg:flex items-start gap-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-3"
+								>
+									<div
+										class="flex-shrink-0 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm"
+									>
+										<svg
+											class="w-5 h-5 text-blue-600"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
+											/>
+										</svg>
+									</div>
+									<div class="flex-1">
+										<div
+											class="font-semibold text-gray-800 text-sm mb-1"
+										>
+											💻 Desktop
+										</div>
+										<div class="text-xs text-gray-600">
+											Cuộn chuột để zoom<br />
+											Kéo thả để di chuyển
+										</div>
+									</div>
+								</div>
+
+								<div
+									class="lg:hidden flex items-start gap-3 bg-gradient-to-r from-pink-50 to-orange-50 rounded-xl p-3"
+								>
+									<div
+										class="flex-shrink-0 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm"
+									>
+										<svg
+											class="w-5 h-5 text-pink-600"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+											/>
+										</svg>
+									</div>
+									<div class="flex-1">
+										<div
+											class="font-semibold text-gray-800 text-sm mb-1"
+										>
+											📱 Mobile
+										</div>
+										<div class="text-xs text-gray-600">
+											Chụm/dạng 2 ngón để zoom<br />
+											Vuốt 1 ngón để di chuyển
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div
+								class="mt-3 pt-3 border-t border-gray-200 text-center"
+							>
+								<p class="text-xs text-gray-400 italic">
+									Hướng dẫn sẽ tự ẩn sau 10 giây
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</Transition>
+
+			<Transition name="scale-fade">
+				<button
+					v-if="instructionsClosed"
+					@click="showInstructions"
+					class="fixed bottom-6 right-6 z-40 bg-gradient-to-br from-blue-600 to-purple-600 text-white rounded-full p-4 shadow-2xl hover:shadow-3xl transition-all hover:scale-110 active:scale-95"
+					title="Xem hướng dẫn zoom"
+				>
+					<svg
+						class="w-6 h-6"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+						/>
+					</svg>
+				</button>
+			</Transition>
+		</Teleport>
 	</DefaultLayout>
 </template>
 
@@ -1050,6 +1212,8 @@ const router = useRouter();
 const route = useRoute();
 const bookingStore = useBookingStore();
 
+const isMobile = ref(window.innerWidth < 1024);
+
 // State
 const loading = ref(true);
 const seatMap = ref(null);
@@ -1060,16 +1224,32 @@ const timeLeft = ref(0);
 const showLayoutModal = ref(false);
 let timer = null;
 
-// Zoom state
+// Zoom and Pan state
 const zoomLevel = ref(1);
+const panX = ref(0);
+const panY = ref(0);
+const isDragging = ref(false);
+const dragStart = ref({ x: 0, y: 0 });
+const lastTouchDistance = ref(0);
+const lastTouchCenter = ref({ x: 0, y: 0 });
 
 // Tooltip state
 const tooltipVisible = ref(false);
 const tooltipData = ref({});
 const tooltipStyle = ref({});
+let tooltipTimer = null;
 
 // Row refs for calculating stage width
 const rowRefs = ref({});
+
+// Mobile bottom sheet state
+const bottomSheetState = ref("minimized");
+const touchStart = ref(null);
+const touchOffset = ref(0);
+
+// Zoom instructions state
+const showZoomInstructions = ref(false);
+const instructionsClosed = ref(false);
 
 // Computed properties
 const venueInfo = computed(() => seatMap.value?.venue || {});
@@ -1077,7 +1257,9 @@ const showInfo = computed(() => seatMap.value?.show || {});
 const performanceData = computed(() => seatMap.value?.performance || {});
 const priceCategories = computed(() => seatMap.value?.price_categories || {});
 
-// Calculate stage width based on longest row
+const showRulesModal = ref(false);
+const hasAcceptedRules = ref(false);
+
 const stageWidth = computed(() => {
 	if (Object.keys(rowRefs.value).length === 0) return "90%";
 
@@ -1154,11 +1336,6 @@ const logeLeftSection = computed(() => {
 					...(row.seats.evenSeats || []),
 			  ].sort((a, b) => parseInt(a.number) - parseInt(b.number));
 
-	console.log("=== LOGE LEFT DEBUG ===");
-	console.log("Total seats:", seats.length);
-	seats.forEach((seat) => {
-		console.log(`Seat ${seat.number}: position_y=${seat.position_y}`);
-	});
 	return { id: section.id, name: section.name, seats };
 });
 
@@ -1223,21 +1400,192 @@ const totalAmount = computed(() => {
 	);
 });
 
-// Zoom functions
-const zoomIn = () => {
-	if (zoomLevel.value < 1.5) {
-		zoomLevel.value = Math.min(1.5, zoomLevel.value + 0.1);
+const lgMarginTop = computed(() => {
+	const rowHeight = window.innerWidth < 768 ? 35 : 45;
+	const startFromRow = 24;
+	return `${startFromRow * rowHeight}px`;
+});
+
+// Wheel zoom for desktop
+const handleWheel = (event) => {
+	event.preventDefault();
+	const delta = event.deltaY * -0.0003;
+	const newZoom = Math.max(
+		isMobile.value ? 0.15 : 0.25,
+		Math.min(2, zoomLevel.value + delta)
+	);
+
+	if (newZoom !== zoomLevel.value) {
+		const container = event.currentTarget;
+		const rect = container.getBoundingClientRect();
+		const mouseX = event.clientX - rect.left;
+		const mouseY = event.clientY - rect.top;
+
+		const oldZoom = zoomLevel.value;
+		zoomLevel.value = newZoom;
+
+		const zoomRatio = newZoom / oldZoom - 1;
+		panX.value -= (mouseX - rect.width / 2 - panX.value) * zoomRatio;
+		panY.value -= (mouseY - rect.height / 2 - panY.value) * zoomRatio;
 	}
 };
 
-const zoomOut = () => {
-	if (zoomLevel.value > 0.25) {
-		zoomLevel.value = Math.max(0.25, zoomLevel.value - 0.1);
+// Mouse pan functions for desktop
+const handleMouseDown = (event) => {
+	isDragging.value = true;
+	dragStart.value = {
+		x: event.clientX - panX.value,
+		y: event.clientY - panY.value,
+	};
+	event.currentTarget.style.cursor = "grabbing";
+};
+
+const handleMouseMove = (event) => {
+	if (isDragging.value) {
+		panX.value = event.clientX - dragStart.value.x;
+		panY.value = event.clientY - dragStart.value.y;
 	}
 };
 
-const resetZoom = () => {
-	zoomLevel.value = 1;
+const handleMouseUp = (event) => {
+	if (isDragging.value) {
+		isDragging.value = false;
+		event.currentTarget.style.cursor = "grab";
+	}
+};
+
+const handleMouseLeave = (event) => {
+	if (isDragging.value) {
+		isDragging.value = false;
+		event.currentTarget.style.cursor = "grab";
+	}
+};
+
+// Touch events for mobile
+const getTouchDistance = (touches) => {
+	const dx = touches[0].clientX - touches[1].clientX;
+	const dy = touches[0].clientY - touches[1].clientY;
+	return Math.sqrt(dx * dx + dy * dy);
+};
+
+const getTouchCenter = (touches) => {
+	return {
+		x: (touches[0].clientX + touches[1].clientX) / 2,
+		y: (touches[0].clientY + touches[1].clientY) / 2,
+	};
+};
+
+const handleTouchStart = (event) => {
+	if (event.touches.length === 1) {
+		isDragging.value = true;
+		dragStart.value = {
+			x: event.touches[0].clientX - panX.value,
+			y: event.touches[0].clientY - panY.value,
+		};
+	} else if (event.touches.length === 2) {
+		event.preventDefault();
+		lastTouchDistance.value = getTouchDistance(event.touches);
+		lastTouchCenter.value = getTouchCenter(event.touches);
+	}
+};
+
+const handleTouchMove = (event) => {
+	if (event.touches.length === 1 && isDragging.value) {
+		panX.value = event.touches[0].clientX - dragStart.value.x;
+		panY.value = event.touches[0].clientY - dragStart.value.y;
+	} else if (event.touches.length === 2) {
+		event.preventDefault();
+		const currentDistance = getTouchDistance(event.touches);
+		const currentCenter = getTouchCenter(event.touches);
+
+		if (lastTouchDistance.value > 0) {
+			const scale = currentDistance / lastTouchDistance.value;
+			const newZoom = Math.max(
+				isMobile.value ? 0.15 : 0.25,
+				Math.min(2, zoomLevel.value * scale)
+			);
+
+			if (newZoom !== zoomLevel.value) {
+				const container = event.currentTarget;
+				const rect = container.getBoundingClientRect();
+
+				const oldZoom = zoomLevel.value;
+				zoomLevel.value = newZoom;
+
+				const zoomRatio = newZoom / oldZoom - 1;
+				panX.value -=
+					(currentCenter.x -
+						rect.left -
+						rect.width / 2 -
+						panX.value) *
+					zoomRatio;
+				panY.value -=
+					(currentCenter.y -
+						rect.top -
+						rect.height / 2 -
+						panY.value) *
+					zoomRatio;
+			}
+		}
+
+		lastTouchDistance.value = currentDistance;
+		lastTouchCenter.value = currentCenter;
+	}
+};
+
+const handleTouchEnd = (event) => {
+	if (event.touches.length === 0) {
+		isDragging.value = false;
+		lastTouchDistance.value = 0;
+	} else if (event.touches.length === 1) {
+		lastTouchDistance.value = 0;
+		dragStart.value = {
+			x: event.touches[0].clientX - panX.value,
+			y: event.touches[0].clientY - panY.value,
+		};
+	}
+};
+
+// Bottom sheet handlers
+const getBottomSheetTransform = () => {
+	if (bottomSheetState.value === "minimized") {
+		return `translateY(calc(100% - 80px + ${touchOffset.value}px))`;
+	}
+	if (bottomSheetState.value === "expanded") {
+		return `translateY(${touchOffset.value}px)`;
+	}
+	return "translateY(100%)";
+};
+
+const handleBottomSheetTouchStart = (e) => {
+	touchStart.value = e.touches[0].clientY;
+};
+
+const handleBottomSheetTouchMove = (e) => {
+	if (touchStart.value === null) return;
+	const currentTouch = e.touches[0].clientY;
+	const diff = currentTouch - touchStart.value;
+
+	if (bottomSheetState.value === "expanded" && diff > 0) {
+		touchOffset.value = Math.min(diff, 100);
+	} else if (bottomSheetState.value === "minimized" && diff < 0) {
+		touchOffset.value = Math.max(diff, -100);
+	}
+};
+
+const handleBottomSheetTouchEnd = () => {
+	if (Math.abs(touchOffset.value) > 50) {
+		if (touchOffset.value > 0 && bottomSheetState.value === "expanded") {
+			bottomSheetState.value = "minimized";
+		} else if (
+			touchOffset.value < 0 &&
+			bottomSheetState.value === "minimized"
+		) {
+			bottomSheetState.value = "expanded";
+		}
+	}
+	touchStart.value = null;
+	touchOffset.value = 0;
 };
 
 // Seat styling
@@ -1281,17 +1629,33 @@ const isSelected = (seat) => {
 
 // Tooltip functions
 const showSeatTooltip = (seat, event) => {
+	if (tooltipTimer) {
+		clearTimeout(tooltipTimer);
+		tooltipTimer = null;
+	}
+
 	tooltipVisible.value = true;
 	tooltipData.value = seat;
+
 	const rect = event.target.getBoundingClientRect();
 	tooltipStyle.value = {
 		left: `${rect.left + rect.width / 2}px`,
 		top: `${rect.top - 10}px`,
 		transform: "translate(-50%, -100%)",
 	};
+
+	if (window.innerWidth < 1024) {
+		tooltipTimer = setTimeout(() => {
+			hideSeatTooltip();
+		}, 3000);
+	}
 };
 
 const hideSeatTooltip = () => {
+	if (tooltipTimer) {
+		clearTimeout(tooltipTimer);
+		tooltipTimer = null;
+	}
 	tooltipVisible.value = false;
 };
 
@@ -1309,7 +1673,6 @@ const getSeatStatusText = (status) => {
 const toggleSeat = async (seat) => {
 	if (seat.status !== "available" && !isSelected(seat)) return;
 	const index = selectedSeats.value.findIndex((s) => s.id === seat.id);
-
 	if (index > -1) {
 		selectedSeats.value.splice(index, 1);
 		try {
@@ -1374,11 +1737,30 @@ const loadSeatMap = async () => {
 		console.error("Failed to load seat map:", error);
 	}
 };
-const lgMarginTop = computed(() => {
-	const rowHeight = window.innerWidth < 768 ? 35 : 45;
-	const startFromRow = 12;
-	return `${startFromRow * rowHeight}px`;
-});
+
+// Instructions management
+const showInstructions = () => {
+	instructionsClosed.value = false;
+	showZoomInstructions.value = true;
+};
+
+const closeInstructions = () => {
+	instructionsClosed.value = true;
+	showZoomInstructions.value = false;
+	localStorage.setItem("zoom_instructions_seen", "true");
+};
+
+let instructionsTimer = null;
+const startInstructionsTimer = () => {
+	if (instructionsTimer) clearTimeout(instructionsTimer);
+
+	instructionsTimer = setTimeout(() => {
+		if (showZoomInstructions.value) {
+			closeInstructions();
+		}
+	}, 10000);
+};
+
 // Formatting
 const formatPrice = (price) => {
 	return new Intl.NumberFormat("vi-VN", {
@@ -1393,6 +1775,20 @@ const formatTime = (seconds) => {
 	return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
 
+// Global touch handler
+const handleGlobalTouch = (event) => {
+	if (window.innerWidth >= 1024) return;
+
+	const target = event.target;
+	const isSeatButton =
+		target.closest('button[class*="w-10 h-10"]') ||
+		target.closest('button[class*="w-12 h-12"]');
+
+	if (!isSeatButton && tooltipVisible.value) {
+		hideSeatTooltip();
+	}
+};
+
 // Lifecycle
 onMounted(async () => {
 	try {
@@ -1403,7 +1799,23 @@ onMounted(async () => {
 			router.push(`/booking/${route.params.showId}`);
 			return;
 		}
+
 		await loadSeatMap();
+
+		document.addEventListener("touchstart", handleGlobalTouch);
+
+		// Show zoom instructions if first time
+		const hasSeenInstructions = localStorage.getItem(
+			"zoom_instructions_seen"
+		);
+		if (!hasSeenInstructions) {
+			setTimeout(() => {
+				showZoomInstructions.value = true;
+				startInstructionsTimer();
+			}, 1500);
+		} else {
+			instructionsClosed.value = true;
+		}
 	} catch (error) {
 		console.error("Failed to load:", error);
 	} finally {
@@ -1413,45 +1825,22 @@ onMounted(async () => {
 
 onUnmounted(() => {
 	if (timer) clearInterval(timer);
+
+	if (tooltipTimer) {
+		clearTimeout(tooltipTimer);
+		tooltipTimer = null;
+	}
+
+	if (instructionsTimer) {
+		clearTimeout(instructionsTimer);
+		instructionsTimer = null;
+	}
+
+	document.removeEventListener("touchstart", handleGlobalTouch);
 });
 </script>
 
 <style scoped>
-/* Custom slider styling */
-.slider-thumb::-webkit-slider-thumb {
-	-webkit-appearance: none;
-	appearance: none;
-	width: 20px;
-	height: 20px;
-	border-radius: 50%;
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-	cursor: pointer;
-	box-shadow: 0 2px 8px rgba(102, 126, 234, 0.6);
-	transition: all 0.2s ease;
-}
-
-.slider-thumb::-webkit-slider-thumb:hover {
-	transform: scale(1.2);
-	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.8);
-}
-
-.slider-thumb::-moz-range-thumb {
-	width: 20px;
-	height: 20px;
-	border-radius: 50%;
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-	cursor: pointer;
-	box-shadow: 0 2px 8px rgba(102, 126, 234, 0.6);
-	transition: all 0.2s ease;
-	border: none;
-}
-
-.slider-thumb::-moz-range-thumb:hover {
-	transform: scale(1.2);
-	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.8);
-}
-
-/* Custom scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
 	width: 6px;
 }
@@ -1470,7 +1859,24 @@ onUnmounted(() => {
 	background: linear-gradient(180deg, #764ba2 0%, #667eea 100%);
 }
 
-/* Animations */
+.no-scrollbar::-webkit-scrollbar {
+	display: none;
+}
+
+.no-scrollbar {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+
+#seat-map-container {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
+	overscroll-behavior: contain;
+}
+
 @keyframes fade-in {
 	from {
 		opacity: 0;
@@ -1497,5 +1903,46 @@ onUnmounted(() => {
 
 .animate-scale-in {
 	animation: scale-in 0.3s ease-out;
+}
+
+/* Zoom Instructions Animations */
+.slide-up-fade-enter-active,
+.slide-up-fade-leave-active {
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-up-fade-enter-from {
+	opacity: 0;
+	transform: translateY(20px);
+}
+
+.slide-up-fade-leave-to {
+	opacity: 0;
+	transform: translateY(10px) scale(0.95);
+}
+
+.scale-fade-enter-active,
+.scale-fade-leave-active {
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scale-fade-enter-from,
+.scale-fade-leave-to {
+	opacity: 0;
+	transform: scale(0.8);
+}
+
+@keyframes float {
+	0%,
+	100% {
+		transform: translateY(0px);
+	}
+	50% {
+		transform: translateY(-5px);
+	}
+}
+
+.fixed.bottom-6.right-6 button {
+	animation: float 3s ease-in-out infinite;
 }
 </style>

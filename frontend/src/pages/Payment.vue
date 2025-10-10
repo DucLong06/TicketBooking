@@ -68,7 +68,7 @@
 									/>
 								</div>
 							</div>
-                            <!-- 9 pay -->
+							<!-- 9 pay -->
 							<div
 								@click="selectPaymentMethod('9pay')"
 								:class="[
@@ -340,19 +340,11 @@
 						<!-- Selected Seats -->
 						<div class="mb-4 pb-4 border-b">
 							<h4 class="font-semibold mb-3">Ghế đã chọn:</h4>
-							<div class="space-y-2 max-h-40 overflow-y-auto">
-								<div
-									v-for="seat in selectedSeats"
-									:key="seat.id"
-									class="flex justify-between items-center text-sm"
-								>
-									<span>{{ seat.full_label }}</span>
-									<!-- ← Thay đổi -->
-									<span class="font-medium">{{
-										formatPrice(seat.price)
-									}}</span>
-								</div>
-							</div>
+							<SelectedSeatsDisplay
+								:seats="selectedSeats"
+								display-mode="list"
+								:show-summary="false"
+							/>
 						</div>
 
 						<!-- Price Details -->
@@ -360,10 +352,6 @@
 							<div class="flex justify-between text-sm">
 								<span>Tổng tiền vé:</span>
 								<span>{{ formatPrice(subtotal) }}</span>
-							</div>
-							<div class="flex justify-between text-sm">
-								<span>Phí dịch vụ:</span>
-								<span>{{ formatPrice(serviceFee) }}</span>
 							</div>
 							<div
 								v-if="discount > 0"
@@ -421,6 +409,7 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { useBookingStore } from "../stores/booking";
+import SelectedSeatsDisplay from "../components/SelectedSeatsDisplay.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -453,12 +442,8 @@ const subtotal = computed(() => {
 	return selectedSeats.value.reduce((sum, seat) => sum + seat.price, 0);
 });
 
-const serviceFee = computed(() => {
-	return selectedSeats.value.length * 10000;
-});
-
 const totalAmount = computed(() => {
-	return subtotal.value + serviceFee.value - discount.value;
+	return subtotal.value - discount.value;
 });
 
 // Methods
@@ -490,7 +475,6 @@ const applyPromo = () => {
 };
 
 const processPayment = async () => {
-
 	if (!selectedMethod.value) return;
 	isProcessing.value = true;
 

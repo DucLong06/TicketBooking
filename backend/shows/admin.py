@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django import forms
 from datetime import datetime, timedelta
 from django.utils import timezone
-from .models import Show, Performance, PerformancePrice
+from .models import Show, Performance, PerformancePrice, Poster
 from venues.models import PriceCategory
 
 
@@ -175,3 +175,32 @@ class SimplePerformanceAdmin(admin.ModelAdmin):
 
         self.message_user(request, f"Đã nhân bản {queryset.count()} suất diễn sang ngày tiếp theo")
     duplicate_performance.short_description = "Nhân bản sang ngày tiếp theo"
+
+
+@admin.register(Poster)
+class PosterAdmin(admin.ModelAdmin):
+    list_display = ['title', 'show', 'order', 'is_active', 'poster_preview', 'created_at']
+    list_filter = ['is_active', 'show']
+    search_fields = ['title', 'show__name']
+    list_editable = ['order', 'is_active']
+    ordering = ['order', '-created_at']
+
+    fieldsets = (
+        ('Thông tin cơ bản', {
+            'fields': ('title', 'show', 'image')
+        }),
+        ('Cấu hình hiển thị', {
+            'fields': ('order', 'is_active')
+        }),
+    )
+
+    readonly_fields = ['created_at', 'updated_at']
+
+    def poster_preview(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="max-height: 50px; max-width: 100px; object-fit: cover;" />',
+                obj.image.url
+            )
+        return "Chưa có ảnh"
+    poster_preview.short_description = 'Preview'

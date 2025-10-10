@@ -83,6 +83,12 @@ class Venue(models.Model):
     # Check-in settings
     checkin_minutes_before = models.IntegerField(default=45, verbose_name='Check-in trước bao nhiêu phút')
 
+    rules = models.TextField(
+        blank=True,
+        verbose_name='Quy định và lưu ý',
+        help_text='Các quy định, lưu ý quan trọng cho khách hàng. Mỗi quy định nên viết trên 1 dòng.'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -479,3 +485,11 @@ class Seat(models.Model):
     @property
     def full_display_label(self):
         return f"{self.row.label}{self.display_label}"
+
+    @property
+    def full_display_label_with_section(self):
+        return f"{self.row.section.name} - {self.row.label}{self.display_label}"
+
+    @property
+    def section_name(self):
+        return self.row.section.name

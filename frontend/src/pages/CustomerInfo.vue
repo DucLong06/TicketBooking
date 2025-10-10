@@ -46,7 +46,7 @@
 						</h2>
 
 						<form @submit.prevent="handleSubmit">
-							<!-- Full Name -->
+							<!-- Họ và tên -->
 							<div class="mb-4">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -84,7 +84,7 @@
 									placeholder="example@email.com"
 								/>
 								<p class="mt-1 text-xs text-gray-500">
-									Vé điện tử sẽ được gửi đến email này
+									{{ emailDescription }}
 								</p>
 								<p
 									v-if="errors.email"
@@ -94,7 +94,7 @@
 								</p>
 							</div>
 
-							<!-- Phone -->
+							<!-- Số điện thoại -->
 							<div class="mb-4">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -117,22 +117,52 @@
 								</p>
 							</div>
 
-							<!-- ID Number -->
+							<!-- ✅ MỚI: Địa chỉ -->
 							<div class="mb-4">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
 								>
-									CMND/CCCD
+									Địa chỉ <span class="text-red-500">*</span>
 								</label>
-								<input
-									v-model="customerInfo.idNumber"
-									type="text"
+								<textarea
+									v-model="customerInfo.address"
+									required
+									rows="3"
 									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-									placeholder="001234567890"
-								/>
+									placeholder="Nhập địa chỉ nhận vé..."
+								></textarea>
+								<p class="mt-1 text-xs text-gray-500">
+									{{ addressDescription }}
+								</p>
+								<p
+									v-if="errors.address"
+									class="mt-1 text-sm text-red-500"
+								>
+									{{ errors.address }}
+								</p>
 							</div>
 
-							<!-- Notes -->
+							<div class="mb-6">
+								<label
+									class="block text-sm font-medium text-gray-700 mb-2"
+								>
+									Thời gian ship vé
+									<span class="text-red-500">*</span>
+								</label>
+								<select
+									v-model="customerInfo.shippingTime"
+									required
+									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+								>
+									<option value="business_hours">
+										Trong giờ hành chính
+									</option>
+									<option value="after_hours">
+										Ngoài giờ hành chính
+									</option>
+								</select>
+							</div>
+
 							<div class="mb-6">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -145,48 +175,6 @@
 									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
 									placeholder="Yêu cầu đặc biệt (nếu có)..."
 								></textarea>
-							</div>
-
-							<!-- Terms & Conditions -->
-							<div class="mb-6">
-								<label class="flex items-start">
-									<input
-										v-model="agreedToTerms"
-										type="checkbox"
-										required
-										class="mt-1 mr-2"
-									/>
-									<span class="text-sm text-gray-600">
-										Tôi đồng ý với
-										<a
-											href="#"
-											class="text-primary-600 hover:underline"
-											>điều khoản sử dụng</a
-										>
-										và
-										<a
-											href="#"
-											class="text-primary-600 hover:underline"
-											>chính sách bảo mật</a
-										>
-										<span class="text-red-500">*</span>
-									</span>
-								</label>
-							</div>
-
-							<!-- Newsletter -->
-							<div class="mb-6 p-4 bg-gray-50 rounded-lg">
-								<label class="flex items-start">
-									<input
-										v-model="subscribeNewsletter"
-										type="checkbox"
-										class="mt-1 mr-2"
-									/>
-									<span class="text-sm text-gray-600">
-										Nhận thông tin ưu đãi và chương trình
-										mới qua email
-									</span>
-								</label>
 							</div>
 
 							<!-- Buttons -->
@@ -208,7 +196,6 @@
 						</form>
 					</div>
 				</div>
-
 				<!-- Order Summary - 1 column -->
 				<div class="lg:col-span-1">
 					<div class="bg-white rounded-lg shadow-lg p-6 sticky top-4">
@@ -220,37 +207,21 @@
 						<div class="mb-4 pb-4 border-b">
 							<h4 class="font-semibold">{{ showInfo.name }}</h4>
 							<p class="text-sm text-gray-600">
-								{{ performanceInfo.date }}
+								Ngày: {{ performanceInfo.date }}
 							</p>
 							<p class="text-sm text-gray-600">
-								Suất: {{ performanceInfo.time }}
+								Thời gian: {{ performanceInfo.time }}
 							</p>
 						</div>
 
 						<!-- Selected Seats -->
 						<div class="mb-4 pb-4 border-b">
 							<h4 class="font-semibold mb-3">Ghế đã chọn:</h4>
-							<div class="space-y-2 max-h-60 overflow-y-auto">
-								<div
-									v-for="seat in selectedSeats"
-									:key="seat.id"
-									class="flex justify-between items-center text-sm p-2 bg-gray-50 rounded"
-								>
-									<div>
-										<span class="font-medium"
-											>{{ seat.row
-											}}{{ seat.number }}</span
-										>
-										<span
-											class="text-gray-500 ml-2 text-xs"
-											>{{ seat.sectionName }}</span
-										>
-									</div>
-									<span class="font-semibold">{{
-										formatPrice(seat.price)
-									}}</span>
-								</div>
-							</div>
+							<SelectedSeatsDisplay
+								:seats="selectedSeats"
+								display-mode="list"
+								:show-summary="false"
+							/>
 						</div>
 
 						<!-- Price Breakdown -->
@@ -258,10 +229,6 @@
 							<div class="flex justify-between text-sm">
 								<span>Tổng tiền vé:</span>
 								<span>{{ formatPrice(subtotal) }}</span>
-							</div>
-							<div class="flex justify-between text-sm">
-								<span>Phí dịch vụ:</span>
-								<span>{{ formatPrice(serviceFee) }}</span>
 							</div>
 						</div>
 
@@ -294,6 +261,7 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { useBookingStore } from "../stores/booking";
+import SelectedSeatsDisplay from "../components/SelectedSeatsDisplay.vue";
 
 const bookingStore = useBookingStore();
 const router = useRouter();
@@ -315,12 +283,19 @@ const customerInfo = ref({
 	email: "",
 	phone: "",
 	idNumber: "",
+	address: "",
 	notes: "",
+	shippingTime: "",
 });
 
 const agreedToTerms = ref(false);
-const subscribeNewsletter = ref(false);
 const errors = ref({});
+const addressDescription = ref(
+	"Địa chỉ nhận vé cứng. Nhà hát Hồ Gươm chỉ sử dụng vé cứng để vào cửa."
+);
+const emailDescription = ref(
+	"Email để nhận xác nhận thanh toán hoặc xác nhận đặt vé"
+);
 
 const selectedSeats = ref([]);
 
@@ -333,12 +308,8 @@ const subtotal = computed(() => {
 	return selectedSeats.value.reduce((sum, seat) => sum + seat.price, 0);
 });
 
-const serviceFee = computed(() => {
-	return selectedSeats.value.length * 10000; // 10k per ticket
-});
-
 const totalAmount = computed(() => {
-	return subtotal.value + serviceFee.value;
+	return subtotal.value;
 });
 
 // Methods
@@ -375,31 +346,63 @@ const validateForm = () => {
 		errors.value.phone = "Số điện thoại không hợp lệ";
 	}
 
+	if (!customerInfo.value.address.trim()) {
+		errors.value.address = "Vui lòng nhập địa chỉ";
+	}
+
 	return Object.keys(errors.value).length === 0;
 };
 
 const handleSubmit = async () => {
 	if (!validateForm()) return;
 
-	if (!agreedToTerms.value) {
-		alert("Vui lòng đồng ý với điều khoản sử dụng");
-		return;
-	}
-
 	try {
 		bookingStore.customerInfo = {
-			customer_name: customerInfo.value.fullName, // fullName → customer_name
-			customer_email: customerInfo.value.email, // email → customer_email
-			customer_phone: customerInfo.value.phone, // phone → customer_phone
-			customer_id_number: customerInfo.value.idNumber, // idNumber → customer_id_number
+			customer_name: customerInfo.value.fullName,
+			customer_email: customerInfo.value.email,
+			customer_phone: customerInfo.value.phone,
+			customer_address: customerInfo.value.address,
+			shipping_time: customerInfo.value.shippingTime,
 			notes: customerInfo.value.notes || "",
 		};
+
 		const booking = await bookingStore.createBooking();
 
-		// Navigate to payment
-		router.push(`/booking/${route.params.showId}/payment`);
+		const paymentData = await bookingStore.processPayment("9pay");
+
+		console.log("Payment data:", paymentData);
+
+		const bookingData = {
+			showInfo: {
+				name: showInfo.value.name,
+			},
+			performance: {
+				date: performanceInfo.value.date,
+				time: performanceInfo.value.time,
+			},
+			customerInfo: {
+				fullName: customerInfo.value.fullName,
+				email: customerInfo.value.email,
+				phone: customerInfo.value.phone,
+			},
+			amount: totalAmount.value,
+			selectedSeats: selectedSeats.value,
+			bookingCode: bookingStore.bookingCode,
+			status: "pending",
+			transactionId: paymentData.transaction_id,
+		};
+
+		sessionStorage.setItem("bookingData", JSON.stringify(bookingData));
+
+		if (paymentData.payment_url) {
+			console.log("Redirecting to 9Pay:", paymentData.payment_url);
+			window.location.href = paymentData.payment_url;
+		} else {
+			throw new Error("Không nhận được URL thanh toán từ 9Pay");
+		}
 	} catch (error) {
-		alert("Lỗi khi tạo đơn đặt vé: " + error.message);
+		console.error("Error:", error);
+		alert("Lỗi: " + (error.response?.data?.error || error.message));
 	}
 };
 
@@ -441,8 +444,9 @@ onMounted(() => {
 	const savedSeats = sessionStorage.getItem("selectedSeats");
 	if (savedSeats) {
 		selectedSeats.value = JSON.parse(savedSeats);
+	} else if (bookingStore.selectedSeats?.length > 0) {
+		selectedSeats.value = bookingStore.selectedSeats;
 	} else {
-		// Redirect if no seats selected
 		alert("Không tìm thấy ghế đã chọn. Vui lòng chọn lại.");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;

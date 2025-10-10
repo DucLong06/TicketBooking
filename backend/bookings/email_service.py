@@ -20,10 +20,25 @@ def send_booking_confirmation(booking):
 
         # Format seat numbers
         seats = booking.seat_reservations.all()
-        seat_numbers = ", ".join([f"{seat.seat.row.label}{seat.seat.number}" for seat in seats])
+
+        # Group seats by section for better readability
+        from collections import defaultdict
+        seats_by_section = defaultdict(list)
+
+        for reservation in seats:
+            seat = reservation.seat
+            section_name = seat.row.section.name
+            seat_label = f"{seat.row.label}{seat.display_label}"
+            seats_by_section[section_name].append(seat_label)
+
+        # Format: "Khán Phòng 1: A1, A2, B3 | Khán Phòng 2: C1, C2"
+        seat_numbers = " | ".join([
+            f"{section}: {', '.join(seats)}"
+            for section, seats in seats_by_section.items()
+        ])
 
         # Get ticket class from first seat
-        ticket_class = "Ghế thường"  # Default
+        ticket_class = ""  # Default
         if seats.exists():
             first_seat = seats.first()
             ticket_class = first_seat.seat.row.price_category.name

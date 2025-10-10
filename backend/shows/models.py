@@ -105,3 +105,38 @@ class PerformancePrice(models.Model):
 
     def __str__(self):
         return f"{self.performance} - {self.price_category.name}: {self.price:,.0f}đ"
+
+
+class Poster(models.Model):
+    """Banner/Poster slides for homepage"""
+    title = models.CharField(max_length=200, verbose_name='Tiêu đề')
+    image = models.ImageField(
+        upload_to='posters/',
+        verbose_name='Ảnh poster',
+        help_text='Kích thước khuyến nghị: 1920x600px cho desktop, tự động resize cho mobile'
+    )
+    show = models.ForeignKey(
+        Show,
+        on_delete=models.CASCADE,
+        related_name='posters',
+        verbose_name='Vở diễn liên kết'
+    )
+    order = models.IntegerField(
+        default=0,
+        verbose_name='Thứ tự hiển thị',
+        help_text='Số nhỏ hơn sẽ hiển thị trước'
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='Đang hoạt động'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Banner/Poster'
+        verbose_name_plural = 'Banner/Poster'
+        ordering = ['order', '-created_at']
+
+    def __str__(self):
+        return f"{self.title} - {self.show.name}"

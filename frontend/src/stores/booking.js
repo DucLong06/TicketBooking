@@ -7,57 +7,35 @@ export const useBookingStore = defineStore('booking', () => {
     const toast = useToast()
 
     // STATE
-    // Session
     const sessionId = ref(null)
-
-    // Shows
     const shows = ref([])
     const currentShow = ref(null)
-
-    // Performance
     const performances = ref([])
     const selectedPerformance = ref(null)
-
-    // Seats
     const seatMap = ref(null)
     const selectedSeats = ref([])
     const reservationExpiry = ref(null)
-
-    // Customer
     const customerInfo = ref({
         customer_name: '',
         customer_email: '',
         customer_phone: '',
-        customer_id_number: '',
+        customer_address: '',
+        shipping_time: '',
         notes: ''
     })
-
-    // Booking
     const currentBooking = ref(null)
     const bookingCode = ref(null)
-
-    // Payment
     const currentTransaction = ref(null)
-
-    // UI State
     const loading = ref(false)
 
-    // GETTERS (computed)
+    // GETTERS
     const totalAmount = computed(() => {
-        return selectedSeats.value.reduce((sum, seat) => sum + seat.price, 0)
+        return selectedSeats.value.reduce((sum, seat) => sum + (seat.price || 0), 0)
     })
 
-    const serviceFee = computed(() => {
-        return selectedSeats.value.length * 10000
-    })
+    const finalAmount = computed(() => totalAmount.value)
 
-    const finalAmount = computed(() => {
-        return totalAmount.value + serviceFee.value
-    })
-
-    // ACTIONS (functions)
-
-    // Initialize session
+    // ACTIONS
     const initSession = () => {
         if (!sessionId.value) {
             sessionId.value = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
@@ -65,13 +43,11 @@ export const useBookingStore = defineStore('booking', () => {
         }
     }
 
-    // Load all shows
     const loadShows = async () => {
         try {
             loading.value = true
             const response = await bookingAPI.getShows()
             shows.value = response.data.results || response.data
-
         } catch (error) {
             console.error('Failed to load shows:', error)
             throw error
@@ -80,7 +56,6 @@ export const useBookingStore = defineStore('booking', () => {
         }
     }
 
-    // Load show detail
     const loadShowDetail = async (showId) => {
         try {
             loading.value = true
@@ -95,18 +70,38 @@ export const useBookingStore = defineStore('booking', () => {
         }
     }
 
-    // Set selected performance
     const setSelectedPerformance = (performance) => {
         selectedPerformance.value = performance
         sessionStorage.setItem('selectedPerformance', JSON.stringify(performance))
     }
 
-    // Load seat map
     const loadSeatMap = async (performanceId) => {
         try {
             loading.value = true
             const response = await bookingAPI.getSeatMap(performanceId)
             seatMap.value = response.data
+
+            // Map existing reservations to selected seats format
+            const existingReservations = response.data.seats
+                .filter(seat => seat.status === 'selected')
+                .map(seat => ({
+                    id: seat.id,
+                    row: seat.row,
+                    number: seat.number,
+                    display_number: seat.display_number,
+                    full_label: seat.full_label,
+                    section_id: seat.section_id,
+                    section_name: seat.section_name,
+                    price: seat.price,
+                    price_category_color: seat.price_category_color,
+                    effective_price_category_name: seat.effective_price_category_name
+                }))
+
+            if (existingReservations.length > 0) {
+                selectedSeats.value = existingReservations
+            }
+
+            return response.data
         } catch (error) {
             console.error('Failed to load seat map:', error)
             throw error
@@ -115,47 +110,60 @@ export const useBookingStore = defineStore('booking', () => {
         }
     }
 
-    // Toggle seat selection
-    const toggleSeat = async (seat) => {
-        const index = selectedSeats.value.findIndex(s => s.id === seat.id)
+    const selectSeat = async (seat) => {
+        initSession()
 
-        if (index > -1) {
+        const isSelected = selectedSeats.value.some(s => s.id === seat.id)
+
+        if (isSelected) {
             // Deselect
-            const seatToRemove = selectedSeats.value[index]
-            selectedSeats.value.splice(index, 1)
-
-            // Release seat
             try {
-                await bookingAPI.releaseSeats([seatToRemove.id], sessionId.value)
+                await bookingAPI.releaseSeats({
+                    session_id: sessionId.value,
+                    seat_ids: [seat.id]
+                })
+                selectedSeats.value = selectedSeats.value.filter(s => s.id !== seat.id)
+                toast.success('Đã bỏ chọn ghế')
             } catch (error) {
-                console.error('Failed to release seat:', error)
+                toast.error('Không thể bỏ chọn ghế')
             }
         } else {
             // Select
-            if (selectedSeats.value.length >= 8) {
-                toast.warning('Bạn chỉ có thể chọn tối đa 8 ghế')
-                return
-            }
-
-            // Reserve seats
             try {
-                const response = await bookingAPI.reserveSeats(
-                    selectedPerformance.value.id,
-                    [...selectedSeats.value.map(s => s.id), seat.id],
-                    sessionId.value
-                )
+                const response = await bookingAPI.reserveSeats({
+                    performance_id: selectedPerformance.value.id,
+                    seat_ids: [seat.id],
+                    session_id: sessionId.value
+                })
 
-                selectedSeats.value = response.data.seats
-                reservationExpiry.value = response.data.expires_at
+                // ===== CRITICAL: Use full seat data from API response =====
+                if (response.data.seats && response.data.seats.length > 0) {
+                    const reservedSeat = response.data.seats[0]
 
-                toast.success('Đã giữ ghế thành công!')
+                    // Ensure we have all necessary fields for display
+                    const seatData = {
+                        id: reservedSeat.id,
+                        row: reservedSeat.row,
+                        number: reservedSeat.number,
+                        display_number: reservedSeat.number, // display_label from API
+                        full_label: reservedSeat.full_label,
+                        section_id: seat.section_id, // from original seat object
+                        section_name: reservedSeat.section_name,
+                        price: reservedSeat.price,
+                        price_category_color: seat.price_category_color, // from original
+                        effective_price_category_name: seat.effective_price_category_name // from original
+                    }
+
+                    selectedSeats.value.push(seatData)
+                    reservationExpiry.value = response.data.expires_at
+                    toast.success('Đã chọn ghế')
+                }
             } catch (error) {
                 toast.error('Không thể giữ ghế này')
             }
         }
     }
 
-    // Create booking
     const createBooking = async () => {
         try {
             loading.value = true
@@ -171,7 +179,7 @@ export const useBookingStore = defineStore('booking', () => {
             currentBooking.value = response.data
             bookingCode.value = response.data.booking_code
 
-            // Save comprehensive booking data to sessionStorage
+            // ===== Save complete booking data with FULL seat info =====
             const completeBookingData = {
                 showInfo: {
                     name: selectedPerformance.value.show_name || currentShow.value?.name
@@ -189,16 +197,14 @@ export const useBookingStore = defineStore('booking', () => {
                     phone: customerInfo.value.customer_phone
                 },
                 amount: finalAmount.value,
-                selectedSeats: selectedSeats.value,
+                seats: selectedSeats.value,
                 bookingCode: response.data.booking_code,
                 status: response.data.status,
-                // Keep raw response for debugging
                 _rawResponse: response.data
-            };
+            }
 
-            sessionStorage.setItem('bookingData', JSON.stringify(completeBookingData));
+            sessionStorage.setItem('bookingData', JSON.stringify(completeBookingData))
 
-            toast.success('Đặt vé thành công!')
             return response.data
         } catch (error) {
             console.error('Failed to create booking:', error)
@@ -208,34 +214,20 @@ export const useBookingStore = defineStore('booking', () => {
         }
     }
 
-    // Process payment
     const processPayment = async (paymentMethod) => {
         try {
             loading.value = true
             const response = await bookingAPI.createPayment(bookingCode.value, paymentMethod)
-
             currentTransaction.value = response.data.transaction_id
-
-            // If payment_url exists, it means we need to redirect (VNPay, MoMo, etc.)
-            if (response.data.payment_url) {
-                return response.data // Return data to let component handle redirect
-            }
-
-            // Fallback for mock/auto payment
-            if (response.data.auto_complete) {
-                startPaymentStatusPolling(response.data.transaction_id)
-            }
-
             return response.data
         } catch (error) {
-            console.error('Payment failed:', error)
+            console.error('Failed to process payment:', error)
             throw error
         } finally {
             loading.value = false
         }
     }
 
-    // Check payment status
     const checkPaymentStatus = async (transactionId) => {
         try {
             const response = await bookingAPI.checkPaymentStatus(transactionId)
@@ -246,51 +238,22 @@ export const useBookingStore = defineStore('booking', () => {
         }
     }
 
-    // Poll payment status
-    const startPaymentStatusPolling = async (transactionId) => {
-        const checkStatus = async () => {
-            try {
-                const response = await bookingAPI.checkPaymentStatus(transactionId)
-
-                if (response.data.status === 'success') {
-                    toast.success('Thanh toán thành công!')
-                    clearSession()
-                    return true
-                } else if (response.data.status === 'failed') {
-                    toast.error('Thanh toán thất bại!')
-                    return false
-                }
-
-                // Continue polling if pending
-                if (response.data.status === 'pending') {
-                    setTimeout(checkStatus, 5000) // Check every 5 seconds
-                }
-            } catch (error) {
-                console.error('Failed to check payment status:', error)
-            }
-        }
-
-        // Start checking after 5 seconds
-        setTimeout(checkStatus, 5000)
-    }
-
-    // Clear session
-    const clearSession = () => {
+    const clearBooking = () => {
         selectedSeats.value = []
+        currentBooking.value = null
+        bookingCode.value = null
         customerInfo.value = {
             customer_name: '',
             customer_email: '',
             customer_phone: '',
-            customer_id_number: '',
+            customer_address: '',
+            shipping_time: '',
             notes: ''
         }
-        reservationExpiry.value = null
-        selectedPerformance.value = null
-        sessionStorage.removeItem('session_id')
-        sessionId.value = null
+        sessionStorage.removeItem('selectedSeats')
+        sessionStorage.removeItem('bookingData')
     }
 
-    // Return all state and methods
     return {
         // State
         sessionId,
@@ -309,7 +272,6 @@ export const useBookingStore = defineStore('booking', () => {
 
         // Getters
         totalAmount,
-        serviceFee,
         finalAmount,
 
         // Actions
@@ -318,11 +280,10 @@ export const useBookingStore = defineStore('booking', () => {
         loadShowDetail,
         setSelectedPerformance,
         loadSeatMap,
-        toggleSeat,
+        selectSeat,
         createBooking,
         processPayment,
         checkPaymentStatus,
-        startPaymentStatusPolling,
-        clearSession
+        clearBooking
     }
 })

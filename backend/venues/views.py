@@ -2,8 +2,11 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
-from .models import Show, Performance
-from .serializers import ShowListSerializer, ShowDetailSerializer, PerformanceSerializer
+from shows.models import Show, Performance
+from shows.serializers import ShowListSerializer, ShowDetailSerializer, PerformanceSerializer
+
+from . models import ContactInfo
+from .serializers import ContactInfoSerializer
 
 
 class ShowViewSet(viewsets.ReadOnlyModelViewSet):
@@ -43,3 +46,15 @@ class PerformanceViewSet(viewsets.ReadOnlyModelViewSet):
         performance = self.get_object()
         seat_map_data = get_performance_seat_map(performance)
         return Response(seat_map_data)
+
+
+class ContactInfoViewSet(viewsets.ReadOnlyModelViewSet):
+    """API for Contact Information - Read only"""
+    queryset = ContactInfo.objects.all()
+    serializer_class = ContactInfoSerializer
+
+    def list(self, request, *args, **kwargs):
+        """Always return the singleton instance"""
+        contact = ContactInfo.get_instance()
+        serializer = self.get_serializer(contact)
+        return Response(serializer.data)

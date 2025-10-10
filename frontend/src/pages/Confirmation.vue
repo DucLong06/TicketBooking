@@ -232,11 +232,25 @@ const bookingData = ref({});
 const qrcodeCanvas = ref(null);
 
 // Computed
+// frontend/src/pages/Confirmation.vue
+
 const seatsList = computed(() => {
-	if (!bookingData.value.selectedSeats) return "";
-	return bookingData.value.selectedSeats
-		.map((seat) => `${seat.row}${seat.number}`)
-		.join(", ");
+	if (!bookingData.value?.seat_reservations) return "";
+	console.log(bookingData.value.seat_reservations);
+
+	// Group by section
+	const seatsBySection = {};
+	bookingData.value.seat_reservations.forEach((seat) => {
+		const sectionName = seat.section_name || "Khán phòng chính";
+		if (!seatsBySection[sectionName]) {
+			seatsBySection[sectionName] = [];
+		}
+		seatsBySection[sectionName].push(seat.seat_label);
+	});
+
+	return Object.entries(seatsBySection)
+		.map(([section, seats]) => `${section}: ${seats.join(", ")}`)
+		.join(" | ");
 });
 
 // Methods

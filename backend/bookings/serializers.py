@@ -15,6 +15,7 @@ class SeatReservationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SeatReservation
+        ordering = ['-price']
         fields = [
             'id', 'seat', 'seat_label', 'row', 'number',
             'section_name', 'status', 'price'
@@ -76,7 +77,8 @@ class CreateBookingSerializer(serializers.ModelSerializer):
         model = Booking
         fields = [
             'performance_id', 'seat_ids', 'session_id',
-            'customer_name', 'customer_email', 'customer_phone',
+            'customer_name', 'customer_email', 'customer_phone', 'customer_address',
+            'shipping_time',
             'customer_id_number', 'notes'
         ]
 
@@ -173,7 +175,9 @@ class BookingDetailSerializer(serializers.ModelSerializer):
         return {
             'fullName': obj.customer_name,
             'email': obj.customer_email,
-            'phone': obj.customer_phone
+            'phone': obj.customer_phone,
+            'address': obj.customer_address,
+            'shippingTime': obj.get_shipping_time_display(),
         }
 
     def get_selectedSeats(self, obj):

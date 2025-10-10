@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Show, Performance, PerformancePrice
+from .models import Show, Performance, PerformancePrice, Poster
 from venues.serializers import VenueSerializer
 
 
@@ -70,3 +70,17 @@ class ShowDetailSerializer(serializers.ModelSerializer):
             status='on_sale'
         ).order_by('datetime')
         return PerformanceSerializer(performances, many=True).data
+
+
+class PosterSerializer(serializers.ModelSerializer):
+    show_id = serializers.IntegerField(source='show.id', read_only=True)
+    show_name = serializers.CharField(source='show.name', read_only=True)
+    show_slug = serializers.CharField(source='show.slug', read_only=True)
+
+    class Meta:
+        model = Poster
+        fields = [
+            'id', 'title', 'image',
+            'show_id', 'show_name', 'show_slug',
+            'order'
+        ]

@@ -1,4 +1,4 @@
-from .models import Venue, Section, Row, Seat, PriceCategory, VenueLayout
+from .models import Venue, Section, Row, Seat, PriceCategory, VenueLayout, ContactInfo
 from rest_framework import serializers
 from django.db import models
 
@@ -122,7 +122,7 @@ class VenueSerializer(serializers.ModelSerializer):
         model = Venue
         fields = [
             'id', 'name', 'venue_type', 'address', 'phone', 'email',
-            'description', 'layout', 'total_seats', 'sections'
+            'description', 'rules', 'layout', 'total_seats', 'sections'
         ]
 
     def get_total_seats(self, obj):
@@ -149,3 +149,16 @@ class VenueListSerializer(serializers.ModelSerializer):
     def get_total_seats(self, obj):
         # Simplified calculation for list view
         return obj.sections.count() * 200  # Rough estimate
+
+
+class ContactInfoSerializer(serializers.ModelSerializer):
+    hotline_display = serializers.ReadOnlyField()
+
+    class Meta:
+        model = ContactInfo
+        fields = [
+            'id', 'name', 'hotline', 'hotline_display',
+            'support_email', 'facebook_url', 'tiktok_url',
+            'instagram_url', 'website_url', 'logo_url',
+            'copyright_text'
+        ]

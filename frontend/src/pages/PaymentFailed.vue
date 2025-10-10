@@ -180,7 +180,7 @@
 
 							<!-- Action Buttons -->
 							<div class="space-y-3">
-								<button
+								<!-- <button
 									@click="retryPayment"
 									class="w-full px-6 py-3 font-semibold text-white transition-all duration-200 rounded-lg shadow-lg hover:shadow-xl"
 									:style="{
@@ -191,7 +191,7 @@
 									}"
 								>
 									Thử lại thanh toán
-								</button>
+								</button> -->
 
 								<button
 									@click="goToHome"
