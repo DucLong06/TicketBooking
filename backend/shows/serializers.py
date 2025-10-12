@@ -9,11 +9,17 @@ class ShowListSerializer(serializers.ModelSerializer):
     min_price = serializers.SerializerMethodField()
     max_price = serializers.SerializerMethodField()
 
+    service_fee_per_ticket = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        read_only=True
+    )
+
     class Meta:
         model = Show
         fields = [
             'id', 'name', 'slug', 'category', 'duration_minutes',
-            'description', 'poster', 'venue_name', 'min_price', 'max_price'
+            'description', 'poster', 'venue_name', 'min_price', 'max_price', 'service_fee_per_ticket'
         ]
 
     def get_min_price(self, obj):
@@ -55,12 +61,17 @@ class PerformanceSerializer(serializers.ModelSerializer):
 class ShowDetailSerializer(serializers.ModelSerializer):
     venue = VenueSerializer(read_only=True)
     performances = serializers.SerializerMethodField()
+    service_fee_per_ticket = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        read_only=True
+    )
 
     class Meta:
         model = Show
         fields = [
             'id', 'name', 'slug', 'category', 'duration_minutes',
-            'description', 'poster', 'venue', 'performances'
+            'description', 'poster', 'venue', 'performances', 'service_fee_per_ticket'
         ]
 
     def get_performances(self, obj):

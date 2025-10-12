@@ -35,6 +35,10 @@ export const useBookingStore = defineStore('booking', () => {
 
     const finalAmount = computed(() => totalAmount.value)
 
+    const showInfo = computed(() => {
+        return currentShow.value || {}
+    })
+
     // ACTIONS
     const initSession = () => {
         if (!sessionId.value) {
@@ -273,6 +277,7 @@ export const useBookingStore = defineStore('booking', () => {
         // Getters
         totalAmount,
         finalAmount,
+        showInfo,
 
         // Actions
         initSession,

@@ -21,6 +21,17 @@ class Show(models.Model):
     )
     venue = models.ForeignKey(Venue, on_delete=models.CASCADE, verbose_name='Nhà hát')
     is_active = models.BooleanField(default=True, verbose_name='Đang hoạt động')
+
+    service_fee_per_ticket = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=10000,
+        validators=[MinValueValidator(0)],
+        verbose_name='Phí dịch vụ mỗi vé',
+        help_text='Phí dịch vụ tính cho mỗi vé (VNĐ)'
+    )
+
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

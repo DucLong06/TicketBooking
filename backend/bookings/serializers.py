@@ -65,11 +65,8 @@ class ReserveSeatSerializer(serializers.Serializer):
         return value
 
 
-class CreateBookingSerializer(serializers.ModelSerializer):
-    seat_ids = serializers.ListField(
-        child=serializers.IntegerField(),
-        write_only=True
-    )
+class BookingCreateSerializer(serializers.ModelSerializer):
+    seat_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True)
     performance_id = serializers.IntegerField(write_only=True)
     session_id = serializers.CharField(write_only=True)
 
@@ -77,17 +74,15 @@ class CreateBookingSerializer(serializers.ModelSerializer):
         model = Booking
         fields = [
             'performance_id', 'seat_ids', 'session_id',
-            'customer_name', 'customer_email', 'customer_phone', 'customer_address',
-            'shipping_time',
-            'customer_id_number', 'notes'
+            'customer_name', 'customer_email', 'customer_phone',
+            'customer_address', 'shipping_time', 'notes'
         ]
 
     def validate(self, data):
-        performance_id = data.get('performance_id')
-        seat_ids = data.get('seat_ids')
-        session_id = data.get('session_id')
+        seat_ids = data['seat_ids']
+        performance_id = data['performance_id']
+        session_id = data['session_id']
 
-        # Check if seats are reserved by this session
         reserved_seats = SeatReservation.objects.filter(
             performance_id=performance_id,
             seat_id__in=seat_ids,
@@ -106,7 +101,7 @@ class CreateBookingSerializer(serializers.ModelSerializer):
         session_id = validated_data.pop('session_id')
 
         # Get performance
-        performance = Performance.objects.get(id=performance_id)
+        performance = Performance.objects.select_related('show').get(id=performance_id)
 
         # Get seat reservations
         seat_reservations = SeatReservation.objects.filter(
@@ -118,7 +113,10 @@ class CreateBookingSerializer(serializers.ModelSerializer):
 
         # Calculate total amount
         total_amount = sum([sr.price for sr in seat_reservations])
-        service_fee = len(seat_ids) * 10000  # 10k per ticket
+
+        service_fee_per_ticket = performance.show.service_fee_per_ticket
+        service_fee = len(seat_ids) * service_fee_per_ticket
+
         final_amount = total_amount + service_fee
 
         # Create booking
@@ -150,6 +148,9 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     selectedSeats = serializers.SerializerMethodField()
     amount = serializers.DecimalField(source='final_amount', max_digits=10, decimal_places=0, read_only=True)
 
+    serviceFee = serializers.DecimalField(source='service_fee', max_digits=10, decimal_places=0, read_only=True)
+    ticketAmount = serializers.DecimalField(source='total_amount', max_digits=10, decimal_places=0, read_only=True)
+
     class Meta:
         model = Booking
         fields = [
@@ -157,7 +158,8 @@ class BookingDetailSerializer(serializers.ModelSerializer):
             'venue_name', 'customer_name', 'customer_email', 'customer_phone',
             'status', 'total_amount', 'service_fee', 'discount_amount',
             'final_amount', 'seat_reservations', 'created_at', 'expires_at',
-            'showInfo', 'performance', 'customerInfo', 'selectedSeats', 'amount'
+            'showInfo', 'performance', 'customerInfo', 'selectedSeats',
+            'amount', 'serviceFee', 'ticketAmount'
         ]
 
     def get_showInfo(self, obj):

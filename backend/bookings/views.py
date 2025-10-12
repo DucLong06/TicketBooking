@@ -9,7 +9,7 @@ from django.conf import settings
 from .models import Booking, SeatReservation
 from .serializers import (
     BookingDetailSerializer,
-    CreateBookingSerializer,
+    BookingCreateSerializer,
     ReserveSeatSerializer,
     SeatMapSerializer
 )
@@ -338,7 +338,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'create':
-            return CreateBookingSerializer
+            return BookingCreateSerializer
         return BookingDetailSerializer
 
     def create(self, request, *args, **kwargs):

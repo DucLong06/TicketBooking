@@ -53,18 +53,37 @@ class PerformanceInline(admin.TabularInline):
 
 @admin.register(Show)
 class ShowAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'venue', 'duration_minutes', 'is_active', 'upcoming_performances']
+    list_display = ['name', 'category', 'venue', 'duration_minutes',
+                    'service_fee_per_ticket', 'is_active', 'upcoming_performances']
     list_filter = ['venue', 'category', 'is_active']
     search_fields = ['name', 'description']
     prepopulated_fields = {'slug': ('name',)}
     inlines = [PerformanceInline]
     readonly_fields = ['created_at', 'updated_at']
 
+    fieldsets = (
+        ('Thông tin cơ bản', {
+            'fields': ('name', 'slug', 'category', 'venue', 'duration_minutes', 'description', 'poster')
+        }),
+        ('Cấu hình giá', {
+            'fields': ('service_fee_per_ticket',),
+            'description': 'Cấu hình phí dịch vụ cho vở diễn này'
+        }),
+        ('Trạng thái', {
+            'fields': ('is_active',)
+        }),
+        ('Thông tin khác', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
     def get_fields(self, request, obj=None):
         if request.user.is_superuser:
             return super().get_fields(request, obj)
         else:
-            return ['name', 'slug', 'category', 'duration_minutes', 'description', 'poster', 'is_active']
+            return ['name', 'slug', 'category', 'duration_minutes', 'description',
+                    'poster', 'service_fee_per_ticket', 'is_active']
 
     def get_readonly_fields(self, request, obj=None):
         if request.user.is_superuser:

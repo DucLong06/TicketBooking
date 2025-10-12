@@ -117,7 +117,7 @@
 								</p>
 							</div>
 
-							<!-- ✅ MỚI: Địa chỉ -->
+							<!-- Địa chỉ -->
 							<div class="mb-4">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -142,6 +142,7 @@
 								</p>
 							</div>
 
+							<!-- Thời gian ship vé -->
 							<div class="mb-6">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -163,6 +164,7 @@
 								</select>
 							</div>
 
+							<!-- Ghi chú -->
 							<div class="mb-6">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -196,48 +198,67 @@
 						</form>
 					</div>
 				</div>
+
 				<!-- Order Summary - 1 column -->
 				<div class="lg:col-span-1">
 					<div class="bg-white rounded-lg shadow-lg p-6 sticky top-4">
-						<h3 class="text-lg font-bold mb-4">
-							Thông tin đơn hàng
-						</h3>
+						<h3 class="text-xl font-bold mb-4">Tóm tắt đơn hàng</h3>
 
 						<!-- Show Info -->
 						<div class="mb-4 pb-4 border-b">
-							<h4 class="font-semibold">{{ showInfo.name }}</h4>
+							<h4 class="font-semibold mb-2">
+								{{ showInfo.name }}
+							</h4>
 							<p class="text-sm text-gray-600">
-								Ngày: {{ performanceInfo.date }}
-							</p>
-							<p class="text-sm text-gray-600">
-								Thời gian: {{ performanceInfo.time }}
+								{{ performanceInfo.date }} -
+								{{ performanceInfo.time }}
 							</p>
 						</div>
 
 						<!-- Selected Seats -->
 						<div class="mb-4 pb-4 border-b">
-							<h4 class="font-semibold mb-3">Ghế đã chọn:</h4>
-							<SelectedSeatsDisplay
-								:seats="selectedSeats"
-								display-mode="list"
-								:show-summary="false"
-							/>
+							<h4 class="font-semibold mb-2">Ghế đã chọn</h4>
+							<div class="space-y-2">
+								<div
+									v-for="seat in selectedSeats"
+									:key="seat.id"
+									class="flex justify-between text-sm"
+								>
+									<span>{{ seat.row }}{{ seat.number }}</span>
+									<span class="font-semibold">{{
+										formatPrice(seat.price)
+									}}</span>
+								</div>
+							</div>
 						</div>
 
 						<!-- Price Breakdown -->
 						<div class="space-y-2 mb-4 pb-4 border-b">
+							<!-- Tổng tiền vé -->
 							<div class="flex justify-between text-sm">
-								<span>Tổng tiền vé:</span>
-								<span>{{ formatPrice(subtotal) }}</span>
+								<span class="text-gray-600">Tổng tiền vé:</span>
+								<span class="font-semibold">{{
+									formatPrice(ticketAmount)
+								}}</span>
+							</div>
+
+							<!-- Phí dịch vụ -->
+							<div class="flex justify-between text-sm">
+								<span class="text-gray-600">Phí dịch vụ:</span>
+								<span class="font-semibold text-primary-600">{{
+									formatPrice(serviceFee)
+								}}</span>
 							</div>
 						</div>
 
-						<!-- Total -->
-						<div class="flex justify-between items-center">
-							<span class="font-semibold">Tổng thanh toán:</span>
-							<span class="text-xl font-bold text-primary-600">
-								{{ formatPrice(totalAmount) }}
-							</span>
+						<!-- Total Amount -->
+						<div
+							class="flex justify-between items-center text-lg font-bold mb-6"
+						>
+							<span>Tổng thanh toán:</span>
+							<span class="text-primary-600">{{
+								formatPrice(totalAmount)
+							}}</span>
 						</div>
 
 						<!-- Timer -->
@@ -261,7 +282,6 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { useBookingStore } from "../stores/booking";
-import SelectedSeatsDisplay from "../components/SelectedSeatsDisplay.vue";
 
 const bookingStore = useBookingStore();
 const router = useRouter();
@@ -270,6 +290,7 @@ const route = useRoute();
 // Form data
 const showInfo = ref({
 	name: "",
+	service_fee_per_ticket: 10000, // default
 });
 
 const performanceInfo = ref({
@@ -277,7 +298,6 @@ const performanceInfo = ref({
 	time: "",
 });
 
-// Form data
 const customerInfo = ref({
 	fullName: "",
 	email: "",
@@ -285,7 +305,7 @@ const customerInfo = ref({
 	idNumber: "",
 	address: "",
 	notes: "",
-	shippingTime: "",
+	shippingTime: "business_hours",
 });
 
 const agreedToTerms = ref(false);
@@ -303,13 +323,30 @@ const selectedSeats = ref([]);
 const timeLeft = ref(600); // 10 minutes
 let timer = null;
 
-// Computed
-const subtotal = computed(() => {
+// ===== COMPUTED - TÍNH PHÍ DỊCH VỤ =====
+const serviceFeePerTicket = computed(() => {
+	// Ưu tiên lấy từ showInfo đã load
+	if (showInfo.value.service_fee_per_ticket) {
+		return showInfo.value.service_fee_per_ticket;
+	}
+	// Fallback: lấy từ bookingStore
+	if (bookingStore.currentShow?.service_fee_per_ticket) {
+		return bookingStore.currentShow.service_fee_per_ticket;
+	}
+	// Default 10,000đ
+	return 10000;
+});
+
+const ticketAmount = computed(() => {
 	return selectedSeats.value.reduce((sum, seat) => sum + seat.price, 0);
 });
 
+const serviceFee = computed(() => {
+	return selectedSeats.value.length * serviceFeePerTicket.value;
+});
+
 const totalAmount = computed(() => {
-	return subtotal.value;
+	return ticketAmount.value + serviceFee.value;
 });
 
 // Methods
@@ -329,18 +366,15 @@ const formatTime = (seconds) => {
 const validateForm = () => {
 	errors.value = {};
 
-	// Validate name
 	if (!customerInfo.value.fullName.trim()) {
 		errors.value.fullName = "Vui lòng nhập họ tên";
 	}
 
-	// Validate email
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	if (!emailRegex.test(customerInfo.value.email)) {
 		errors.value.email = "Email không hợp lệ";
 	}
 
-	// Validate phone
 	const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
 	if (!phoneRegex.test(customerInfo.value.phone)) {
 		errors.value.phone = "Số điện thoại không hợp lệ";
@@ -367,10 +401,7 @@ const handleSubmit = async () => {
 		};
 
 		const booking = await bookingStore.createBooking();
-
 		const paymentData = await bookingStore.processPayment("9pay");
-
-		console.log("Payment data:", paymentData);
 
 		const bookingData = {
 			showInfo: {
@@ -386,6 +417,8 @@ const handleSubmit = async () => {
 				phone: customerInfo.value.phone,
 			},
 			amount: totalAmount.value,
+			ticketAmount: ticketAmount.value,
+			serviceFee: serviceFee.value,
 			selectedSeats: selectedSeats.value,
 			bookingCode: bookingStore.bookingCode,
 			status: "pending",
@@ -395,7 +428,6 @@ const handleSubmit = async () => {
 		sessionStorage.setItem("bookingData", JSON.stringify(bookingData));
 
 		if (paymentData.payment_url) {
-			console.log("Redirecting to 9Pay:", paymentData.payment_url);
 			window.location.href = paymentData.payment_url;
 		} else {
 			throw new Error("Không nhận được URL thanh toán từ 9Pay");
@@ -410,7 +442,6 @@ const goBack = () => {
 	router.back();
 };
 
-// Timer
 const startTimer = () => {
 	timer = setInterval(() => {
 		if (timeLeft.value > 0) {
@@ -424,13 +455,22 @@ const startTimer = () => {
 };
 
 onMounted(() => {
-	// Load performance data from session
-	const savedPerformance = sessionStorage.getItem("selectedPerformance");
-	if (savedPerformance) {
-		const performance = JSON.parse(savedPerformance);
+	// Load từ bookingStore trước (ưu tiên)
+	if (bookingStore.currentShow) {
 		showInfo.value = {
-			name: performance.show_name,
+			name: bookingStore.currentShow.name,
+			service_fee_per_ticket:
+				bookingStore.currentShow.service_fee_per_ticket || 10000,
 		};
+	}
+
+	// Load performance data
+	if (bookingStore.selectedPerformance) {
+		const performance = bookingStore.selectedPerformance;
+		if (!showInfo.value.name) {
+			showInfo.value.name =
+				performance.show_name || performance.show?.name;
+		}
 		performanceInfo.value = {
 			date: new Date(performance.datetime).toLocaleDateString("vi-VN"),
 			time: new Date(performance.datetime).toLocaleTimeString("vi-VN", {
@@ -438,18 +478,41 @@ onMounted(() => {
 				minute: "2-digit",
 			}),
 		};
+	} else {
+		// Fallback: Load từ sessionStorage
+		const savedPerformance = sessionStorage.getItem("selectedPerformance");
+		if (savedPerformance) {
+			const performance = JSON.parse(savedPerformance);
+			if (!showInfo.value.name) {
+				showInfo.value.name = performance.show_name;
+			}
+			performanceInfo.value = {
+				date: new Date(performance.datetime).toLocaleDateString(
+					"vi-VN"
+				),
+				time: new Date(performance.datetime).toLocaleTimeString(
+					"vi-VN",
+					{
+						hour: "2-digit",
+						minute: "2-digit",
+					}
+				),
+			};
+		}
 	}
 
-	// Load selected seats from sessionStorage
-	const savedSeats = sessionStorage.getItem("selectedSeats");
-	if (savedSeats) {
-		selectedSeats.value = JSON.parse(savedSeats);
-	} else if (bookingStore.selectedSeats?.length > 0) {
+	// Load selected seats
+	if (bookingStore.selectedSeats?.length > 0) {
 		selectedSeats.value = bookingStore.selectedSeats;
 	} else {
-		alert("Không tìm thấy ghế đã chọn. Vui lòng chọn lại.");
-		router.push(`/booking/${route.params.showId}/seats`);
-		return;
+		const savedSeats = sessionStorage.getItem("selectedSeats");
+		if (savedSeats) {
+			selectedSeats.value = JSON.parse(savedSeats);
+		} else {
+			alert("Không tìm thấy ghế đã chọn. Vui lòng chọn lại.");
+			router.push(`/booking/${route.params.showId}/seats`);
+			return;
+		}
 	}
 
 	startTimer();
