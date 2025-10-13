@@ -6,7 +6,7 @@
 				<div class="flex items-center space-x-3">
 					<img
 						class="h-12 w-auto object-contain"
-						src="/logo_DCART-1.png"
+						src="/LogoDC.png"
 						alt="Dương Cầm ART Logo"
 					/>
 					<h1

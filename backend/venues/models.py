@@ -158,6 +158,7 @@ class ContactInfo(models.Model):
     instagram_url = models.URLField(blank=True, verbose_name='Instagram URL')
     website_url = models.URLField(blank=True, verbose_name='Website URL')
     logo_url = models.URLField(
+        max_length=500,
         default='https://lh3.googleusercontent.com/pw/AP1GczOeY1ZKKsObbQ5Em5H14byD0GRz_-ydPBGZWzBOQbun4cB783CMb3NsYbucZAmrMlCE-YJ8r3Ll71Fthb-wyaMjuQbPTc1jAPLcf-3-NzjBqBuS_3NB2W6JzfAWZP3sRYBVzVxethfg4iJBam3EhoDp=w489-h301-s-no-gm',
         verbose_name='Logo URL'
     )
