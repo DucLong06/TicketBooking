@@ -234,7 +234,6 @@
 
 						<!-- Price Breakdown -->
 						<div class="space-y-2 mb-4 pb-4 border-b">
-							<!-- Tổng tiền vé -->
 							<div class="flex justify-between text-sm">
 								<span class="text-gray-600">Tổng tiền vé:</span>
 								<span class="font-semibold">{{
@@ -242,9 +241,10 @@
 								}}</span>
 							</div>
 
-							<!-- Phí dịch vụ -->
 							<div class="flex justify-between text-sm">
-								<span class="text-gray-600">Phí dịch vụ:</span>
+								<span class="text-gray-600"
+									>Phí vận chuyển:</span
+								>
 								<span class="font-semibold text-primary-600">{{
 									formatPrice(serviceFee)
 								}}</span>
@@ -323,13 +323,10 @@ const selectedSeats = ref([]);
 const timeLeft = ref(600); // 10 minutes
 let timer = null;
 
-// ===== COMPUTED - TÍNH PHÍ DỊCH VỤ =====
 const serviceFeePerTicket = computed(() => {
-	// Ưu tiên lấy từ showInfo đã load
 	if (showInfo.value.service_fee_per_ticket) {
 		return showInfo.value.service_fee_per_ticket;
 	}
-	// Fallback: lấy từ bookingStore
 	if (bookingStore.currentShow?.service_fee_per_ticket) {
 		return bookingStore.currentShow.service_fee_per_ticket;
 	}

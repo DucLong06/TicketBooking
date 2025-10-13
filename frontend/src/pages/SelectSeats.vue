@@ -182,10 +182,76 @@
 						</div>
 
 						<!-- Seat Map Container with Zoom -->
+
 						<div
 							class="relative bg-white rounded-2xl shadow-inner border-2 border-gray-200 overflow-hidden"
 							style="min-height: 500px; max-height: 650px"
 						>
+							<!-- Zoom Controls - Top Left Corner -->
+							<div
+								class="absolute top-4 left-4 z-20 flex flex-col gap-2"
+							>
+								<button
+									@click="handleZoomIn"
+									class="bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-lg shadow-lg border-2 border-gray-200 transition-all hover:scale-110 active:scale-95"
+									title="Phóng to"
+								>
+									<svg
+										class="w-5 h-5"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"
+										/>
+									</svg>
+								</button>
+
+								<button
+									@click="handleZoomOut"
+									class="bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-lg shadow-lg border-2 border-gray-200 transition-all hover:scale-110 active:scale-95"
+									title="Thu nhỏ"
+								>
+									<svg
+										class="w-5 h-5"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"
+										/>
+									</svg>
+								</button>
+
+								<button
+									@click="handleResetView"
+									class="bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-lg shadow-lg border-2 border-gray-200 transition-all hover:scale-110 active:scale-95"
+									title="Đặt lại vị trí"
+								>
+									<svg
+										class="w-5 h-5"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+										/>
+									</svg>
+								</button>
+							</div>
+
 							<div
 								class="absolute inset-0 bg-gradient-to-b from-purple-900/5 via-transparent to-gray-900/5 pointer-events-none"
 							></div>
@@ -241,12 +307,12 @@
 												></div>
 												<div class="relative z-10">
 													<div
-														class="text-2xl font-bold tracking-wider mb-1 text-yellow-100"
+														class="text-4xl font-bold tracking-wider mb-1 text-yellow-100"
 													>
 														SÂN KHẤU
 													</div>
 													<div
-														class="text-sm opacity-75 tracking-widest text-yellow-200/70"
+														class="text-xl opacity-75 tracking-widest text-yellow-200/70"
 													>
 														STAGE
 													</div>
@@ -1052,152 +1118,6 @@
 				</div>
 			</div>
 		</Teleport>
-
-		<!-- Zoom Instructions - Floating Guide -->
-		<Teleport to="body">
-			<Transition name="slide-up-fade">
-				<div
-					v-if="showZoomInstructions && !instructionsClosed"
-					class="fixed bottom-6 right-6 z-40 max-w-sm"
-				>
-					<div
-						class="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-2xl shadow-2xl p-[2px]"
-					>
-						<div class="bg-white rounded-2xl p-5 relative">
-							<button
-								@click="closeInstructions"
-								class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors"
-							>
-								<svg
-									class="w-5 h-5"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M6 18L18 6M6 6l12 12"
-									/>
-								</svg>
-							</button>
-
-							<div class="mb-4 pr-6">
-								<div class="flex items-center gap-2 mb-1">
-									<span class="text-2xl">🔍</span>
-									<h3 class="text-lg font-bold text-gray-800">
-										Cách zoom sơ đồ ghế
-									</h3>
-								</div>
-								<p class="text-xs text-gray-500">
-									Phóng to/thu nhỏ để xem rõ hơn
-								</p>
-							</div>
-
-							<div class="space-y-3">
-								<div
-									class="hidden lg:flex items-start gap-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-3"
-								>
-									<div
-										class="flex-shrink-0 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm"
-									>
-										<svg
-											class="w-5 h-5 text-blue-600"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
-											/>
-										</svg>
-									</div>
-									<div class="flex-1">
-										<div
-											class="font-semibold text-gray-800 text-sm mb-1"
-										>
-											💻 Desktop
-										</div>
-										<div class="text-xs text-gray-600">
-											Cuộn chuột để zoom<br />
-											Kéo thả để di chuyển
-										</div>
-									</div>
-								</div>
-
-								<div
-									class="lg:hidden flex items-start gap-3 bg-gradient-to-r from-pink-50 to-orange-50 rounded-xl p-3"
-								>
-									<div
-										class="flex-shrink-0 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm"
-									>
-										<svg
-											class="w-5 h-5 text-pink-600"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-											/>
-										</svg>
-									</div>
-									<div class="flex-1">
-										<div
-											class="font-semibold text-gray-800 text-sm mb-1"
-										>
-											📱 Mobile
-										</div>
-										<div class="text-xs text-gray-600">
-											Chụm/dạng 2 ngón để zoom<br />
-											Vuốt 1 ngón để di chuyển
-										</div>
-									</div>
-								</div>
-							</div>
-
-							<div
-								class="mt-3 pt-3 border-t border-gray-200 text-center"
-							>
-								<p class="text-xs text-gray-400 italic">
-									Hướng dẫn sẽ tự ẩn sau 10 giây
-								</p>
-							</div>
-						</div>
-					</div>
-				</div>
-			</Transition>
-
-			<Transition name="scale-fade">
-				<button
-					v-if="instructionsClosed"
-					@click="showInstructions"
-					class="fixed bottom-6 right-6 z-40 bg-gradient-to-br from-blue-600 to-purple-600 text-white rounded-full p-4 shadow-2xl hover:shadow-3xl transition-all hover:scale-110 active:scale-95"
-					title="Xem hướng dẫn zoom"
-				>
-					<svg
-						class="w-6 h-6"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-						/>
-					</svg>
-				</button>
-			</Transition>
-		</Teleport>
 	</DefaultLayout>
 </template>
 
@@ -1225,9 +1145,13 @@ const showLayoutModal = ref(false);
 let timer = null;
 
 // Zoom and Pan state
-const zoomLevel = ref(1);
+const zoomLevel = ref(0.29);
 const panX = ref(0);
-const panY = ref(0);
+const panY = ref(-770);
+const initialZoomLevel = ref(0.29);
+const initialPanX = ref(0);
+const initialPanY = ref(-770);
+
 const isDragging = ref(false);
 const dragStart = ref({ x: 0, y: 0 });
 const lastTouchDistance = ref(0);
@@ -1787,6 +1711,26 @@ const handleGlobalTouch = (event) => {
 	if (!isSeatButton && tooltipVisible.value) {
 		hideSeatTooltip();
 	}
+};
+
+// Zoom In Handler
+const handleZoomIn = () => {
+	const newZoom = Math.min(2, zoomLevel.value + 0.1);
+	zoomLevel.value = newZoom;
+};
+
+// Zoom Out Handler
+const handleZoomOut = () => {
+	const minZoom = isMobile.value ? 0.15 : 0.25;
+	const newZoom = Math.max(minZoom, zoomLevel.value - 0.1);
+	zoomLevel.value = newZoom;
+};
+
+// Reset View Handler
+const handleResetView = () => {
+	zoomLevel.value = initialZoomLevel.value;
+	panX.value = initialPanX.value;
+	panY.value = initialPanY.value;
 };
 
 // Lifecycle
