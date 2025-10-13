@@ -884,6 +884,172 @@
 		</div>
 
 		<!-- Mobile Bottom Sheet -->
+		<div class="lg:hidden">
+			<div
+				v-if="bottomSheetState === 'expanded'"
+				class="fixed inset-0 bg-black/40 z-40 transition-opacity"
+				@click="bottomSheetState = 'minimized'"
+			></div>
+
+			<div
+				v-if="selectedSeats.length > 0"
+				class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-50 transition-transform duration-300"
+				:style="{
+					transform: getBottomSheetTransform(),
+				}"
+				@touchstart="handleBottomSheetTouchStart"
+				@touchmove="handleBottomSheetTouchMove"
+				@touchend="handleBottomSheetTouchEnd"
+			>
+				<div class="flex justify-center pt-3 pb-2">
+					<div class="w-12 h-1 bg-gray-300 rounded-full"></div>
+				</div>
+
+				<div v-if="bottomSheetState === 'minimized'" class="px-4 pb-4">
+					<div class="flex items-center justify-between gap-3">
+						<div
+							class="flex-1 cursor-pointer flex items-center gap-3"
+							@click="bottomSheetState = 'expanded'"
+						>
+							<span class="text-purple-600 text-xl">🎫</span>
+							<div>
+								<div class="font-bold text-gray-800">
+									{{ selectedSeats.length }} ghế đã chọn
+								</div>
+								<div class="text-sm text-gray-600">
+									{{ formatPrice(totalAmount) }}
+								</div>
+							</div>
+						</div>
+
+						<div class="text-center flex-shrink-0">
+							<div
+								class="text-lg font-bold text-orange-600 tabular-nums"
+							>
+								{{ formatTime(timeLeft) }}
+							</div>
+						</div>
+
+						<button
+							@click.stop="continueToCustomerInfo"
+							class="bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg hover:shadow-xl transform active:scale-95 transition-all flex-shrink-0"
+						>
+							Tiếp tục
+						</button>
+					</div>
+				</div>
+
+				<div
+					v-if="bottomSheetState === 'expanded'"
+					class="px-4 pb-4 pt-2"
+				>
+					<div class="flex justify-center mb-3">
+						<button
+							@click="bottomSheetState = 'minimized'"
+							class="p-2 hover:bg-gray-100 rounded-full"
+						>
+							<svg
+								class="w-5 h-5 text-gray-400"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M19 9l-7 7-7-7"
+								/>
+							</svg>
+						</button>
+					</div>
+
+					<div class="grid grid-cols-4 gap-2 items-stretch mb-3">
+						<div
+							class="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border-2 border-yellow-300 p-3 text-center flex flex-col justify-center"
+						>
+							<div
+								class="text-xs text-yellow-800 font-semibold mb-1"
+							>
+								⏱️
+							</div>
+							<div
+								class="text-sm font-bold text-orange-600 mb-0.5"
+							>
+								{{ formatTime(timeLeft) }}
+							</div>
+							<div class="text-xs text-yellow-700">Giữ ghế</div>
+						</div>
+
+						<div
+							class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border-2 border-purple-300 p-3 text-center flex flex-col justify-center"
+						>
+							<div
+								class="text-xs text-purple-800 font-semibold mb-1"
+							>
+								🎫
+							</div>
+							<div
+								class="text-lg font-bold text-purple-600 mb-0.5"
+							>
+								{{ selectedSeats.length }}
+							</div>
+							<div class="text-xs text-purple-700">Đã chọn</div>
+						</div>
+
+						<div
+							class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-green-300 p-3 text-center flex flex-col justify-center"
+						>
+							<div
+								class="text-xs text-green-800 font-semibold mb-1"
+							>
+								💰
+							</div>
+							<div
+								class="text-sm font-bold text-green-600 mb-0.5 leading-tight"
+							>
+								{{ (totalAmount / 1000).toFixed(0) }}K
+							</div>
+							<div class="text-xs text-green-700">Tổng tiền</div>
+						</div>
+
+						<button
+							@click="continueToCustomerInfo"
+							class="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform active:scale-95 transition-all flex items-center justify-center px-2"
+						>
+							Tiếp tục →
+						</button>
+					</div>
+
+					<details class="mt-3">
+						<summary
+							class="text-xs text-gray-600 cursor-pointer hover:text-gray-800 text-center py-2"
+						>
+							Xem chi tiết ghế đã chọn ▼
+						</summary>
+						<div class="space-y-2 mt-2 max-h-40 overflow-y-auto">
+							<div
+								v-for="seat in selectedSeats"
+								:key="seat.id"
+								class="flex justify-between items-center bg-gradient-to-r from-purple-50 to-blue-50 p-2 rounded-lg border border-purple-200 text-xs"
+							>
+								<div>
+									<div class="font-bold text-gray-800">
+										{{ seat.full_label }}
+									</div>
+									<div class="text-gray-600">
+										{{ seat.section_name }}
+									</div>
+								</div>
+								<div class="font-bold text-purple-600">
+									{{ formatPrice(seat.price) }}
+								</div>
+							</div>
+						</div>
+					</details>
+				</div>
+			</div>
+		</div>
 
 		<!-- Seat Tooltip -->
 		<Teleport to="body">
