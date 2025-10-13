@@ -16,143 +16,7 @@
 			<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 				<!-- Left Column: Seat Map (2/3 width) -->
 				<div class="lg:col-span-2">
-					<div
-						class="bg-gradient-to-b from-gray-50 to-gray-100 rounded-2xl shadow-2xl p-6 border border-gray-200 relative overflow-hidden"
-					>
-						<!-- Decorative background pattern -->
-						<div class="absolute inset-0 opacity-5">
-							<div
-								class="absolute inset-0"
-								style="
-									background-image: radial-gradient(
-										circle,
-										#000 1px,
-										transparent 1px
-									);
-									background-size: 20px 20px;
-								"
-							></div>
-						</div>
-
-						<!-- Enhanced Header -->
-						<div class="text-center mb-6 relative z-10">
-							<h2
-								class="text-2xl lg:text-3xl font-bold text-gray-800 mb-3 lg:mb-4 flex items-center justify-center gap-2 lg:gap-3"
-							>
-								<span class="text-3xl lg:text-4xl">🎭</span>
-								<span>{{ showInfo.name }}</span>
-							</h2>
-							<div
-								class="flex flex-wrap justify-center gap-2 lg:gap-3 text-xs lg:text-sm"
-							>
-								<div
-									class="flex items-center gap-1.5 lg:gap-2 bg-white/80 backdrop-blur-sm px-3 lg:px-4 py-1.5 lg:py-2 rounded-full shadow-sm border border-gray-200"
-								>
-									<svg
-										class="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary-600"
-										fill="none"
-										stroke="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-										/>
-									</svg>
-									<span class="font-semibold">{{
-										performanceData.date
-									}}</span>
-								</div>
-								<div
-									class="flex items-center gap-1.5 lg:gap-2 bg-white/80 backdrop-blur-sm px-3 lg:px-4 py-1.5 lg:py-2 rounded-full shadow-sm border border-gray-200"
-								>
-									<svg
-										class="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary-600"
-										fill="none"
-										stroke="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-										/>
-									</svg>
-									<span class="font-semibold">{{
-										performanceData.time
-									}}</span>
-								</div>
-								<div
-									class="hidden lg:flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-200"
-								>
-									<svg
-										class="w-4 h-4 text-primary-600"
-										fill="none"
-										stroke="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-										/>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-										/>
-									</svg>
-									<span class="font-medium">{{
-										venueInfo.name
-									}}</span>
-								</div>
-								<div
-									v-if="showInfo.duration_minutes"
-									class="hidden lg:flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-200"
-								>
-									<svg
-										class="w-4 h-4 text-primary-600"
-										fill="none"
-										stroke="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-										/>
-									</svg>
-									<span class="font-medium"
-										>{{
-											showInfo.duration_minutes
-										}}
-										phút</span
-									>
-								</div>
-							</div>
-							<div
-								v-if="venueInfo.checkin_minutes_before"
-								class="mt-2 lg:mt-3 inline-block"
-							>
-								<div
-									class="bg-amber-100/80 backdrop-blur-sm border-2 border-amber-300 rounded-full px-3 lg:px-4 py-1.5 lg:py-2 shadow-sm"
-								>
-									<span
-										class="text-xs text-amber-800 font-semibold"
-									>
-										Vé không kèm trẻ em, chương trình không
-										dành cho trẻ em dưới 6 tuổi
-									</span>
-								</div>
-							</div>
-						</div>
-
+					<div class="">
 						<!-- Price Categories - Mobile horizontal scroll -->
 						<div class="lg:hidden mb-4">
 							<div class="grid grid-cols-2 gap-2">
@@ -184,7 +48,7 @@
 						<!-- Seat Map Container with Zoom -->
 
 						<div
-							class="relative bg-white rounded-2xl shadow-inner border-2 border-gray-200 overflow-hidden"
+							class="relative overflow-hidden"
 							style="min-height: 500px; max-height: 650px"
 						>
 							<!-- Zoom Controls - Top Left Corner -->
@@ -252,9 +116,7 @@
 								</button>
 							</div>
 
-							<div
-								class="absolute inset-0 bg-gradient-to-b from-purple-900/5 via-transparent to-gray-900/5 pointer-events-none"
-							></div>
+							<div class=""></div>
 
 							<div
 								class="h-full p-6 flex items-center justify-center"
@@ -711,7 +573,7 @@
 						</div>
 
 						<!-- Status Legend -->
-						<div
+						<!-- <div
 							class="mt-6 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-5 border border-gray-200 relative z-10"
 						>
 							<h4
@@ -765,15 +627,150 @@
 									>
 								</div>
 							</div>
-						</div>
+						</div> -->
 					</div>
 				</div>
 
 				<!-- Right Column: Price Categories & Booking Summary - DESKTOP ONLY -->
+
 				<div class="hidden lg:block lg:col-span-1">
+					<!-- Decorative background pattern -->
+					<!-- <div class="absolute inset-0 opacity-5">
+						<div
+							class="absolute inset-0"
+							style="
+								background-image: radial-gradient(
+									circle,
+									#000 1px,
+									transparent 1px
+								);
+								background-size: 20px 20px;
+							"
+						></div>
+					</div> -->
+
+					<!-- Enhanced Header -->
+
 					<div
 						class="mb-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl shadow-xl p-5 border-2 border-blue-100"
 					>
+						<div class="text-center relative z-10">
+							<h2
+								class="text-xl lg:text-2xl font-bold text-gray-800 mb-3 lg:mb-4 flex items-center justify-center gap-2 lg:gap-3"
+							>
+								<span class="text-2xl lg:text-3xl">🎭</span>
+								<span>{{ showInfo.name }}</span>
+							</h2>
+							<div
+								class="flex flex-wrap justify-center gap-2 lg:gap-3 text-xs"
+							>
+								<div
+									class="flex items-center gap-1.5 lg:gap-2 bg-white/80 backdrop-blur-sm px-3 lg:px-4 py-1.5 lg:py-2 rounded-full shadow-sm border border-gray-200"
+								>
+									<svg
+										class="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary-600"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+										/>
+									</svg>
+									<span class="font-semibold">{{
+										performanceData.date
+									}}</span>
+								</div>
+								<div
+									class="flex items-center gap-1.5 lg:gap-2 bg-white/80 backdrop-blur-sm px-3 lg:px-4 py-1.5 lg:py-2 rounded-full shadow-sm border border-gray-200"
+								>
+									<svg
+										class="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary-600"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+										/>
+									</svg>
+									<span class="font-semibold">{{
+										performanceData.time
+									}}</span>
+								</div>
+								<div
+									class="hidden lg:flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-200"
+								>
+									<svg
+										class="w-4 h-4 text-primary-600"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+										/>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+										/>
+									</svg>
+									<span class="font-medium">{{
+										venueInfo.name
+									}}</span>
+								</div>
+								<div
+									v-if="showInfo.duration_minutes"
+									class="hidden lg:flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-200"
+								>
+									<svg
+										class="w-4 h-4 text-primary-600"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+										/>
+									</svg>
+									<span class="font-medium"
+										>{{
+											showInfo.duration_minutes
+										}}
+										phút</span
+									>
+								</div>
+							</div>
+							<div
+								v-if="venueInfo.checkin_minutes_before"
+								class="mt-2 lg:mt-3 inline-block"
+							>
+								<!-- <div
+									class="bg-amber-100/80 backdrop-blur-sm border-2 border-amber-300 rounded-full px-3 lg:px-4 py-1.5 lg:py-2 shadow-sm"
+								>
+									<span
+										class="text-xs text-amber-800 font-semibold"
+									>
+										Vé không kèm trẻ em, chương trình không
+										dành cho trẻ em dưới 6 tuổi
+									</span>
+								</div> -->
+							</div>
+						</div>
 						<div class="space-y-3">
 							<div
 								v-for="(category, code) in priceCategories"
@@ -887,172 +884,6 @@
 		</div>
 
 		<!-- Mobile Bottom Sheet -->
-		<div class="lg:hidden">
-			<div
-				v-if="bottomSheetState === 'expanded'"
-				class="fixed inset-0 bg-black/40 z-40 transition-opacity"
-				@click="bottomSheetState = 'minimized'"
-			></div>
-
-			<div
-				v-if="selectedSeats.length > 0"
-				class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-50 transition-transform duration-300"
-				:style="{
-					transform: getBottomSheetTransform(),
-				}"
-				@touchstart="handleBottomSheetTouchStart"
-				@touchmove="handleBottomSheetTouchMove"
-				@touchend="handleBottomSheetTouchEnd"
-			>
-				<div class="flex justify-center pt-3 pb-2">
-					<div class="w-12 h-1 bg-gray-300 rounded-full"></div>
-				</div>
-
-				<div v-if="bottomSheetState === 'minimized'" class="px-4 pb-4">
-					<div class="flex items-center justify-between gap-3">
-						<div
-							class="flex-1 cursor-pointer flex items-center gap-3"
-							@click="bottomSheetState = 'expanded'"
-						>
-							<span class="text-purple-600 text-xl">🎫</span>
-							<div>
-								<div class="font-bold text-gray-800">
-									{{ selectedSeats.length }} ghế đã chọn
-								</div>
-								<div class="text-sm text-gray-600">
-									{{ formatPrice(totalAmount) }}
-								</div>
-							</div>
-						</div>
-
-						<div class="text-center flex-shrink-0">
-							<div
-								class="text-lg font-bold text-orange-600 tabular-nums"
-							>
-								{{ formatTime(timeLeft) }}
-							</div>
-						</div>
-
-						<button
-							@click.stop="continueToCustomerInfo"
-							class="bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg hover:shadow-xl transform active:scale-95 transition-all flex-shrink-0"
-						>
-							Tiếp tục
-						</button>
-					</div>
-				</div>
-
-				<div
-					v-if="bottomSheetState === 'expanded'"
-					class="px-4 pb-4 pt-2"
-				>
-					<div class="flex justify-center mb-3">
-						<button
-							@click="bottomSheetState = 'minimized'"
-							class="p-2 hover:bg-gray-100 rounded-full"
-						>
-							<svg
-								class="w-5 h-5 text-gray-400"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M19 9l-7 7-7-7"
-								/>
-							</svg>
-						</button>
-					</div>
-
-					<div class="grid grid-cols-4 gap-2 items-stretch mb-3">
-						<div
-							class="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border-2 border-yellow-300 p-3 text-center flex flex-col justify-center"
-						>
-							<div
-								class="text-xs text-yellow-800 font-semibold mb-1"
-							>
-								⏱️
-							</div>
-							<div
-								class="text-sm font-bold text-orange-600 mb-0.5"
-							>
-								{{ formatTime(timeLeft) }}
-							</div>
-							<div class="text-xs text-yellow-700">Giữ ghế</div>
-						</div>
-
-						<div
-							class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border-2 border-purple-300 p-3 text-center flex flex-col justify-center"
-						>
-							<div
-								class="text-xs text-purple-800 font-semibold mb-1"
-							>
-								🎫
-							</div>
-							<div
-								class="text-lg font-bold text-purple-600 mb-0.5"
-							>
-								{{ selectedSeats.length }}
-							</div>
-							<div class="text-xs text-purple-700">Đã chọn</div>
-						</div>
-
-						<div
-							class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-green-300 p-3 text-center flex flex-col justify-center"
-						>
-							<div
-								class="text-xs text-green-800 font-semibold mb-1"
-							>
-								💰
-							</div>
-							<div
-								class="text-sm font-bold text-green-600 mb-0.5 leading-tight"
-							>
-								{{ (totalAmount / 1000).toFixed(0) }}K
-							</div>
-							<div class="text-xs text-green-700">Tổng tiền</div>
-						</div>
-
-						<button
-							@click="continueToCustomerInfo"
-							class="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform active:scale-95 transition-all flex items-center justify-center px-2"
-						>
-							Tiếp tục →
-						</button>
-					</div>
-
-					<details class="mt-3">
-						<summary
-							class="text-xs text-gray-600 cursor-pointer hover:text-gray-800 text-center py-2"
-						>
-							Xem chi tiết ghế đã chọn ▼
-						</summary>
-						<div class="space-y-2 mt-2 max-h-40 overflow-y-auto">
-							<div
-								v-for="seat in selectedSeats"
-								:key="seat.id"
-								class="flex justify-between items-center bg-gradient-to-r from-purple-50 to-blue-50 p-2 rounded-lg border border-purple-200 text-xs"
-							>
-								<div>
-									<div class="font-bold text-gray-800">
-										{{ seat.full_label }}
-									</div>
-									<div class="text-gray-600">
-										{{ seat.section_name }}
-									</div>
-								</div>
-								<div class="font-bold text-purple-600">
-									{{ formatPrice(seat.price) }}
-								</div>
-							</div>
-						</div>
-					</details>
-				</div>
-			</div>
-		</div>
 
 		<!-- Seat Tooltip -->
 		<Teleport to="body">
