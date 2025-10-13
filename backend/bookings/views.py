@@ -1,3 +1,4 @@
+from django.db.models import Prefetch
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
@@ -27,13 +28,22 @@ def get_performance_seat_map(performance):
 
     # Get all seats
     seats = Seat.objects.filter(
-        row__section__venue=venue,
-        status='active'
+    row__section__venue=venue,
+    status='active'
     ).select_related(
         'row',
-        'row__section',
+        'row__section', 
         'row__price_category',
-        'price_category'  # ← SELECT seat's price_category
+        'price_category'
+    ).prefetch_related(
+        Prefetch(
+            'reservations',
+            queryset=SeatReservation.objects.filter(
+                performance=performance,
+                status__in=['reserved', 'sold', 'blocked']
+            ),
+            to_attr='active_reservations'
+        )
     )
 
     # Get reservations

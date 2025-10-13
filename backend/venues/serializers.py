@@ -126,12 +126,10 @@ class VenueSerializer(serializers.ModelSerializer):
         ]
 
     def get_total_seats(self, obj):
-        return sum(
-            section.rows.aggregate(
-                total=models.Sum('seats__id')
-            )['total'] or 0
-            for section in obj.sections.all()
-        )
+        return Seat.objects.filter(
+            row__section__venue=obj,
+            status='active'
+        ).count()
 
 
 class VenueListSerializer(serializers.ModelSerializer):
@@ -147,7 +145,6 @@ class VenueListSerializer(serializers.ModelSerializer):
         ]
 
     def get_total_seats(self, obj):
-        # Simplified calculation for list view
         return obj.sections.count() * 200  # Rough estimate
 
 

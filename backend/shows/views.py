@@ -1,3 +1,4 @@
+from django.db.models import Q, Count
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -35,11 +36,15 @@ class ShowViewSet(viewsets.ReadOnlyModelViewSet):
 
 class PerformanceViewSet(viewsets.ReadOnlyModelViewSet):
     """API for Performances"""
-    queryset = Performance.objects.filter(
-        datetime__gte=timezone.now(),
-        status='on_sale'
-    )
     serializer_class = PerformanceSerializer
+
+    def get_queryset(self):
+        return Performance.objects.annotate(
+            available_seats=Count('show__venue__sections__rows__seats') - Count(
+                'seat_reservations',
+                filter=Q(seat_reservations__status__in=['reserved', 'sold'])
+            )
+        )
 
     @action(detail=True, methods=['get'])
     def seat_map(self, request, pk=None):
