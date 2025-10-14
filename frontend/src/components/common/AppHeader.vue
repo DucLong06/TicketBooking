@@ -25,10 +25,10 @@
 						Trang chủ
 					</a>
 					<a
-						href="/#shows"
+						href="/lookup"
 						class="text-gray-700 hover:text-primary-600 transition font-medium"
 					>
-						Lịch diễn
+						Tra cứu vé
 					</a>
 					<a
 						href="/#about"
@@ -102,11 +102,11 @@
 							🏠 Trang chủ
 						</a>
 						<a
-							href="/#shows"
+							href="/lookup"
 							@click="closeMenu"
 							class="text-gray-700 hover:text-primary-600 hover:bg-gray-50 px-4 py-3 rounded-lg transition font-medium"
 						>
-							🎭 Lịch diễn
+							🔍 Tra cứu vé
 						</a>
 						<a
 							href="/#about"

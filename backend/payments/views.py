@@ -68,7 +68,6 @@ def create_payment(request, booking_code):
         )
 
 
-@csrf_exempt
 @api_view(['GET', 'POST'])
 def ninepay_return(request):
     """Handle 9Pay return callback"""

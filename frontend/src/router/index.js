@@ -7,6 +7,11 @@ const routes = [
         component: () => import('../pages/HomePage.vue')
     },
     {
+        path: '/lookup',
+        name: 'Lookup',
+        component: () => import('../pages/LookupPage.vue')
+    },
+    {
         path: '/booking/:showId',
         name: 'SelectPerformance',
         component: () => import('../pages/SelectPerformance.vue')

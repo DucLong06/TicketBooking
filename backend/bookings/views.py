@@ -11,14 +11,14 @@ from .serializers import (
 )
 from .models import Booking, SeatReservation
 from django.conf import settings
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db import transaction
-from datetime import timezone as dt_timezone 
+from datetime import timezone as dt_timezone
 from datetime import timedelta
 
 
@@ -352,6 +352,39 @@ def release_seats(request):
     return Response({'released': count})
 
 
+@api_view(['GET'])
+def search_bookings(request):
+    """
+    Search for bookings by booking code or customer phone number.
+    Only returns paid bookings for performances that happened yesterday or are in the future.
+    """
+    search_query = request.query_params.get('search', None)
+    if not search_query:
+        return Response(
+            {'error': 'Vui lòng cung cấp mã vé hoặc số điện thoại để tra cứu.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Calculate the cutoff date: today minus one day.
+    # This allows searching for shows that happened yesterday as well.
+    cutoff_date = timezone.now().date() - timedelta(days=1)
+
+    bookings = Booking.objects.filter(
+        # Search by booking code (case-insensitive) or exact phone number
+        Q(booking_code__iexact=search_query) | Q(customer_phone__exact=search_query),
+        # Only show successfully paid bookings
+        status='paid',
+        # Only show bookings for performances from yesterday onwards
+        performance__datetime__date__gte=cutoff_date
+    ).order_by('-performance__datetime')  # Order by most recent performance first
+
+    if not bookings.exists():
+        return Response([], status=status.HTTP_200_OK)
+
+    serializer = BookingDetailSerializer(bookings, many=True)
+    return Response(serializer.data)
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class BookingViewSet(viewsets.ModelViewSet):
     """API for Bookings"""
@@ -413,7 +446,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         """Resend booking confirmation email"""
         booking = self.get_object()
 
-        if booking.status not in ['paid', 'confirmed']:
+        if booking.status not in ['paid']:
             return Response(
                 {'error': 'Chỉ có thể gửi lại email cho đơn đã thanh toán'},
                 status=status.HTTP_400_BAD_REQUEST

@@ -48,6 +48,15 @@ export const bookingAPI = {
         return api.get(`/bookings/${bookingCode}/`)
     },
 
+    // Search for bookings
+    searchBookings(searchTerm) {
+        return api.get('/bookings/search/', {
+            params: {
+                search: searchTerm
+            }
+        })
+    },
+
     // Create payment
     createPayment(bookingCode, paymentMethod) {
         return api.post(`/bookings/${bookingCode}/payment/`, {
