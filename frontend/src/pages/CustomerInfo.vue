@@ -1,7 +1,6 @@
 <template>
 	<DefaultLayout>
 		<div class="container mx-auto px-4 py-8">
-			<!-- Breadcrumb - giữ nguyên -->
 			<nav class="mb-6">
 				<ol class="flex items-center space-x-2 text-sm">
 					<li>
@@ -38,7 +37,6 @@
 			</nav>
 
 			<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-				<!-- Form Section - 2 columns -->
 				<div class="lg:col-span-2">
 					<div
 						class="bg-white rounded-lg shadow-lg p-6 mb-20 lg:mb-0"
@@ -70,7 +68,6 @@
 								</p>
 							</div>
 
-							<!-- Email -->
 							<div class="mb-4">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -117,7 +114,6 @@
 								</p>
 							</div>
 
-							<!-- Địa chỉ -->
 							<div class="mb-4">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -142,7 +138,6 @@
 								</p>
 							</div>
 
-							<!-- Thời gian ship vé -->
 							<div class="mb-6">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -164,7 +159,6 @@
 								</select>
 							</div>
 
-							<!-- Ghi chú -->
 							<div class="mb-6">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -179,7 +173,6 @@
 								></textarea>
 							</div>
 
-							<!-- Buttons cho desktop -->
 							<div class="hidden lg:flex justify-between">
 								<button
 									type="button"
@@ -199,12 +192,10 @@
 					</div>
 				</div>
 
-				<!-- Order Summary - Desktop only (1 column) -->
 				<div class="hidden lg:block lg:col-span-1">
 					<div class="bg-white rounded-lg shadow-lg p-6 sticky top-4">
 						<h3 class="text-xl font-bold mb-4">Tóm tắt đơn hàng</h3>
 
-						<!-- Show Info -->
 						<div class="mb-4 pb-4 border-b">
 							<h4 class="font-semibold mb-2">
 								{{ showInfo.name }}
@@ -215,7 +206,6 @@
 							</p>
 						</div>
 
-						<!-- Selected Seats -->
 						<div class="mb-4 pb-4 border-b">
 							<h4 class="font-semibold mb-2">Ghế đã chọn</h4>
 							<div class="space-y-2">
@@ -234,8 +224,41 @@
 								</div>
 							</div>
 						</div>
+						<div class="mb-4 pb-4 border-b">
+							<label
+								class="block text-sm font-medium text-gray-700 mb-2"
+								>Mã giảm giá</label
+							>
+							<div class="flex gap-2">
+								<input
+									v-model="discountCodeInput"
+									type="text"
+									class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+									placeholder="Nhập mã giảm giá"
+									:disabled="bookingStore.isDiscountSuccess"
+								/>
+								<button
+									@click="applyDiscountCode"
+									:disabled="bookingStore.isDiscountSuccess"
+									class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+								>
+									Áp dụng
+								</button>
+							</div>
+							<p
+								v-if="bookingStore.discountMessage"
+								class="mt-2 text-sm"
+								:class="{
+									'text-green-600':
+										bookingStore.isDiscountSuccess,
+									'text-red-500':
+										!bookingStore.isDiscountSuccess,
+								}"
+							>
+								{{ bookingStore.discountMessage }}
+							</p>
+						</div>
 
-						<!-- Price Breakdown -->
 						<div class="space-y-2 mb-4 pb-4 border-b">
 							<div class="flex justify-between text-sm">
 								<span class="text-gray-600">Tổng tiền vé:</span>
@@ -252,19 +275,28 @@
 									formatPrice(serviceFee)
 								}}</span>
 							</div>
+							<div
+								v-if="bookingStore.discountAmount > 0"
+								class="flex justify-between text-sm"
+							>
+								<span class="text-gray-600">Giảm giá:</span>
+								<span class="font-semibold text-green-600"
+									>-{{
+										formatPrice(bookingStore.discountAmount)
+									}}</span
+								>
+							</div>
 						</div>
 
-						<!-- Total Amount -->
 						<div
 							class="flex justify-between items-center text-lg font-bold mb-6"
 						>
 							<span>Tổng thanh toán:</span>
 							<span class="text-primary-600">{{
-								formatPrice(totalAmount)
+								formatPrice(finalAmount)
 							}}</span>
 						</div>
 
-						<!-- Timer -->
 						<div class="mt-4 p-3 bg-yellow-50 rounded-lg">
 							<div class="text-sm text-yellow-800">
 								⏱️ Thời gian giữ vé:
@@ -277,17 +309,15 @@
 				</div>
 			</div>
 
-			<!-- Mobile Sticky Bottom Bar -->
 			<div
 				class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50"
 			>
 				<div class="px-4 py-3">
-					<!-- Tổng thanh toán -->
 					<div class="flex justify-between items-center mb-3">
 						<div>
 							<p class="text-xs text-gray-500">Tổng thanh toán</p>
 							<p class="text-lg font-bold text-primary-600">
-								{{ formatPrice(totalAmount) }}
+								{{ formatPrice(finalAmount) }}
 							</p>
 						</div>
 						<div class="text-right">
@@ -326,6 +356,55 @@
 									formatPrice(serviceFee)
 								}}</span>
 							</div>
+							<div
+								v-if="bookingStore.discountAmount > 0"
+								class="flex justify-between"
+							>
+								<span class="text-gray-600">Giảm giá:</span>
+								<span class="font-semibold text-green-600"
+									>-{{
+										formatPrice(bookingStore.discountAmount)
+									}}</span
+								>
+							</div>
+							<div class="pt-2 border-t">
+								<label
+									class="block text-xs font-medium text-gray-700 mb-1"
+									>Mã giảm giá</label
+								>
+								<div class="flex gap-2">
+									<input
+										v-model="discountCodeInput"
+										type="text"
+										class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-primary-500"
+										placeholder="Nhập mã"
+										:disabled="
+											bookingStore.isDiscountSuccess
+										"
+									/>
+									<button
+										@click="applyDiscountCode"
+										:disabled="
+											bookingStore.isDiscountSuccess
+										"
+										class="px-3 py-1 bg-primary-600 text-white rounded-md text-xs hover:bg-primary-700 disabled:bg-gray-400"
+									>
+										Áp dụng
+									</button>
+								</div>
+								<p
+									v-if="bookingStore.discountMessage"
+									class="mt-1 text-xs"
+									:class="{
+										'text-green-600':
+											bookingStore.isDiscountSuccess,
+										'text-red-500':
+											!bookingStore.isDiscountSuccess,
+									}"
+								>
+									{{ bookingStore.discountMessage }}
+								</p>
+							</div>
 							<div class="border-t pt-2 mt-2">
 								<p class="text-xs text-gray-500 mb-1">
 									Ghế:
@@ -347,7 +426,6 @@
 						</div>
 					</div>
 
-					<!-- Buttons -->
 					<div class="flex gap-2">
 						<button
 							type="button"
@@ -447,6 +525,41 @@ const totalAmount = computed(() => {
 	return ticketAmount.value + serviceFee.value;
 });
 
+// Discount
+const discountCodeInput = ref("");
+const finalAmount = computed(() => bookingStore.finalAmount);
+
+const applyDiscountCode = async () => {
+	if (!discountCodeInput.value.trim()) {
+		toast.warning("Vui lòng nhập mã giảm giá.");
+		return;
+	}
+	// Create a temporary booking to get a booking code
+	if (!bookingStore.bookingCode) {
+		if (!validateForm()) {
+			toast.error(
+				"Vui lòng điền đầy đủ thông tin khách hàng trước khi áp dụng mã."
+			);
+			return;
+		}
+		try {
+			bookingStore.customerInfo = {
+				customer_name: customerInfo.value.fullName,
+				customer_email: customerInfo.value.email,
+				customer_phone: customerInfo.value.phone,
+				customer_address: customerInfo.value.address,
+				shipping_time: customerInfo.value.shippingTime,
+				notes: customerInfo.value.notes || "",
+			};
+			await bookingStore.createBooking();
+		} catch (e) {
+			toast.error("Không thể tạo đơn hàng tạm, vui lòng thử lại.");
+			return;
+		}
+	}
+	await bookingStore.applyDiscount(discountCodeInput.value);
+};
+
 // Methods
 const formatPrice = (price) => {
 	return new Intl.NumberFormat("vi-VN", {
@@ -496,6 +609,9 @@ const handleSubmit = async () => {
 			customer_address: customerInfo.value.address,
 			shipping_time: customerInfo.value.shippingTime,
 			notes: customerInfo.value.notes || "",
+			discount_code: bookingStore.isDiscountSuccess
+				? discountCodeInput.value
+				: "",
 		};
 
 		const booking = await bookingStore.createBooking();
@@ -514,9 +630,10 @@ const handleSubmit = async () => {
 				email: customerInfo.value.email,
 				phone: customerInfo.value.phone,
 			},
-			amount: totalAmount.value,
+			amount: finalAmount.value,
 			ticketAmount: ticketAmount.value,
 			serviceFee: serviceFee.value,
+			discountAmount: bookingStore.discountAmount,
 			selectedSeats: selectedSeats.value,
 			bookingCode: bookingStore.bookingCode,
 			status: "pending",

@@ -2,11 +2,12 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 from datetime import timedelta
+from decimal import Decimal
 import string
 import random
 from venues.models import Seat
 from shows.models import Performance
-from discounts.models import Discount
+from discounts.models import Discount, DiscountUsage
 
 
 def generate_booking_code():
@@ -140,6 +141,47 @@ class Booking(models.Model):
             self.seat_reservations.update(status='available')
             return True
         return False
+
+    def apply_discount_code(self, code, user_email=None, user_phone=None):
+        if not code:
+            self.discount = None
+            self.discount_amount = Decimal('0.00')
+            self.final_amount = self.total_amount + self.service_fee
+            if hasattr(self, 'discount_usage'):
+                self.discount_usage.delete()
+            self.save()
+            return True, "Đã gỡ mã giảm giá."
+
+        try:
+            discount = Discount.objects.get(code__iexact=code)
+        except Discount.DoesNotExist:
+            return False, "Mã giảm giá không tồn tại."
+
+        is_valid, message = discount.is_valid(user_email=user_email, user_phone=user_phone)
+        if not is_valid:
+            return False, message
+
+        pending_usages = DiscountUsage.objects.filter(discount=discount, status='PENDING').exclude(booking=self).count()
+        if discount.max_usage is not None and (discount.usage_count + pending_usages) >= discount.max_usage:
+            return False, 'Mã giảm giá đã hết lượt sử dụng.'
+
+        original_total = self.total_amount + self.service_fee
+        discount_amount = Decimal('0.00')
+        if discount.discount_type == 'PERCENTAGE':
+            discount_amount = (original_total * discount.value) / Decimal('100.00')
+        elif discount.discount_type == 'FIXED_AMOUNT':
+            discount_amount = discount.value
+
+        discount_amount = min(original_total, discount_amount).quantize(Decimal('1'))
+
+        self.discount = discount
+        self.discount_amount = discount_amount
+        self.final_amount = original_total - discount_amount
+        self.save()
+
+        DiscountUsage.objects.update_or_create(booking=self, defaults={'discount': discount, 'status': 'PENDING'})
+
+        return True, "Áp dụng mã giảm giá thành công."
 
 
 class SeatReservation(models.Model):

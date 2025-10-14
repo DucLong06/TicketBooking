@@ -6,6 +6,15 @@ import { useToast } from 'vue-toastification'
 export const useBookingStore = defineStore('booking', () => {
     const toast = useToast()
 
+    // Helper function to format price
+    const formatPrice = (price) => {
+        if (price === undefined || price === null) return '0 ₫';
+        return new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+        }).format(price);
+    };
+
     // STATE
     const sessionId = ref(null)
     const shows = ref([])
@@ -41,7 +50,8 @@ export const useBookingStore = defineStore('booking', () => {
     })
 
     const finalAmount = computed(() => {
-        const baseAmount = totalAmount.value + (currentShow.value?.service_fee_per_ticket || 10000) * selectedSeats.value.length;
+        const serviceFee = (currentShow.value?.service_fee_per_ticket || 10000) * selectedSeats.value.length;
+        const baseAmount = totalAmount.value + serviceFee;
         return baseAmount - discountAmount.value;
     });
 
@@ -51,10 +61,12 @@ export const useBookingStore = defineStore('booking', () => {
 
     // ACTIONS
     const initSession = () => {
-        if (!sessionId.value) {
-            sessionId.value = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
-            sessionStorage.setItem('session_id', sessionId.value)
+        let sid = sessionStorage.getItem('session_id');
+        if (!sid) {
+            sid = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+            sessionStorage.setItem('session_id', sid)
         }
+        sessionId.value = sid;
     }
 
     const applyDiscount = async (code) => {
@@ -68,6 +80,10 @@ export const useBookingStore = defineStore('booking', () => {
             isDiscountSuccess.value = true;
             discountMessage.value = `Áp dụng thành công! Bạn được giảm ${formatPrice(discountAmount.value)}.`;
             toast.success("Áp dụng mã giảm giá thành công!");
+
+            // Cập nhật lại thông tin booking hiện tại trong store
+            currentBooking.value = response.data;
+
         } catch (error) {
             discountAmount.value = 0;
             isDiscountSuccess.value = false;
@@ -151,10 +167,7 @@ export const useBookingStore = defineStore('booking', () => {
         if (isSelected) {
             // Deselect
             try {
-                await bookingAPI.releaseSeats({
-                    session_id: sessionId.value,
-                    seat_ids: [seat.id]
-                })
+                await bookingAPI.releaseSeats([seat.id], sessionId.value);
                 selectedSeats.value = selectedSeats.value.filter(s => s.id !== seat.id)
                 toast.success('Đã bỏ chọn ghế')
             } catch (error) {
@@ -163,33 +176,31 @@ export const useBookingStore = defineStore('booking', () => {
         } else {
             // Select
             try {
-                const response = await bookingAPI.reserveSeats({
-                    performance_id: selectedPerformance.value.id,
-                    seat_ids: [seat.id],
-                    session_id: sessionId.value
-                })
+                const response = await bookingAPI.reserveSeats(
+                    selectedPerformance.value.id,
+                    [...selectedSeats.value.map(s => s.id), seat.id],
+                    sessionId.value
+                )
 
-                // ===== CRITICAL: Use full seat data from API response =====
                 if (response.data.seats && response.data.seats.length > 0) {
-                    const reservedSeat = response.data.seats[0]
-                    console.log("response.data:", response.data);
+                    selectedSeats.value = response.data.seats.map(reservedSeat => {
+                        const originalSeat = seatMap.value.seats.find(s => s.id === reservedSeat.seat_id) || {};
+                        return {
+                            id: reservedSeat.seat_id,
+                            row: reservedSeat.row,
+                            number: reservedSeat.number,
+                            display_number: reservedSeat.seat_label.replace(reservedSeat.row, ''),
+                            full_label: reservedSeat.seat_label,
+                            section_id: originalSeat.section_id,
+                            section_name: reservedSeat.section_name,
+                            price: reservedSeat.price,
+                            price_category_color: originalSeat.price_category_color,
+                            effective_price_category_name: originalSeat.effective_price_category_name,
+                        }
+                    })
 
-                    // Ensure we have all necessary fields for display
-                    const seatData = {
-                        id: reservedSeat.id,
-                        row: reservedSeat.row,
-                        number: reservedSeat.number,
-                        display_number: reservedSeat.number, // display_label from API
-                        full_label: reservedSeat.full_label,
-                        section_id: seat.section_id, // from original seat object
-                        section_name: reservedSeat.section_name,
-                        price: reservedSeat.price,
-                        price_category_color: seat.price_category_color, // from original
-                        effective_price_category_name: seat.effective_price_category_name // from original
-                    }
-
-                    selectedSeats.value.push(seatData)
                     reservationExpiry.value = response.data.expires_at
+                    sessionStorage.setItem('reservationExpiry', response.data.expires_at);
                     toast.success('Đã chọn ghế')
                 }
             } catch (error) {
@@ -206,7 +217,7 @@ export const useBookingStore = defineStore('booking', () => {
                 performance_id: selectedPerformance.value.id,
                 seat_ids: selectedSeats.value.map(s => s.id),
                 session_id: sessionId.value,
-                discount_code: discountCode.value,
+                discount_code: isDiscountSuccess.value ? discountCode.value : '',
                 ...customerInfo.value
             }
 
@@ -220,10 +231,9 @@ export const useBookingStore = defineStore('booking', () => {
                 sessionStorage.setItem('bookingExpiry', expiresAt.toISOString());
             }
 
-            // ===== Save complete booking data with FULL seat info =====
             const completeBookingData = {
                 showInfo: {
-                    name: selectedPerformance.value.show_name || currentShow.value?.name
+                    name: currentShow.value?.name
                 },
                 performance: {
                     date: new Date(selectedPerformance.value.datetime).toLocaleDateString("vi-VN"),
@@ -291,8 +301,14 @@ export const useBookingStore = defineStore('booking', () => {
             shipping_time: '',
             notes: ''
         }
+        discountCode.value = ''
+        discountAmount.value = 0
+        isDiscountSuccess.value = false
+        discountMessage.value = ''
+
         sessionStorage.removeItem('selectedSeats')
         sessionStorage.removeItem('bookingData')
+        sessionStorage.removeItem('bookingExpiry')
     }
 
     return {

@@ -76,9 +76,11 @@ export const bookingAPI = {
 
     // Apply discount code
     applyDiscountCode(bookingCode, discountCode) {
+        const sessionId = sessionStorage.getItem('session_id');
         return api.post('/discounts/apply/', {
             booking_code: bookingCode,
-            code: discountCode
+            code: discountCode,
+            session_id: sessionId
         });
     },
 }

@@ -49,15 +49,15 @@ class Discount(models.Model):
         if self.valid_to and self.valid_to < now:
             return False, "Mã giảm giá đã hết hạn."
 
-        pending_usages = self.usages.filter(status='PENDING').count()
-        if self.max_usage is not None and (self.usage_count + pending_usages) >= self.max_usage:
-            return False, "Mã giảm giá đã hết lượt sử dụng."
-
         if not self.all_users:
-            allowed = [u.strip() for u in self.allowed_users.split(',') if u.strip()]
+            allowed = [u.strip().lower() for u in self.allowed_users.split(',') if u.strip()]
             if not user_email and not user_phone:
                 return False, "Cần thông tin khách hàng để áp dụng mã này."
-            if user_email not in allowed and user_phone not in allowed:
+
+            user_email_lower = user_email.lower() if user_email else None
+            user_phone_lower = user_phone if user_phone else None
+
+            if user_email_lower not in allowed and user_phone_lower not in allowed:
                 return False, "Bạn không đủ điều kiện sử dụng mã giảm giá này."
 
         return True, "Mã hợp lệ."
