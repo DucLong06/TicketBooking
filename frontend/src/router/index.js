@@ -22,11 +22,6 @@ const routes = [
         component: () => import('../pages/CustomerInfo.vue'),
     },
     {
-        path: '/booking/:showId/payment',
-        name: 'Payment',
-        component: () => import('../pages/Payment.vue'),
-    },
-    {
         path: '/booking/confirmation/:bookingCode',
         name: 'Confirmation',
         component: () => import('../pages/Confirmation.vue')
