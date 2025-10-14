@@ -534,30 +534,10 @@ const applyDiscountCode = async () => {
 		toast.warning("Vui lòng nhập mã giảm giá.");
 		return;
 	}
-	// Create a temporary booking to get a booking code
-	if (!bookingStore.bookingCode) {
-		if (!validateForm()) {
-			toast.error(
-				"Vui lòng điền đầy đủ thông tin khách hàng trước khi áp dụng mã."
-			);
-			return;
-		}
-		try {
-			bookingStore.customerInfo = {
-				customer_name: customerInfo.value.fullName,
-				customer_email: customerInfo.value.email,
-				customer_phone: customerInfo.value.phone,
-				customer_address: customerInfo.value.address,
-				shipping_time: customerInfo.value.shippingTime,
-				notes: customerInfo.value.notes || "",
-			};
-			await bookingStore.createBooking();
-		} catch (e) {
-			toast.error("Không thể tạo đơn hàng tạm, vui lòng thử lại.");
-			return;
-		}
-	}
-	await bookingStore.applyDiscount(discountCodeInput.value);
+	await bookingStore.applyDiscount(
+		discountCodeInput.value,
+		customerInfo.value
+	);
 };
 
 // Methods

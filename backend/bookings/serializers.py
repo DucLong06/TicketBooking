@@ -4,6 +4,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 from discounts.models import Discount, DiscountUsage
+from discounts.services import validate_and_calculate_discount, DiscountError
 from .models import Booking, SeatReservation
 from venues.models import Seat
 from shows.models import Performance
@@ -118,43 +119,30 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         total_amount = sum(sr.price for sr in seat_reservations)
         service_fee = len(seat_ids) * performance.show.service_fee_per_ticket
 
-        discount_amount = Decimal('0')
         discount_instance = None
+        discount_amount = Decimal('0')
 
-        # --- LOGIC XÁC THỰC VÀ TÍNH TOÁN TẬP TRUNG ---
+        # Create a temporary booking object to pass to the service
+        temp_booking_for_validation = Booking(
+            total_amount=total_amount,
+            **validated_data
+        )
+
         if discount_code_str:
             try:
-                discount = Discount.objects.get(code__iexact=discount_code_str)
-                is_valid, message = discount.is_valid(
-                    user_email=validated_data.get('customer_email'),
-                    user_phone=validated_data.get('customer_phone')
+                discount_instance, discount_amount = validate_and_calculate_discount(
+                    booking=temp_booking_for_validation,
+                    code=discount_code_str
                 )
-                if not is_valid:
-                    raise serializers.ValidationError({'discount_code': message})
-
-                pending_usages = DiscountUsage.objects.filter(discount=discount, status='PENDING').count()
-                if discount.max_usage is not None and (discount.usage_count + pending_usages) >= discount.max_usage:
-                    raise serializers.ValidationError({'discount_code': 'Mã giảm giá đã hết lượt sử dụng.'})
-
-                discount_instance = discount
-                original_total = total_amount + service_fee
-                if discount.discount_type == 'PERCENTAGE':
-                    calculated_amount = (original_total * discount.value) / Decimal('100.00')
-                    discount_amount = calculated_amount.quantize(Decimal('1'))
-                elif discount.discount_type == 'FIXED_AMOUNT':
-                    discount_amount = discount.value.quantize(Decimal('1'))
-
-                discount_amount = min(original_total, discount_amount)
-
-            except Discount.DoesNotExist:
-                raise serializers.ValidationError({'discount_code': 'Mã giảm giá không hợp lệ.'})
+            except DiscountError as e:
+                raise serializers.ValidationError({'discount_code': str(e)})
 
         final_amount = total_amount + service_fee - discount_amount
 
-        # Xóa các booking đang chờ xử lý cũ của cùng session để tránh trùng lặp
+        # Delete old pending bookings from the same session to avoid duplicates
         Booking.objects.filter(session_id=session_id, status='pending').delete()
 
-        # Tạo booking MỚI với tất cả dữ liệu đã được tính toán chính xác
+        # Create the new booking with all correctly calculated data
         booking = Booking.objects.create(
             performance=performance,
             session_id=session_id,

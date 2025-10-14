@@ -8,6 +8,7 @@ import random
 from venues.models import Seat
 from shows.models import Performance
 from discounts.models import Discount, DiscountUsage
+from django.db import transaction
 
 
 def generate_booking_code():
@@ -132,56 +133,31 @@ class Booking(models.Model):
     def is_expired(self):
         return timezone.now() > self.expires_at and self.status == 'pending'
 
-    def check_and_update_expiry(self):
-        """Check if booking is expired and update status"""
-        if self.is_expired:
+    def expire_booking(self):
+        """
+        Expires a pending booking, releasing seats and discount usage.
+        Returns True if the booking was expired, False otherwise.
+        """
+        if self.status != 'pending' or timezone.now() < self.expires_at:
+            return False
+
+        with transaction.atomic():
             self.status = 'expired'
             self.save()
+
             # Release seats
-            self.seat_reservations.update(status='available')
-            return True
-        return False
+            self.seat_reservations.update(status='available', session_id='', expires_at=None)
 
-    def apply_discount_code(self, code, user_email=None, user_phone=None):
-        if not code:
-            self.discount = None
-            self.discount_amount = Decimal('0.00')
-            self.final_amount = self.total_amount + self.service_fee
-            if hasattr(self, 'discount_usage'):
-                self.discount_usage.delete()
-            self.save()
-            return True, "Đã gỡ mã giảm giá."
+            # Release discount usage
+            try:
+                usage = self.discount_usage
+                if usage.status == 'PENDING':
+                    usage.status = 'CANCELLED'
+                    usage.save()
+            except DiscountUsage.DoesNotExist:
+                pass  # No discount was used
 
-        try:
-            discount = Discount.objects.get(code__iexact=code)
-        except Discount.DoesNotExist:
-            return False, "Mã giảm giá không tồn tại."
-
-        is_valid, message = discount.is_valid(user_email=user_email, user_phone=user_phone)
-        if not is_valid:
-            return False, message
-
-        pending_usages = DiscountUsage.objects.filter(discount=discount, status='PENDING').exclude(booking=self).count()
-        if discount.max_usage is not None and (discount.usage_count + pending_usages) >= discount.max_usage:
-            return False, 'Mã giảm giá đã hết lượt sử dụng.'
-
-        original_total = self.total_amount + self.service_fee
-        discount_amount = Decimal('0.00')
-        if discount.discount_type == 'PERCENTAGE':
-            discount_amount = (original_total * discount.value) / Decimal('100.00')
-        elif discount.discount_type == 'FIXED_AMOUNT':
-            discount_amount = discount.value
-
-        discount_amount = min(original_total, discount_amount).quantize(Decimal('1'))
-
-        self.discount = discount
-        self.discount_amount = discount_amount
-        self.final_amount = original_total - discount_amount
-        self.save()
-
-        DiscountUsage.objects.update_or_create(booking=self, defaults={'discount': discount, 'status': 'PENDING'})
-
-        return True, "Áp dụng mã giảm giá thành công."
+        return True
 
 
 class SeatReservation(models.Model):
