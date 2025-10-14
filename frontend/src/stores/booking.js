@@ -28,12 +28,22 @@ export const useBookingStore = defineStore('booking', () => {
     const currentTransaction = ref(null)
     const loading = ref(false)
 
+    // Discount related state
+    const discountCode = ref('');
+    const discountAmount = ref(0);
+    const discountMessage = ref('');
+    const isDiscountSuccess = ref(false);
+
+
     // GETTERS
     const totalAmount = computed(() => {
         return selectedSeats.value.reduce((sum, seat) => sum + (seat.price || 0), 0)
     })
 
-    const finalAmount = computed(() => totalAmount.value)
+    const finalAmount = computed(() => {
+        const baseAmount = totalAmount.value + (currentShow.value?.service_fee_per_ticket || 10000) * selectedSeats.value.length;
+        return baseAmount - discountAmount.value;
+    });
 
     const showInfo = computed(() => {
         return currentShow.value || {}
@@ -44,6 +54,25 @@ export const useBookingStore = defineStore('booking', () => {
         if (!sessionId.value) {
             sessionId.value = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
             sessionStorage.setItem('session_id', sessionId.value)
+        }
+    }
+
+    const applyDiscount = async (code) => {
+        if (!bookingCode.value) {
+            toast.error("Vui lòng tạo đơn hàng trước khi áp dụng mã.");
+            return;
+        }
+        try {
+            const response = await bookingAPI.applyDiscountCode(bookingCode.value, code);
+            discountAmount.value = response.data.discount_amount;
+            isDiscountSuccess.value = true;
+            discountMessage.value = `Áp dụng thành công! Bạn được giảm ${formatPrice(discountAmount.value)}.`;
+            toast.success("Áp dụng mã giảm giá thành công!");
+        } catch (error) {
+            discountAmount.value = 0;
+            isDiscountSuccess.value = false;
+            discountMessage.value = error.response?.data?.error || "Mã giảm giá không hợp lệ.";
+            toast.error(discountMessage.value);
         }
     }
 
@@ -177,6 +206,7 @@ export const useBookingStore = defineStore('booking', () => {
                 performance_id: selectedPerformance.value.id,
                 seat_ids: selectedSeats.value.map(s => s.id),
                 session_id: sessionId.value,
+                discount_code: discountCode.value,
                 ...customerInfo.value
             }
 
@@ -286,8 +316,15 @@ export const useBookingStore = defineStore('booking', () => {
         finalAmount,
         showInfo,
 
+        // Discount related state
+        discountCode,
+        discountAmount,
+        discountMessage,
+        isDiscountSuccess,
+
         // Actions
         initSession,
+        applyDiscount,
         loadShows,
         loadShowDetail,
         setSelectedPerformance,

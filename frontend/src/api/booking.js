@@ -72,5 +72,13 @@ export const bookingAPI = {
     // Resend confirmation email
     resendEmail(bookingCode) {
         return api.post(`/bookings/${bookingCode}/resend-email/`)
-    }
+    },
+
+    // Apply discount code
+    applyDiscountCode(bookingCode, discountCode) {
+        return api.post('/discounts/apply/', {
+            booking_code: bookingCode,
+            code: discountCode
+        });
+    },
 }

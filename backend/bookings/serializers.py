@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.utils import timezone
 from datetime import timedelta
+
+from discounts.models import DiscountUsage
 from .models import Booking, SeatReservation
 from venues.models import Seat
 from shows.models import Performance
@@ -69,13 +71,14 @@ class BookingCreateSerializer(serializers.ModelSerializer):
     seat_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True)
     performance_id = serializers.IntegerField(write_only=True)
     session_id = serializers.CharField(write_only=True)
+    discount_code = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
     class Meta:
         model = Booking
         fields = [
             'performance_id', 'seat_ids', 'session_id',
             'customer_name', 'customer_email', 'customer_phone',
-            'customer_address', 'shipping_time', 'notes'
+            'customer_address', 'shipping_time', 'notes', 'discount_code'
         ]
 
     def validate(self, data):
@@ -112,23 +115,34 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         )
 
         # Calculate total amount
+        discount_code_str = validated_data.pop('discount_code', None)
+        discount_amount = 0
+        discount_instance = None
+        if discount_code_str:
+            # Logic kiểm tra và áp dụng mã giảm giá ở đây
+            # ...
+            pass
         total_amount = sum([sr.price for sr in seat_reservations])
 
         service_fee_per_ticket = performance.show.service_fee_per_ticket
         service_fee = len(seat_ids) * service_fee_per_ticket
 
-        final_amount = total_amount + service_fee
+        final_amount = total_amount + service_fee - discount_amount
 
         # Create booking
         booking = Booking.objects.create(
             performance=performance,
             total_amount=total_amount,
+            discount=discount_instance,
+            discount_amount=discount_amount,
             service_fee=service_fee,
             final_amount=final_amount,
             session_id=session_id,
             **validated_data
         )
 
+        if discount_instance:
+            DiscountUsage.objects.create(discount=discount_instance, booking=booking, status='PENDING')
         # Update seat reservations
         seat_reservations.update(booking=booking)
 
@@ -141,6 +155,7 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     performance_datetime = serializers.DateTimeField(source='performance.datetime', read_only=True)
     venue_name = serializers.CharField(source='performance.show.venue.name', read_only=True)
 
+    discount_code = serializers.CharField(source='discount.code', read_only=True, allow_null=True)
     # Add computed fields for frontend compatibility
     showInfo = serializers.SerializerMethodField()
     performance = serializers.SerializerMethodField()
@@ -159,7 +174,7 @@ class BookingDetailSerializer(serializers.ModelSerializer):
             'status', 'total_amount', 'service_fee', 'discount_amount',
             'final_amount', 'seat_reservations', 'created_at', 'expires_at',
             'showInfo', 'performance', 'customerInfo', 'selectedSeats',
-            'amount', 'serviceFee', 'ticketAmount'
+            'amount', 'serviceFee', 'ticketAmount', 'discount_code',
         ]
 
     def get_showInfo(self, obj):

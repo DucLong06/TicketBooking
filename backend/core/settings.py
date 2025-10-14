@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     'shows',
     'bookings',
     'payments',
+    'discounts'
 ]
 
 MIDDLEWARE = [

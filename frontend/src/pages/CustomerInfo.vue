@@ -48,7 +48,6 @@
 						</h2>
 
 						<form @submit.prevent="handleSubmit">
-							<!-- Họ và tên -->
 							<div class="mb-4">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -96,7 +95,6 @@
 								</p>
 							</div>
 
-							<!-- Số điện thoại -->
 							<div class="mb-4">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"

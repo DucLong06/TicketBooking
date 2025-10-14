@@ -6,6 +6,7 @@ import string
 import random
 from venues.models import Seat
 from shows.models import Performance
+from discounts.models import Discount
 
 
 def generate_booking_code():
@@ -108,6 +109,8 @@ class Booking(models.Model):
 
     # Additional info
     notes = models.TextField(blank=True, verbose_name='Ghi chú')
+
+    discount = models.ForeignKey(Discount, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings')
 
     class Meta:
         verbose_name = 'Đơn đặt vé'
