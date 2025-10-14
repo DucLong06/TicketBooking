@@ -83,4 +83,13 @@ export const bookingAPI = {
             session_id: sessionId
         });
     },
+
+    getSessionReservations(performanceId, sessionId) {
+        return api.get('/seats/session-reservations/', {
+            params: {
+                performance_id: performanceId,
+                session_id: sessionId
+            }
+        })
+    },
 }

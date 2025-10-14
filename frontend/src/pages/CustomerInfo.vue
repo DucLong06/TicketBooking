@@ -462,7 +462,7 @@ const route = useRoute();
 // Form data
 const showInfo = ref({
 	name: "",
-	service_fee_per_ticket: 10000, // default
+	service_fee_per_ticket: 0, // default
 });
 
 const performanceInfo = ref({
@@ -499,25 +499,42 @@ const toggleOrderSummary = () => {
 };
 
 // Timer
-const timeLeft = ref(600); // 10 minutes
+const timeLeft = ref(600);
 let timer = null;
 
 const serviceFeePerTicket = computed(() => {
 	if (showInfo.value.service_fee_per_ticket) {
 		return showInfo.value.service_fee_per_ticket;
 	}
+
 	if (bookingStore.currentShow?.service_fee_per_ticket) {
 		return bookingStore.currentShow.service_fee_per_ticket;
 	}
-	// Default 10,000đ
-	return 10000;
+
+	try {
+		const savedPerformance = sessionStorage.getItem("selectedPerformance");
+		if (savedPerformance) {
+			const performance = JSON.parse(savedPerformance);
+			if (performance.service_fee_per_ticket) {
+				return performance.service_fee_per_ticket;
+			}
+		}
+	} catch (error) {
+		console.error("Error parsing savedPerformance:", error);
+	}
+
+	return 0;
 });
 
 const ticketAmount = computed(() => {
-	return selectedSeats.value.reduce((sum, seat) => sum + seat.price, 0);
+	return selectedSeats.value.reduce(
+		(sum, seat) => sum + (seat.price || 0),
+		0
+	);
 });
 
 const serviceFee = computed(() => {
+	if (!serviceFeePerTicket.value) return 0;
 	return selectedSeats.value.length * serviceFeePerTicket.value;
 });
 
@@ -525,9 +542,14 @@ const totalAmount = computed(() => {
 	return ticketAmount.value + serviceFee.value;
 });
 
+const finalAmount = computed(() => {
+	if (bookingStore.currentBooking?.final_amount) {
+		return bookingStore.currentBooking.final_amount;
+	}
+	return totalAmount.value;
+});
 // Discount
 const discountCodeInput = ref("");
-const finalAmount = computed(() => bookingStore.finalAmount);
 
 const applyDiscountCode = async () => {
 	if (!discountCodeInput.value.trim()) {
@@ -600,10 +622,11 @@ const handleSubmit = async () => {
 			booking.seat_reservations.length === 0
 		) {
 			toast.error("Lỗi: Không có ghế. Vui lòng chọn lại.");
-			await cleanup();
-			router.push(`/booking/${route.params.showId}/seats`);
+			bookingStore.clearBooking();
+			router.push(`/booking/${route.params.showId}`);
 			return;
 		}
+
 		const paymentData = await bookingStore.processPayment("9pay");
 
 		const bookingData = {
@@ -631,6 +654,7 @@ const handleSubmit = async () => {
 
 		sessionStorage.setItem("bookingData", JSON.stringify(bookingData));
 
+		// Redirect to payment
 		if (paymentData.payment_url) {
 			window.location.href = paymentData.payment_url;
 		} else {
@@ -638,7 +662,14 @@ const handleSubmit = async () => {
 		}
 	} catch (error) {
 		console.error("Error:", error);
-		toast.error("Lỗi: " + (error.response?.data?.error || error.message));
+		bookingStore.clearBooking();
+		toast.error(error.message || "Có lỗi. Vui lòng chọn lại.");
+
+		if (error.shouldRedirect) {
+			setTimeout(() => {
+				router.push(`/booking/${route.params.showId}`);
+			}, 1500);
+		}
 	}
 };
 
@@ -676,39 +707,42 @@ const startTimer = () => {
 		}
 	}, 1000);
 };
+const loadFullBookingData = async () => {
+	try {
+		// Load show detail
+		const showId = route.params.showId;
+		await bookingStore.loadShowDetail(showId);
 
-onMounted(() => {
-	// Load từ bookingStore trước (ưu tiên)
-	if (bookingStore.currentShow) {
-		showInfo.value = {
-			name: bookingStore.currentShow.name,
-			service_fee_per_ticket:
-				bookingStore.currentShow.service_fee_per_ticket || 10000,
-		};
-	}
-
-	// Load performance data
-	if (bookingStore.selectedPerformance) {
-		const performance = bookingStore.selectedPerformance;
-		if (!showInfo.value.name) {
-			showInfo.value.name =
-				performance.show_name || performance.show?.name;
+		// Load show info
+		if (bookingStore.currentShow) {
+			showInfo.value = {
+				name: bookingStore.currentShow.name,
+				service_fee_per_ticket:
+					bookingStore.currentShow.service_fee_per_ticket || 10000,
+			};
 		}
-		performanceInfo.value = {
-			date: new Date(performance.datetime).toLocaleDateString("vi-VN"),
-			time: new Date(performance.datetime).toLocaleTimeString("vi-VN", {
-				hour: "2-digit",
-				minute: "2-digit",
-			}),
-		};
-	} else {
-		// Fallback: Load từ sessionStorage
+
+		// Load performance info
+		let performance = null;
 		const savedPerformance = sessionStorage.getItem("selectedPerformance");
 		if (savedPerformance) {
-			const performance = JSON.parse(savedPerformance);
+			performance = JSON.parse(savedPerformance);
+		} else if (bookingStore.selectedPerformance) {
+			performance = bookingStore.selectedPerformance;
+		}
+
+		if (performance) {
 			if (!showInfo.value.name) {
-				showInfo.value.name = performance.show_name;
+				showInfo.value.name = performance.show_name || "";
 			}
+			if (
+				!showInfo.value.service_fee_per_ticket &&
+				performance.service_fee_per_ticket
+			) {
+				showInfo.value.service_fee_per_ticket =
+					performance.service_fee_per_ticket;
+			}
+
 			performanceInfo.value = {
 				date: new Date(performance.datetime).toLocaleDateString(
 					"vi-VN"
@@ -722,28 +756,240 @@ onMounted(() => {
 				),
 			};
 		}
+
+		// Ensure service_fee has default value
+		if (!showInfo.value.service_fee_per_ticket) {
+			console.warn("Service fee not found, using default 10,000đ");
+			showInfo.value.service_fee_per_ticket = 10000;
+		}
+
+		// Load selected seats
+		if (bookingStore.selectedSeats?.length > 0) {
+			selectedSeats.value = bookingStore.selectedSeats;
+		} else {
+			const savedSeats = sessionStorage.getItem("selectedSeats");
+			if (savedSeats) {
+				selectedSeats.value = JSON.parse(savedSeats);
+			} else {
+				throw new Error("No seats found");
+			}
+		}
+
+		return true;
+	} catch (error) {
+		console.error("Failed to load full booking data:", error);
+		return false;
+	}
+};
+
+onMounted(() => {
+	console.log("🚀 [CustomerInfo] Validating data...");
+
+	bookingStore.resetDiscount();
+	discountCodeInput.value = "";
+
+	// ========================================
+	// CHECK 0: Restore session_id vào store
+	// ========================================
+	const existingSessionId = sessionStorage.getItem("session_id");
+	if (existingSessionId) {
+		bookingStore.sessionId = existingSessionId;
+		console.log("✅ Session ID restored:", existingSessionId);
+	} else {
+		console.error("❌ No session ID found");
+		toast.warning("Phiên đã hết hạn. Vui lòng chọn lại ghế.");
+		router.push(`/booking/${route.params.showId}/seats`);
+		return;
 	}
 
-	// Load selected seats
+	// ========================================
+	// CHECK 1: Load seats và set vào STORE
+	// ========================================
+	let hasSeats = false;
+
 	if (bookingStore.selectedSeats?.length > 0) {
 		selectedSeats.value = bookingStore.selectedSeats;
+		hasSeats = true;
+		console.log("✅ Seats from store:", selectedSeats.value.length);
 	} else {
 		const savedSeats = sessionStorage.getItem("selectedSeats");
 		if (savedSeats) {
-			selectedSeats.value = JSON.parse(savedSeats);
-		} else {
-			alert("Không tìm thấy ghế đã chọn. Vui lòng chọn lại.");
-			router.push(`/booking/${route.params.showId}/seats`);
-			return;
+			try {
+				const parsedSeats = JSON.parse(savedSeats);
+				selectedSeats.value = parsedSeats;
+
+				// ✅ QUAN TRỌNG: Set vào store
+				bookingStore.selectedSeats = parsedSeats;
+
+				hasSeats = parsedSeats.length > 0;
+				console.log(
+					"✅ Seats from sessionStorage and restored to store:",
+					parsedSeats.length
+				);
+			} catch (e) {
+				console.error("Failed to parse savedSeats:", e);
+			}
 		}
 	}
 
-	startTimer();
+	if (!hasSeats) {
+		console.error("❌ No seats found");
+		toast.warning("Vui lòng chọn ghế trước");
+		router.push(`/booking/${route.params.showId}/seats`);
+		return;
+	}
+
+	// ========================================
+	// CHECK 2: Load show info & performance info + Restore to store
+	// ========================================
+	const savedPerformance = sessionStorage.getItem("selectedPerformance");
+	if (savedPerformance) {
+		try {
+			const performance = JSON.parse(savedPerformance);
+
+			// ✅ QUAN TRỌNG: Restore selectedPerformance vào store
+			if (
+				!bookingStore.selectedPerformance ||
+				!bookingStore.selectedPerformance.id
+			) {
+				bookingStore.selectedPerformance = performance;
+				console.log(
+					"✅ Restored selectedPerformance to store:",
+					performance.id
+				);
+			}
+
+			// Load show info
+			showInfo.value = {
+				name:
+					performance.show_name ||
+					bookingStore.currentShow?.name ||
+					"",
+				service_fee_per_ticket:
+					performance.service_fee_per_ticket ||
+					bookingStore.currentShow?.service_fee_per_ticket,
+			};
+
+			// Load performance info (date, time)
+			if (performance.datetime) {
+				performanceInfo.value = {
+					date: new Date(performance.datetime).toLocaleDateString(
+						"vi-VN"
+					),
+					time: new Date(performance.datetime).toLocaleTimeString(
+						"vi-VN",
+						{
+							hour: "2-digit",
+							minute: "2-digit",
+						}
+					),
+				};
+			}
+
+			console.log("✅ Show & Performance info loaded:", {
+				performanceId: performance.id,
+				showName: showInfo.value.name,
+				serviceFee: showInfo.value.service_fee_per_ticket,
+				date: performanceInfo.value.date,
+				time: performanceInfo.value.time,
+			});
+		} catch (e) {
+			console.error("Failed to parse savedPerformance:", e);
+		}
+	} else if (bookingStore.currentShow) {
+		// Fallback to store
+		showInfo.value = {
+			name: bookingStore.currentShow.name,
+			service_fee_per_ticket:
+				bookingStore.currentShow.service_fee_per_ticket,
+		};
+		console.log("✅ Show info from store");
+	}
+
+	// ========================================
+	// CHECK 3: Validate thông tin hiển thị
+	// ========================================
+	if (!showInfo.value.name || !performanceInfo.value.date) {
+		console.error("❌ Missing show or performance info");
+		toast.warning("Thiếu thông tin suất diễn. Vui lòng chọn lại.");
+		router.push(`/booking/${route.params.showId}/seats`);
+		return;
+	}
+
+	// ========================================
+	// CHECK 4: Có service_fee không?
+	// ========================================
+	if (!serviceFeePerTicket.value) {
+		console.error("❌ Service fee not found");
+		toast.warning("Thiếu thông tin phí dịch vụ. Vui lòng chọn lại ghế.");
+		router.push(`/booking/${route.params.showId}/seats`);
+		return;
+	}
+
+	// ========================================
+	// CHECK 5: Có timer không?
+	// ========================================
+	const savedExpiry = sessionStorage.getItem("reservationExpiry");
+	if (!savedExpiry) {
+		console.error("❌ No reservation expiry");
+		toast.warning("Phiên đã hết hạn. Vui lòng chọn lại ghế.");
+		router.push(`/booking/${route.params.showId}/seats`);
+		return;
+	}
+
+	const expiryDate = new Date(savedExpiry);
+	const now = new Date();
+	if (expiryDate <= now) {
+		console.error("❌ Reservation expired");
+		toast.warning("Hết thời gian giữ ghế. Vui lòng chọn lại.");
+		router.push(`/booking/${route.params.showId}/seats`);
+		return;
+	}
+
+	// ========================================
+	// ✅ ALL CHECKS PASSED
+	// ========================================
+	console.log("✅ All validation passed");
+	console.log("📊 Final State (Local):", {
+		showName: showInfo.value.name,
+		performanceDate: performanceInfo.value.date,
+		performanceTime: performanceInfo.value.time,
+		seats: selectedSeats.value.length,
+		serviceFee: serviceFeePerTicket.value,
+		ticketAmount: ticketAmount.value,
+		totalAmount: totalAmount.value,
+	});
+
+	console.log("📊 Final State (Store):", {
+		sessionId: bookingStore.sessionId,
+		selectedPerformanceId: bookingStore.selectedPerformance?.id,
+		selectedSeatsCount: bookingStore.selectedSeats?.length,
+	});
+
+	// Start timer
+	timer = setInterval(() => {
+		const now = new Date();
+		const diff = Math.floor((expiryDate - now) / 1000);
+		timeLeft.value = Math.max(0, diff);
+
+		if (timeLeft.value === 0) {
+			clearInterval(timer);
+			toast.error("Hết thời gian giữ ghế");
+			router.push(`/booking/${route.params.showId}/seats`);
+		}
+	}, 1000);
+
+	console.log(
+		"✅ Timer started - expires in:",
+		Math.floor((expiryDate - now) / 1000),
+		"seconds"
+	);
 });
 
 onUnmounted(() => {
 	if (timer) {
 		clearInterval(timer);
 	}
+	discountCodeInput.value = "";
 });
 </script>

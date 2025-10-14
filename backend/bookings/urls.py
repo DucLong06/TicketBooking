@@ -5,7 +5,8 @@ from .views import (
     performance_seat_map,
     reserve_seats,
     release_seats,
-    search_bookings
+    search_bookings,
+    get_session_reservations,
 )
 
 router = DefaultRouter()
@@ -16,5 +17,6 @@ urlpatterns = [
     path('performances/<int:performance_id>/seat-map/', performance_seat_map, name='seat-map'),
     path('seats/reserve/', reserve_seats, name='reserve-seats'),
     path('seats/release/', release_seats, name='release-seats'),
+    path('seats/session-reservations/', get_session_reservations, name='session-reservations'),
     path('', include(router.urls)),
 ]

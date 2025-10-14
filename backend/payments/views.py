@@ -10,7 +10,7 @@ from logzero import logger
 
 from .models import Payment
 from .ninepay import NinePay
-from bookings.models import Booking
+from bookings.models import Booking, SeatReservation
 from discounts.models import DiscountUsage
 
 
@@ -25,9 +25,31 @@ def create_payment(request, booking_code):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    if booking.seat_reservations.count() == 0:
+    seat_count = booking.seat_reservations.filter(status='reserved').count()
+    if seat_count == 0:
+        logger.error(f"🚨 CRITICAL: Booking {booking_code} has NO SEATS")
         return Response(
             {'error': 'Booking không có ghế. Vui lòng đặt lại.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if booking.final_amount <= 0:
+        logger.error(f"🚨 CRITICAL: Booking {booking_code} has invalid amount: {booking.final_amount}")
+        return Response(
+            {'error': 'Giá trị booking không hợp lệ. Vui lòng đặt lại.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    duplicate_check = SeatReservation.objects.filter(
+        seat_id__in=booking.seat_reservations.values_list('seat_id', flat=True),
+        performance=booking.performance,
+        status__in=['reserved', 'sold']
+    ).exclude(booking=booking)
+
+    if duplicate_check.exists():
+        logger.error(f"🚨 CRITICAL: Booking {booking_code} has duplicate seats")
+        return Response(
+            {'error': 'Có ghế bị trùng. Vui lòng đặt lại.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -119,6 +141,12 @@ def ninepay_return(request):
                 booking.status = 'paid'
                 booking.paid_at = timezone.now()
                 booking.save()
+
+                old_session = booking.session_id
+                booking.session_id = ''
+                booking.save()
+
+                logger.info(f"Cleared session_id '{old_session}' for booking {booking.booking_code}")
 
                 seat_count = booking.seat_reservations.count()
 

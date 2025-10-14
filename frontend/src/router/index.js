@@ -87,6 +87,13 @@ router.beforeEach(async (to, from, next) => {
             return next({ name: 'Home' })
         }
     }
+    if (to.name === 'CustomerInfo') {
+        const hasSeats = sessionStorage.getItem('selectedSeats')
+        if (!hasSeats) {
+            next({ name: 'SelectPerformance', params: { showId: to.params.showId } })
+            return
+        }
+    }
 
     next()
 })

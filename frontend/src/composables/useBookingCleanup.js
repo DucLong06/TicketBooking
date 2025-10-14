@@ -26,7 +26,6 @@ export function useBookingCleanup(options = {}) {
                     selectedSeats.map(s => s.id),
                     sessionId
                 )
-                console.log('✅ Seats released successfully')
             } catch (error) {
                 console.error('❌ Failed to release seats:', error)
             }

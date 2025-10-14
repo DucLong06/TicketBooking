@@ -1125,7 +1125,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
-import { useRouter, useRoute } from "vue-router";
+import { useRouter, useRoute, onBeforeRouteLeave } from "vue-router";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { useBookingStore } from "../stores/booking";
 import { bookingAPI } from "../api/booking";
@@ -1604,6 +1604,52 @@ const getSeatStatusText = (status) => {
 	return statusMap[status] || status;
 };
 
+const loadSessionReservations = async () => {
+	try {
+		const response = await bookingAPI.getSessionReservations(
+			performanceInfo.value.id,
+			bookingStore.sessionId
+		);
+
+		if (response.data.seats && response.data.seats.length > 0) {
+			console.log("✅ Restored", response.data.seats.length, "seats");
+
+			selectedSeats.value = response.data.seats;
+			bookingStore.selectedSeats = response.data.seats;
+
+			reservationExpiry.value = new Date(response.data.expires_at);
+			bookingStore.reservationExpiry = response.data.expires_at;
+
+			sessionStorage.setItem(
+				"selectedSeats",
+				JSON.stringify(response.data.seats)
+			);
+			sessionStorage.setItem(
+				"reservationExpiry",
+				response.data.expires_at
+			);
+
+			startTimer();
+
+			// Show success toast
+			toast.success(`Đã khôi phục ${response.data.seats.length} ghế`);
+			return true;
+		} else {
+			// No reservations - clean up
+			console.log("No reservations found");
+			selectedSeats.value = [];
+			reservationExpiry.value = null;
+			sessionStorage.removeItem("selectedSeats");
+			sessionStorage.removeItem("reservationExpiry");
+			return false;
+		}
+	} catch (error) {
+		// Silent fail - just log, don't show toast
+		console.error("Failed to load reservations:", error);
+		return false;
+	}
+};
+
 const toggleSeat = async (seat) => {
 	if (seat.status !== "available" && !isSelected(seat)) return;
 
@@ -1614,13 +1660,19 @@ const toggleSeat = async (seat) => {
 
 		try {
 			await bookingAPI.releaseSeats([seat.id], bookingStore.sessionId);
+
+			sessionStorage.setItem(
+				"selectedSeats",
+				JSON.stringify(selectedSeats.value)
+			);
+			bookingStore.selectedSeats = selectedSeats.value;
 		} catch (error) {
 			console.error("Failed to release seat:", error);
+			toast.error("Không thể bỏ chọn ghế");
 		}
 	} else {
-		// CHỌN GHẾ MỚI
 		if (selectedSeats.value.length >= 8) {
-			alert("Bạn chỉ có thể chọn tối đa 8 ghế");
+			toast.warning("Bạn chỉ có thể chọn tối đa 8 ghế");
 			return;
 		}
 
@@ -1632,21 +1684,32 @@ const toggleSeat = async (seat) => {
 			);
 
 			selectedSeats.value = response.data.seats;
+			bookingStore.selectedSeats = response.data.seats;
 
 			if (!reservationExpiry.value) {
 				reservationExpiry.value = new Date(response.data.expires_at);
-
 				sessionStorage.setItem(
 					"reservationExpiry",
 					response.data.expires_at
 				);
-
 				bookingStore.reservationExpiry = response.data.expires_at;
-
 				startTimer();
 			}
+
+			sessionStorage.setItem(
+				"selectedSeats",
+				JSON.stringify(selectedSeats.value)
+			);
 		} catch (error) {
-			alert("Không thể giữ ghế này");
+			console.error("Failed to reserve seat:", error);
+
+			const errorMsg =
+				error.response?.data?.error || "Không thể giữ ghế này";
+			toast.error(errorMsg);
+
+			if (errorMsg.includes("quá 8 ghế")) {
+				await loadSessionReservations();
+			}
 		}
 	}
 };
@@ -1677,23 +1740,46 @@ const startTimer = () => {
 	}, 1000);
 };
 const continueToCustomerInfo = () => {
-	if (selectedSeats.value.length > 0) {
-		bookingStore.selectedSeats = selectedSeats.value;
-		sessionStorage.setItem(
-			"selectedSeats",
-			JSON.stringify(selectedSeats.value)
-		);
-
-		if (reservationExpiry.value) {
-			const expiryISO = reservationExpiry.value.toISOString
-				? reservationExpiry.value.toISOString()
-				: reservationExpiry.value;
-			sessionStorage.setItem("reservationExpiry", expiryISO);
-			bookingStore.reservationExpiry = expiryISO;
-		}
-
-		router.push(`/booking/${route.params.showId}/customer-info`);
+	if (selectedSeats.value.length === 0) {
+		toast.warning("Vui lòng chọn ghế trước");
+		return;
 	}
+
+	console.log("🚀 [SelectSeats] Continue to CustomerInfo");
+
+	bookingStore.selectedSeats = selectedSeats.value;
+	sessionStorage.setItem(
+		"selectedSeats",
+		JSON.stringify(selectedSeats.value)
+	);
+	console.log("✅ Saved seats:", selectedSeats.value.length);
+
+	if (reservationExpiry.value) {
+		const expiryISO = reservationExpiry.value.toISOString
+			? reservationExpiry.value.toISOString()
+			: new Date(reservationExpiry.value).toISOString();
+
+		sessionStorage.setItem("reservationExpiry", expiryISO);
+		bookingStore.reservationExpiry = expiryISO;
+		console.log("✅ Saved expiry:", expiryISO);
+	}
+
+	const performanceToSave = {
+		...performanceInfo.value,
+		service_fee_per_ticket:
+			performanceInfo.value.service_fee_per_ticket ||
+			bookingStore.currentShow?.service_fee_per_ticket ||
+			0,
+		show_name:
+			performanceInfo.value.show_name || bookingStore.currentShow?.name,
+	};
+
+	sessionStorage.setItem(
+		"selectedPerformance",
+		JSON.stringify(performanceToSave)
+	);
+	// Navigate
+	router.push(`/booking/${route.params.showId}/customer-info`);
 };
 
 const loadSeatMap = async () => {
@@ -1814,53 +1900,82 @@ const calculateAutoFit = async () => {
 	initialZoomLevel.value = optimalZoom;
 	initialPanX.value = optimalPanX;
 	initialPanY.value = optimalPanY;
-
-	console.log("Auto-fit calculated:", {
-		containerSize: { width: containerWidth, height: containerHeight },
-		actualContentSize: {
-			width: actualContentWidth,
-			height: actualContentHeight,
-		},
-		scaledContentSize: {
-			width: scaledContentWidth,
-			height: scaledContentHeight,
-		},
-		optimalZoom,
-		optimalPan: { x: optimalPanX, y: optimalPanY },
-	});
 };
 
 // Lifecycle
 onMounted(async () => {
+	loading.value = true;
+
 	try {
-		const savedPerformance = sessionStorage.getItem("selectedPerformance");
-		if (savedPerformance) {
-			performanceInfo.value = JSON.parse(savedPerformance);
+		const existingSessionId = sessionStorage.getItem("session_id");
+		if (existingSessionId) {
+			bookingStore.sessionId = existingSessionId;
 		} else {
+			bookingStore.initSession();
+		}
+
+		let performanceData = null;
+		const savedPerformance = sessionStorage.getItem("selectedPerformance");
+
+		if (savedPerformance) {
+			try {
+				performanceData = JSON.parse(savedPerformance);
+			} catch (e) {
+				console.error("Failed to parse savedPerformance:", e);
+			}
+		}
+
+		if (!performanceData || !performanceData.id) {
+			await bookingStore.loadShowDetail(route.params.showId);
+
+			if (
+				!bookingStore.performances ||
+				bookingStore.performances.length === 0
+			) {
+				throw new Error("No performances available");
+			}
+
+			if (bookingStore.performances.length === 1) {
+				performanceData = bookingStore.performances[0];
+			} else {
+				toast.info("Vui lòng chọn suất diễn");
+				router.push(`/booking/${route.params.showId}`);
+				return;
+			}
+
+			performanceData.service_fee_per_ticket =
+				bookingStore.currentShow?.service_fee_per_ticket || 10000;
+			performanceData.show_name = bookingStore.currentShow?.name;
+
+			sessionStorage.setItem(
+				"selectedPerformance",
+				JSON.stringify(performanceData)
+			);
+		}
+
+		if (!performanceData || !performanceData.id) {
+			toast.error("Dữ liệu suất diễn không hợp lệ");
 			router.push(`/booking/${route.params.showId}`);
 			return;
 		}
 
+		performanceInfo.value = performanceData;
+
 		await loadSeatMap();
 
-		const savedExpiry = sessionStorage.getItem("reservationExpiry");
-		if (savedExpiry) {
-			reservationExpiry.value = new Date(savedExpiry);
-			const now = new Date();
-			if (reservationExpiry.value > now) {
-				startTimer();
-			} else {
-				reservationExpiry.value = null;
-				sessionStorage.removeItem("reservationExpiry");
-				sessionStorage.removeItem("selectedSeats");
-			}
-		}
+		console.log("Checking for existing reservations...");
+		await loadSessionReservations();
 	} catch (error) {
-		console.error("Failed to load:", error);
+		console.error("SelectSeats onMounted error:", error);
+		// Only show toast for critical errors
+		if (error.message !== "No performances available") {
+			toast.error("Không thể tải dữ liệu. Vui lòng thử lại.");
+		}
 	} finally {
 		loading.value = false;
 	}
 });
+
 onUnmounted(() => {
 	if (timer) clearInterval(timer);
 
@@ -1875,6 +1990,20 @@ onUnmounted(() => {
 	}
 
 	document.removeEventListener("touchstart", handleGlobalTouch);
+});
+onBeforeRouteLeave((to, from, next) => {
+	// Nếu KHÔNG đi sang CustomerInfo thì release seats
+	if (!to.path.includes("/customer-info")) {
+		if (selectedSeats.value.length > 0 && bookingStore.sessionId) {
+			bookingAPI
+				.releaseSeats(
+					selectedSeats.value.map((s) => s.id),
+					bookingStore.sessionId
+				)
+				.catch((err) => console.error("Failed to release seats:", err));
+		}
+	}
+	next();
 });
 </script>
 

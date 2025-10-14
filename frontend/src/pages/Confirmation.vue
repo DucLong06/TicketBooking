@@ -222,6 +222,8 @@ import jsPDF from "jspdf";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { bookingAPI } from "../api/booking";
 import { useToast } from "vue-toastification";
+import { useBookingStore } from "../stores/booking";
+const bookingStore = useBookingStore();
 
 const toast = useToast();
 const router = useRouter();
@@ -233,12 +235,8 @@ const bookingCode = ref("");
 const bookingData = ref({});
 const qrcodeCanvas = ref(null);
 
-// Computed
-// frontend/src/pages/Confirmation.vue
-
 const seatsList = computed(() => {
 	if (!bookingData.value?.seat_reservations) return "";
-	console.log(bookingData.value.seat_reservations);
 
 	// Group by section
 	const seatsBySection = {};
@@ -365,8 +363,12 @@ const sendEmail = async () => {
 };
 
 const goHome = () => {
-	// Clear all session data
 	sessionStorage.clear();
+
+	bookingStore.clearBooking();
+
+	bookingStore.initSession();
+
 	router.push("/");
 };
 function transformBookingData(rawData) {
@@ -412,8 +414,60 @@ function transformBookingData(rawData) {
 	};
 }
 
+function transformBookingData(rawData) {
+	const required = [
+		"booking_code",
+		"customer_email",
+		"performance_datetime",
+		"seat_reservations",
+	];
+	for (const field of required) {
+		if (!rawData[field]) {
+			throw new Error(`Missing required field: ${field}`);
+		}
+	}
+
+	return {
+		showInfo: { name: rawData.show_name },
+		performance: {
+			date: new Date(rawData.performance_datetime).toLocaleDateString(
+				"vi-VN"
+			),
+			time: new Date(rawData.performance_datetime).toLocaleTimeString(
+				"vi-VN",
+				{
+					hour: "2-digit",
+					minute: "2-digit",
+				}
+			),
+		},
+		customerInfo: {
+			fullName: rawData.customer_name,
+			email: rawData.customer_email,
+			phone: rawData.customer_phone,
+		},
+		amount: rawData.final_amount,
+		selectedSeats: rawData.seat_reservations.map((sr) => ({
+			id: sr.seat.id,
+			row: sr.seat.row,
+			number: sr.seat.number,
+			price: sr.price,
+		})),
+		...rawData,
+	};
+}
+
 onMounted(async () => {
 	bookingCode.value = route.params.bookingCode;
+
+	sessionStorage.removeItem("session_id");
+	sessionStorage.removeItem("selectedSeats");
+	sessionStorage.removeItem("reservationExpiry");
+	sessionStorage.removeItem("currentBooking");
+
+	bookingStore.clearBooking();
+
+	bookingStore.initSession();
 
 	try {
 		const response = await bookingAPI.getBooking(bookingCode.value);

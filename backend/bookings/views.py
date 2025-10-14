@@ -248,7 +248,28 @@ def reserve_seats(request):
         )
         expired_reservations.update(status='available', session_id='', expires_at=None)
 
-        # Check availability
+        existing_session_reservations = SeatReservation.objects.filter(
+            performance=performance,
+            session_id=session_id,
+            status='reserved',
+            expires_at__gt=timezone.now()
+        )
+
+        existing_seat_ids = set(existing_session_reservations.values_list('seat_id', flat=True))
+        new_seat_ids = set(seat_ids)
+        total_seat_ids = existing_seat_ids | new_seat_ids  # Union of both sets
+
+        if len(total_seat_ids) > 8:
+            return Response(
+                {
+                    'error': f'Không thể giữ quá 8 ghế. Bạn đang có {len(existing_seat_ids)} ghế, yêu cầu thêm {len(new_seat_ids)} ghế.',
+                    'current_count': len(existing_seat_ids),
+                    'requested_count': len(new_seat_ids),
+                    'max_allowed': 8
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         existing_reservations = SeatReservation.objects.filter(
             performance=performance,
             seat_id__in=seat_ids,
@@ -267,7 +288,6 @@ def reserve_seats(request):
         ).values('price_category_id', 'price')
         price_map = {pp['price_category_id']: pp['price'] for pp in performance_prices}
 
-        # Reserve seats
         reserved_seats = []
         timeout_minutes = getattr(settings, 'SEAT_RESERVATION_TIMEOUT_MINUTES', 5)
         existing_reservation = SeatReservation.objects.filter(
@@ -289,7 +309,7 @@ def reserve_seats(request):
                 'price_category'
             ).get(id=seat_id)
 
-            # ===== GET PRICE FROM SEAT'S PRICE_CATEGORY =====
+            # Get price from seat's price_category
             effective_pc = seat.effective_price_category
             price_category_id = effective_pc.id if effective_pc else None
             seat_price = price_map.get(
@@ -303,7 +323,7 @@ def reserve_seats(request):
                 defaults={
                     'status': 'reserved',
                     'session_id': session_id,
-                    'price': seat_price,  # ← Giá theo price_category của ghế
+                    'price': seat_price,
                     'expires_at': expires_at
                 }
             )
@@ -311,7 +331,7 @@ def reserve_seats(request):
             reserved_seats.append({
                 'id': seat.id,
                 'row': seat.row.label,
-                'number': seat.display_label,      # ← Display number
+                'number': seat.display_label,
                 'full_label': seat.full_display_label,
                 'section_name': seat.row.section.name,
                 'price': float(seat_price)
@@ -472,3 +492,90 @@ class BookingViewSet(viewsets.ModelViewSet):
                 {'error': 'Lỗi hệ thống. Vui lòng thử lại sau.'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+@api_view(['GET'])
+@csrf_exempt
+def get_session_reservations(request):
+    """
+    Get all reserved seats for a session
+    Used to restore seats after page refresh
+    ALWAYS returns valid response, never throws errors
+    """
+    session_id = request.query_params.get('session_id')
+    performance_id = request.query_params.get('performance_id')
+
+    # Default empty response
+    empty_response = {
+        'seats': [],
+        'expires_at': None,
+        'count': 0
+    }
+
+    # Missing params → return empty
+    if not session_id or not performance_id:
+        logger.info(f"get_session_reservations: Missing params (session={session_id}, perf={performance_id})")
+        return Response(empty_response)
+
+    try:
+        # Get performance
+        try:
+            performance = Performance.objects.get(id=performance_id)
+        except Performance.DoesNotExist:
+            logger.warning(f"get_session_reservations: Performance {performance_id} not found")
+            return Response(empty_response)
+
+        # Get reservations for this session
+        reservations = SeatReservation.objects.filter(
+            performance=performance,
+            session_id=session_id,
+            status='reserved',
+            expires_at__gt=timezone.now()
+        ).select_related(
+            'seat',
+            'seat__row',
+            'seat__row__section'
+        )
+
+        # No reservations → return empty
+        if not reservations.exists():
+            logger.info(f"get_session_reservations: No active reservations for session {session_id}")
+            return Response(empty_response)
+
+        # Build response
+        first_reservation = reservations.first()
+        expires_at = first_reservation.expires_at
+
+        reserved_seats = []
+        for reservation in reservations:
+            try:
+                seat = reservation.seat
+                reserved_seats.append({
+                    'id': seat.id,
+                    'row': seat.row.label,
+                    'number': seat.display_label,
+                    'full_label': seat.full_display_label,
+                    'section_name': seat.row.section.name,
+                    'price': float(reservation.price)
+                })
+            except Exception as seat_error:
+                # Skip this seat if error, don't fail entire request
+                logger.error(f"Error processing seat {reservation.seat_id}: {seat_error}")
+                continue
+
+        # If all seats failed to process, return empty
+        if not reserved_seats:
+            logger.warning(f"get_session_reservations: All seats failed to process")
+            return Response(empty_response)
+
+        logger.info(f"get_session_reservations: Found {len(reserved_seats)} seats for session {session_id}")
+        return Response({
+            'seats': reserved_seats,
+            'expires_at': expires_at.isoformat(),
+            'count': len(reserved_seats)
+        })
+
+    except Exception as e:
+        # Log error but return empty instead of 500
+        logger.error(f"get_session_reservations: Unexpected error: {e}", exc_info=True)
+        return Response(empty_response)

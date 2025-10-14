@@ -1,13 +1,17 @@
+from django.db.models import Q
+from logzero import logger
 from rest_framework import serializers
 from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 
+from payments.models import Payment
 from discounts.models import Discount, DiscountUsage
 from discounts.services import validate_and_calculate_discount, DiscountError
 from .models import Booking, SeatReservation
 from venues.models import Seat
 from shows.models import Performance
+from django.db import transaction
 
 
 class SeatReservationSerializer(serializers.ModelSerializer):
@@ -123,24 +127,34 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             performance_id=performance_id,
             seat_id__in=seat_ids,
             session_id=session_id,
-            status='reserved'
+            status='reserved',
+            expires_at__gt=timezone.now()
         )
 
-        if seat_reservations.count() == 0:
-            raise serializers.ValidationError(
-                "Không tìm thấy ghế. Vui lòng chọn lại."
-            )
+        if seat_reservations.count() != len(seat_ids):
+            raise serializers.ValidationError({
+                "detail": "Ghế không hợp lệ hoặc đã hết hạn. Vui lòng chọn lại.",
+                "shouldRedirect": True
+            })
 
         total_amount = sum(sr.price for sr in seat_reservations)
         service_fee = len(seat_ids) * performance.show.service_fee_per_ticket
 
+        if total_amount <= 0:
+            raise serializers.ValidationError({
+                "detail": "Lỗi tính tiền. Vui lòng thử lại.",
+                "shouldRedirect": True
+            })
+
         discount_instance = None
         discount_amount = Decimal('0')
 
-        # Create a temporary booking object to pass to the service
         temp_booking_for_validation = Booking(
             total_amount=total_amount,
-            **validated_data
+            customer_email=validated_data.get('customer_email'),
+            customer_phone=validated_data.get('customer_phone'),
+            **{k: v for k, v in validated_data.items()
+               if k in ['customer_name', 'customer_address', 'shipping_time', 'notes']}
         )
 
         if discount_code_str:
@@ -154,29 +168,61 @@ class BookingCreateSerializer(serializers.ModelSerializer):
 
         final_amount = total_amount + service_fee - discount_amount
 
-        # Delete old pending bookings from the same session to avoid duplicates
-        Booking.objects.filter(session_id=session_id, status='pending').delete()
+        with transaction.atomic():
+            # Lock seats để tránh race condition
+            locked_reservations = SeatReservation.objects.select_for_update().filter(
+                performance_id=performance_id,
+                seat_id__in=seat_ids,
+                session_id=session_id,
+                status='reserved',
+                expires_at__gt=timezone.now()
+            )
 
-        # Create the new booking with all correctly calculated data
-        booking = Booking.objects.create(
-            performance=performance,
-            session_id=session_id,
-            total_amount=total_amount,
-            service_fee=service_fee,
-            discount=discount_instance,
-            discount_amount=discount_amount,
-            final_amount=final_amount,
-            **validated_data
-        )
+            if locked_reservations.count() != len(seat_ids):
+                raise serializers.ValidationError({
+                    "detail": "Có ghế đã được người khác đặt. Vui lòng chọn lại.",
+                    "shouldRedirect": True
+                })
 
-        seat_reservations.update(booking=booking)
+            from datetime import timedelta
+            cutoff_time = timezone.now() - timedelta(minutes=30)
 
-        if booking.seat_reservations.count() != len(seat_ids):
-            booking.delete()
-            raise serializers.ValidationError("Lỗi hệ thống. Vui lòng thử lại.")
+            old_pending_bookings = Booking.objects.filter(
+                session_id=session_id,
+                status='pending',
+                created_at__lt=cutoff_time
+            ).exclude(
+                Q(seat_reservations__status='sold') |
+                Q(id__in=Payment.objects.values_list('booking_id', flat=True))
+            )
 
-        if discount_instance:
-            DiscountUsage.objects.create(discount=discount_instance, booking=booking, status='PENDING')
+            deleted_count = old_pending_bookings.delete()[0]
+            if deleted_count > 0:
+                logger.info(f"✅ Deleted {deleted_count} old pending bookings for session {session_id}")
+
+            booking = Booking.objects.create(
+                performance=performance,
+                session_id=session_id,
+                total_amount=total_amount,
+                service_fee=service_fee,
+                discount=discount_instance,
+                discount_amount=discount_amount,
+                final_amount=final_amount,
+                **validated_data
+            )
+
+            locked_reservations.update(booking=booking)
+
+            if booking.seat_reservations.count() != len(seat_ids):
+                raise Exception("CRITICAL: Seat count mismatch after creation")
+
+            if discount_instance:
+                DiscountUsage.objects.create(
+                    discount=discount_instance,
+                    booking=booking,
+                    status='PENDING'
+                )
+                logger.info(f"✅ Created pending discount usage for code '{discount_code_str}'")
 
         return booking
 
