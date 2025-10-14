@@ -31,6 +31,14 @@ def send_booking_confirmation(booking):
             seat_label = f"{seat.row.label}{seat.display_label}"
             seats_by_section[section_name].append(seat_label)
 
+        section_names = list(seats_by_section.keys())
+        if len(section_names) == 1:
+            section_display_name = section_names[0]
+        elif len(section_names) > 1:
+            section_display_name = ', '.join(section_names)
+        else:
+            section_display_name = venue.name
+
         # Format: "Khán Phòng 1: A1, A2, B3 | Khán Phòng 2: C1, C2"
         seat_numbers = " | ".join([
             f"{section}: {', '.join(seats)}"
@@ -58,40 +66,14 @@ def send_booking_confirmation(booking):
 
         # Determine payment status section
         payment_section = ""
-        payment_status = getattr(booking, 'payment_status', 'pending')
 
-        if payment_status == 'cod':
-            payment_section = """
-            <tr>
-                <td class="banve" style="width: 30%; font-weight: bold;">
-                    Tình trạng thanh toán <br>
-                    <span style="font-style: italic; font-weight: normal;">Payment Status</span>
-                </td>
-                <td class="banve" style="">
-                    <a style="font-weight: bold; color: #6d4c41;">Thanh toán khi nhận vé.</a>
-              <br>
-              <span style="font-style: italic; font-weight: normal;">Cash on delivery.</span>
-                      </td>
-                  </tr>
-            """
-        elif payment_status == 'completed':
-            payment_section = """
+        payment_section = """
             <tr>
                 <td class="banve" style="width: 30%; font-weight: bold;">
                     Tình trạng <br> 
                     <span style="font-style: italic; font-weight: normal;">Status</span>
                 </td>
                 <td class="banve" style=" font-weight: bold; color: #6d4c41; text-transform: uppercase">Đã thanh toán</td>
-            </tr>
-            """
-        else:
-            payment_section = """
-            <tr>
-                <td class="banve" style="width: 30%; font-weight: bold;">
-                    Tình trạng <br> 
-                    <span style="font-style: italic; font-weight: normal;">Status</span>
-                </td>
-                <td class="banve" style=" font-weight: bold; color: #6d4c41; text-transform: uppercase">Vé mới</td>
             </tr>
             """
 
@@ -107,6 +89,7 @@ def send_booking_confirmation(booking):
             'total_amount': f"{booking.final_amount:,.0f}",
             'show': show,
             'venue': venue,
+            'section_name': section_display_name,
             'performance_datetime_display': performance_datetime_display,
             'performance_datetime_cal': f"{performance_datetime_cal}/{performance_end_cal}",
             'venue_maps_url': venue.maps_url,

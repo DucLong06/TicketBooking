@@ -1,3 +1,16 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from .email_service import send_booking_confirmation
+from logzero import logger
+from shows.models import Performance, PerformancePrice
+from venues.models import Seat
+from .serializers import (
+    BookingDetailSerializer,
+    BookingCreateSerializer,
+    ReserveSeatSerializer,
+)
+from .models import Booking, SeatReservation
+from django.conf import settings
 from django.db.models import Prefetch
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
@@ -5,21 +18,8 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db import transaction
+from datetime import timezone as dt_timezone 
 from datetime import timedelta
-from django.conf import settings
-from .models import Booking, SeatReservation
-from .serializers import (
-    BookingDetailSerializer,
-    BookingCreateSerializer,
-    ReserveSeatSerializer,
-    SeatMapSerializer
-)
-from venues.models import Seat
-from shows.models import Performance, PerformancePrice
-from logzero import logger
-from .email_service import send_booking_confirmation
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 
 
 def get_performance_seat_map(performance):
@@ -58,7 +58,8 @@ def get_performance_seat_map(performance):
         performance=performance
     ).values('price_category_id', 'price')
     price_map = {pp['price_category_id']: pp['price'] for pp in performance_prices}
-    utc_plus_7 = timezone(timedelta(hours=7))
+
+    utc_plus_7 = dt_timezone(timedelta(hours=7))
     datetime_in_utc7 = performance.datetime.astimezone(utc_plus_7)
 
     # Build seat map data

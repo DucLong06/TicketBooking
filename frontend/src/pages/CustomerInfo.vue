@@ -1,7 +1,7 @@
 <template>
 	<DefaultLayout>
 		<div class="container mx-auto px-4 py-8">
-			<!-- Breadcrumb -->
+			<!-- Breadcrumb - giữ nguyên -->
 			<nav class="mb-6">
 				<ol class="flex items-center space-x-2 text-sm">
 					<li>
@@ -40,7 +40,9 @@
 			<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 				<!-- Form Section - 2 columns -->
 				<div class="lg:col-span-2">
-					<div class="bg-white rounded-lg shadow-lg p-6">
+					<div
+						class="bg-white rounded-lg shadow-lg p-6 mb-20 lg:mb-0"
+					>
 						<h2 class="text-2xl font-bold mb-6">
 							Thông tin người đặt vé
 						</h2>
@@ -179,8 +181,8 @@
 								></textarea>
 							</div>
 
-							<!-- Buttons -->
-							<div class="flex justify-between">
+							<!-- Buttons cho desktop -->
+							<div class="hidden lg:flex justify-between">
 								<button
 									type="button"
 									@click="goBack"
@@ -199,8 +201,8 @@
 					</div>
 				</div>
 
-				<!-- Order Summary - 1 column -->
-				<div class="lg:col-span-1">
+				<!-- Order Summary - Desktop only (1 column) -->
+				<div class="hidden lg:block lg:col-span-1">
 					<div class="bg-white rounded-lg shadow-lg p-6 sticky top-4">
 						<h3 class="text-xl font-bold mb-4">Tóm tắt đơn hàng</h3>
 
@@ -224,7 +226,10 @@
 									:key="seat.id"
 									class="flex justify-between text-sm"
 								>
-									<span>{{ seat.row }}{{ seat.number }}</span>
+									<span
+										>{{ seat.full_label }} -
+										{{ seat.section_name }}</span
+									>
 									<span class="font-semibold">{{
 										formatPrice(seat.price)
 									}}</span>
@@ -270,6 +275,95 @@
 								}}</span>
 							</div>
 						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Mobile Sticky Bottom Bar -->
+			<div
+				class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50"
+			>
+				<div class="px-4 py-3">
+					<!-- Tổng thanh toán -->
+					<div class="flex justify-between items-center mb-3">
+						<div>
+							<p class="text-xs text-gray-500">Tổng thanh toán</p>
+							<p class="text-lg font-bold text-primary-600">
+								{{ formatPrice(totalAmount) }}
+							</p>
+						</div>
+						<div class="text-right">
+							<p class="text-xs text-gray-500">
+								⏱️ {{ formatTime(timeLeft) }}
+							</p>
+							<button
+								@click="toggleOrderSummary"
+								class="text-xs text-primary-600 hover:text-primary-700 underline"
+							>
+								{{
+									showOrderSummary
+										? "Ẩn chi tiết"
+										: "Xem chi tiết"
+								}}
+							</button>
+						</div>
+					</div>
+
+					<div
+						v-show="showOrderSummary"
+						class="mb-3 p-3 bg-gray-50 rounded-lg text-sm max-h-48 overflow-y-auto"
+					>
+						<div class="space-y-2">
+							<div class="flex justify-between">
+								<span class="text-gray-600">Tiền vé:</span>
+								<span class="font-semibold">{{
+									formatPrice(ticketAmount)
+								}}</span>
+							</div>
+							<div class="flex justify-between">
+								<span class="text-gray-600"
+									>Phí vận chuyển:</span
+								>
+								<span class="font-semibold">{{
+									formatPrice(serviceFee)
+								}}</span>
+							</div>
+							<div class="border-t pt-2 mt-2">
+								<p class="text-xs text-gray-500 mb-1">
+									Ghế:
+									<span
+										v-for="(seat, index) in selectedSeats"
+										:key="seat.id"
+									>
+										{{ seat.full_label }} -
+										{{ seat.section_name
+										}}<span
+											v-if="
+												index < selectedSeats.length - 1
+											"
+											>,
+										</span>
+									</span>
+								</p>
+							</div>
+						</div>
+					</div>
+
+					<!-- Buttons -->
+					<div class="flex gap-2">
+						<button
+							type="button"
+							@click="goBack"
+							class="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium"
+						>
+							← Quay lại
+						</button>
+						<button
+							@click="handleSubmit"
+							class="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition"
+						>
+							Thanh toán →
+						</button>
 					</div>
 				</div>
 			</div>
@@ -320,6 +414,13 @@ const emailDescription = ref(
 );
 
 const selectedSeats = ref([]);
+
+// Mobile order summary toggle
+const showOrderSummary = ref(false);
+
+const toggleOrderSummary = () => {
+	showOrderSummary.value = !showOrderSummary.value;
+};
 
 // Timer
 const timeLeft = ref(600); // 10 minutes
