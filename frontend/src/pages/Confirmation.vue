@@ -369,66 +369,71 @@ const goHome = () => {
 	sessionStorage.clear();
 	router.push("/");
 };
+function transformBookingData(rawData) {
+	const required = [
+		"booking_code",
+		"customer_email",
+		"performance_datetime",
+		"seat_reservations",
+	];
+	for (const field of required) {
+		if (!rawData[field]) {
+			throw new Error(`Missing required field: ${field}`);
+		}
+	}
+
+	return {
+		showInfo: { name: rawData.show_name },
+		performance: {
+			date: new Date(rawData.performance_datetime).toLocaleDateString(
+				"vi-VN"
+			),
+			time: new Date(rawData.performance_datetime).toLocaleTimeString(
+				"vi-VN",
+				{
+					hour: "2-digit",
+					minute: "2-digit",
+				}
+			),
+		},
+		customerInfo: {
+			fullName: rawData.customer_name,
+			email: rawData.customer_email,
+			phone: rawData.customer_phone,
+		},
+		amount: rawData.final_amount,
+		selectedSeats: rawData.seat_reservations.map((sr) => ({
+			id: sr.seat.id,
+			row: sr.seat.row,
+			number: sr.seat.number,
+			price: sr.price,
+		})),
+		...rawData,
+	};
+}
 
 onMounted(async () => {
 	bookingCode.value = route.params.bookingCode;
 
 	try {
 		const response = await bookingAPI.getBooking(bookingCode.value);
-		const rawData = response.data;
+		bookingData.value = transformBookingData(response.data);
 
-		// Transform backend data to frontend expected structure
-		bookingData.value = {
-			showInfo: {
-				name: rawData.show_name,
-			},
-			performance: {
-				date: new Date(rawData.performance_datetime).toLocaleDateString(
-					"vi-VN"
-				),
-				time: new Date(rawData.performance_datetime).toLocaleTimeString(
-					"vi-VN",
-					{
-						hour: "2-digit",
-						minute: "2-digit",
-					}
-				),
-			},
-			customerInfo: {
-				fullName: rawData.customer_name,
-				email: rawData.customer_email,
-				phone: rawData.customer_phone,
-			},
-			amount: rawData.final_amount,
-			selectedSeats: rawData.seat_reservations.map((sr) => ({
-				id: sr.seat.id,
-				row: sr.seat.row,
-				number: sr.seat.number,
-				price: sr.price,
-			})),
-			// Keep original data for reference
-			...rawData,
-		};
-
-		// Save the transformed data to sessionStorage for backup
 		sessionStorage.setItem(
 			"bookingData",
 			JSON.stringify(bookingData.value)
 		);
 	} catch (error) {
-		console.error("Failed to load booking data:", error);
+		console.error("Failed to load booking:", error);
 
-		// Fallback to sessionStorage
 		const savedData = sessionStorage.getItem("bookingData");
-		if (savedData) {
-			bookingData.value = JSON.parse(savedData);
-		} else {
+		if (!savedData) {
 			toast.error("Không tìm thấy thông tin đặt vé");
 			router.push("/");
 			return;
 		}
-	}
 
-	// await generateQRCode();
+		bookingData.value = JSON.parse(savedData);
+	}
 });
 </script>

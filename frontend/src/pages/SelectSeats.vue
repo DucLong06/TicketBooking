@@ -1130,7 +1130,12 @@ import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { useBookingStore } from "../stores/booking";
 import { bookingAPI } from "../api/booking";
 import { useToast } from "vue-toastification";
+import { useBookingCleanup } from "@/composables/useBookingCleanup";
 
+const { cleanup } = useBookingCleanup({
+	shouldRelease: true,
+	excludeRoutes: ["/booking/confirmation"],
+});
 const toast = useToast();
 const router = useRouter();
 const route = useRoute();
@@ -1184,6 +1189,11 @@ const venueInfo = computed(() => seatMap.value?.venue || {});
 const showInfo = computed(() => seatMap.value?.show || {});
 const performanceData = computed(() => seatMap.value?.performance || {});
 const priceCategories = computed(() => seatMap.value?.price_categories || {});
+
+const goBack = async () => {
+	await cleanup();
+	router.push("/");
+};
 
 const stageWidth = computed(() => {
 	if (Object.keys(rowRefs.value).length === 0) return "90%";

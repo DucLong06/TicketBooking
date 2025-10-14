@@ -96,9 +96,19 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         )
 
         if reserved_seats.count() != len(seat_ids):
-            raise serializers.ValidationError(
-                "Một số ghế bạn chọn không hợp lệ hoặc đã được người khác giữ. Vui lòng chọn lại.")
-
+            alternative = SeatReservation.objects.filter(
+                performance_id=performance_id,
+                seat_id__in=seat_ids,
+                status='reserved',
+                expires_at__gt=timezone.now(),
+                booking__isnull=True
+            )
+            if alternative.count() == len(seat_ids):
+                alternative.update(session_id=session_id)
+            else:
+                raise serializers.ValidationError(
+                    "Ghế không hợp lệ. Vui lòng chọn lại."
+                )
         return data
 
     def create(self, validated_data):
@@ -115,6 +125,11 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             session_id=session_id,
             status='reserved'
         )
+
+        if seat_reservations.count() == 0:
+            raise serializers.ValidationError(
+                "Không tìm thấy ghế. Vui lòng chọn lại."
+            )
 
         total_amount = sum(sr.price for sr in seat_reservations)
         service_fee = len(seat_ids) * performance.show.service_fee_per_ticket
@@ -155,6 +170,10 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         )
 
         seat_reservations.update(booking=booking)
+
+        if booking.seat_reservations.count() != len(seat_ids):
+            booking.delete()
+            raise serializers.ValidationError("Lỗi hệ thống. Vui lòng thử lại.")
 
         if discount_instance:
             DiscountUsage.objects.create(discount=discount_instance, booking=booking, status='PENDING')

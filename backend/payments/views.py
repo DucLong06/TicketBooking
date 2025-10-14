@@ -25,6 +25,12 @@ def create_payment(request, booking_code):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    if booking.seat_reservations.count() == 0:
+        return Response(
+            {'error': 'Booking không có ghế. Vui lòng đặt lại.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     payment_method = '9pay'
     transaction_id = f"TXN{uuid.uuid4().hex[:10].upper()}"
 
@@ -114,7 +120,14 @@ def ninepay_return(request):
                 booking.paid_at = timezone.now()
                 booking.save()
 
-                booking.seat_reservations.update(status='sold')
+                seat_count = booking.seat_reservations.count()
+
+                updated = booking.seat_reservations.update(status='sold')
+
+                logger.info(f"Seats: {seat_count}, Updated: {updated}")
+
+                if updated == 0:
+                    logger.error(f"🚨 CRITICAL: Payment OK but NO SEATS for {booking.booking_code}")
 
                 try:
                     usage = DiscountUsage.objects.select_for_update().get(booking=booking, status='PENDING')

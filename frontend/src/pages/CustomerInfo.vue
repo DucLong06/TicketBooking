@@ -595,6 +595,15 @@ const handleSubmit = async () => {
 		};
 
 		const booking = await bookingStore.createBooking();
+		if (
+			!booking.seat_reservations ||
+			booking.seat_reservations.length === 0
+		) {
+			toast.error("Lỗi: Không có ghế. Vui lòng chọn lại.");
+			await cleanup();
+			router.push(`/booking/${route.params.showId}/seats`);
+			return;
+		}
 		const paymentData = await bookingStore.processPayment("9pay");
 
 		const bookingData = {
