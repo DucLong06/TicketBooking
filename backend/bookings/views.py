@@ -28,11 +28,11 @@ def get_performance_seat_map(performance):
 
     # Get all seats
     seats = Seat.objects.filter(
-    row__section__venue=venue,
-    status='active'
+        row__section__venue=venue,
+        status='active'
     ).select_related(
         'row',
-        'row__section', 
+        'row__section',
         'row__price_category',
         'price_category'
     ).prefetch_related(
@@ -266,8 +266,18 @@ def reserve_seats(request):
 
         # Reserve seats
         reserved_seats = []
-        timeout_minutes = getattr(settings, 'BOOKING_TIMEOUT_MINUTES', 10)
-        expires_at = timezone.now() + timedelta(minutes=timeout_minutes)
+        timeout_minutes = getattr(settings, 'SEAT_RESERVATION_TIMEOUT_MINUTES', 5)
+        existing_reservation = SeatReservation.objects.filter(
+            performance=performance,
+            session_id=session_id,
+            status='reserved',
+            expires_at__isnull=False
+        ).first()
+
+        if existing_reservation and existing_reservation.expires_at:
+            expires_at = existing_reservation.expires_at
+        else:
+            expires_at = timezone.now() + timedelta(minutes=timeout_minutes)
 
         for seat_id in seat_ids:
             seat = Seat.objects.select_related(
@@ -361,8 +371,13 @@ class BookingViewSet(viewsets.ModelViewSet):
 
         # Return booking details
         detail_serializer = BookingDetailSerializer(booking)
+        response_data = detail_serializer.data
+
+        response_data['expires_at'] = booking.expires_at.isoformat()
+        response_data['timeout_seconds'] = int((booking.expires_at - timezone.now()).total_seconds())
+
         return Response(
-            detail_serializer.data,
+            response_data,
             status=status.HTTP_201_CREATED
         )
 

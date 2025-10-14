@@ -143,6 +143,7 @@ export const useBookingStore = defineStore('booking', () => {
                 // ===== CRITICAL: Use full seat data from API response =====
                 if (response.data.seats && response.data.seats.length > 0) {
                     const reservedSeat = response.data.seats[0]
+                    console.log("response.data:", response.data);
 
                     // Ensure we have all necessary fields for display
                     const seatData = {
@@ -180,8 +181,14 @@ export const useBookingStore = defineStore('booking', () => {
             }
 
             const response = await bookingAPI.createBooking(bookingData)
+
             currentBooking.value = response.data
             bookingCode.value = response.data.booking_code
+
+            if (response.data.expires_at) {
+                const expiresAt = new Date(response.data.expires_at);
+                sessionStorage.setItem('bookingExpiry', expiresAt.toISOString());
+            }
 
             // ===== Save complete booking data with FULL seat info =====
             const completeBookingData = {

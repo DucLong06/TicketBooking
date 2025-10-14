@@ -282,7 +282,9 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { useBookingStore } from "../stores/booking";
+import { useToast } from "vue-toastification";
 
+const toast = useToast();
 const bookingStore = useBookingStore();
 const router = useRouter();
 const route = useRoute();
@@ -431,7 +433,7 @@ const handleSubmit = async () => {
 		}
 	} catch (error) {
 		console.error("Error:", error);
-		alert("Lỗi: " + (error.response?.data?.error || error.message));
+		toast.error("Lỗi: " + (error.response?.data?.error || error.message));
 	}
 };
 
@@ -440,12 +442,31 @@ const goBack = () => {
 };
 
 const startTimer = () => {
+	const savedExpiry = sessionStorage.getItem("reservationExpiry");
+
+	if (!savedExpiry) {
+		alert("Không tìm thấy thông tin đặt vé. Vui lòng chọn lại.");
+		router.push(`/booking/${route.params.showId}/seats`);
+		return;
+	}
+
+	const expiryDate = new Date(savedExpiry);
+
+	const now = new Date();
+	if (expiryDate <= now) {
+		alert("Hết thời gian giữ ghế. Vui lòng đặt lại.");
+		router.push(`/booking/${route.params.showId}/seats`);
+		return;
+	}
+
 	timer = setInterval(() => {
-		if (timeLeft.value > 0) {
-			timeLeft.value--;
-		} else {
+		const now = new Date();
+		const diff = Math.floor((expiryDate - now) / 1000);
+		timeLeft.value = Math.max(0, diff);
+
+		if (timeLeft.value === 0) {
 			clearInterval(timer);
-			alert("Hết thời gian giữ vé. Vui lòng đặt lại.");
+			alert("Hết thời gian giữ ghế. Vui lòng đặt lại.");
 			router.push("/");
 		}
 	}, 1000);

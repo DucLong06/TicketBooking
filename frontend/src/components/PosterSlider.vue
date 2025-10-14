@@ -151,7 +151,9 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { posterAPI } from "../api/poster";
+import { useToast } from "vue-toastification";
 
+const toast = useToast();
 const router = useRouter();
 const posters = ref([]);
 const currentSlide = ref(0);
@@ -242,7 +244,6 @@ onMounted(async () => {
 			posters.value = response.data; // No pagination
 		}
 
-		console.log("Loaded posters:", posters.value);
 		startAutoPlay();
 	} catch (error) {
 		console.error("Failed to load posters:", error);

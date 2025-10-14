@@ -221,7 +221,9 @@ import QRCode from "qrcode";
 import jsPDF from "jspdf";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { bookingAPI } from "../api/booking";
+import { useToast } from "vue-toastification";
 
+const toast = useToast();
 const router = useRouter();
 const route = useRoute();
 
@@ -338,9 +340,11 @@ const sendEmail = async () => {
 		const response = await bookingAPI.resendEmail(bookingCode.value);
 
 		if (response.data.success) {
-			alert(response.data.message || "Email đã được gửi lại thành công!");
+			toast.success(
+				response.data.message || "Email đã được gửi lại thành công!"
+			);
 		} else {
-			alert(response.data.error || "Có lỗi xảy ra khi gửi email");
+			toast.error(response.data.error || "Có lỗi xảy ra khi gửi email");
 		}
 	} catch (error) {
 		console.error("Error resending email:", error);
@@ -351,9 +355,9 @@ const sendEmail = async () => {
 			error.response.data &&
 			error.response.data.error
 		) {
-			alert(error.response.data.error);
+			toast.error(error.response.data.error);
 		} else {
-			alert("Không thể gửi email. Vui lòng thử lại sau.");
+			toast.error("Không thể gửi email. Vui lòng thử lại sau.");
 		}
 	} finally {
 		isResendingEmail.value = false;
@@ -419,7 +423,7 @@ onMounted(async () => {
 		if (savedData) {
 			bookingData.value = JSON.parse(savedData);
 		} else {
-			alert("Không tìm thấy thông tin đặt vé");
+			toast.error("Không tìm thấy thông tin đặt vé");
 			router.push("/");
 			return;
 		}

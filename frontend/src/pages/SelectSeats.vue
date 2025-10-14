@@ -49,7 +49,12 @@
 
 						<div
 							class="relative overflow-hidden"
-							style="min-height: 500px; max-height: 650px"
+							:style="{
+								minHeight: isMobile ? '400px' : '600px',
+								maxHeight: isMobile
+									? 'calc(100vh - 200px)'
+									: 'calc(100vh - 150px)',
+							}"
 						>
 							<!-- Zoom Controls - Top Left Corner -->
 							<div
@@ -95,7 +100,7 @@
 									</svg>
 								</button>
 
-								<button
+								<!-- <button
 									@click="handleResetView"
 									class="bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-lg shadow-lg border-2 border-gray-200 transition-all hover:scale-110 active:scale-95"
 									title="Đặt lại vị trí"
@@ -113,7 +118,7 @@
 											d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
 										/>
 									</svg>
-								</button>
+								</button> -->
 							</div>
 
 							<div class=""></div>
@@ -1124,7 +1129,9 @@ import { useRouter, useRoute } from "vue-router";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { useBookingStore } from "../stores/booking";
 import { bookingAPI } from "../api/booking";
+import { useToast } from "vue-toastification";
 
+const toast = useToast();
 const router = useRouter();
 const route = useRoute();
 const bookingStore = useBookingStore();
@@ -1177,9 +1184,6 @@ const venueInfo = computed(() => seatMap.value?.venue || {});
 const showInfo = computed(() => seatMap.value?.show || {});
 const performanceData = computed(() => seatMap.value?.performance || {});
 const priceCategories = computed(() => seatMap.value?.price_categories || {});
-
-const showRulesModal = ref(false);
-const hasAcceptedRules = ref(false);
 
 const stageWidth = computed(() => {
 	if (Object.keys(rowRefs.value).length === 0) return "90%";
@@ -1590,31 +1594,47 @@ const getSeatStatusText = (status) => {
 	return statusMap[status] || status;
 };
 
-// Seat selection
 const toggleSeat = async (seat) => {
 	if (seat.status !== "available" && !isSelected(seat)) return;
+
 	const index = selectedSeats.value.findIndex((s) => s.id === seat.id);
+
 	if (index > -1) {
 		selectedSeats.value.splice(index, 1);
+
 		try {
 			await bookingAPI.releaseSeats([seat.id], bookingStore.sessionId);
 		} catch (error) {
 			console.error("Failed to release seat:", error);
 		}
 	} else {
+		// CHỌN GHẾ MỚI
 		if (selectedSeats.value.length >= 8) {
 			alert("Bạn chỉ có thể chọn tối đa 8 ghế");
 			return;
 		}
+
 		try {
 			const response = await bookingAPI.reserveSeats(
 				performanceData.value.id,
 				[...selectedSeats.value.map((s) => s.id), seat.id],
 				bookingStore.sessionId
 			);
+
 			selectedSeats.value = response.data.seats;
-			reservationExpiry.value = new Date(response.data.expires_at);
-			startTimer();
+
+			if (!reservationExpiry.value) {
+				reservationExpiry.value = new Date(response.data.expires_at);
+
+				sessionStorage.setItem(
+					"reservationExpiry",
+					response.data.expires_at
+				);
+
+				bookingStore.reservationExpiry = response.data.expires_at;
+
+				startTimer();
+			}
 		} catch (error) {
 			alert("Không thể giữ ghế này");
 		}
@@ -1623,21 +1643,29 @@ const toggleSeat = async (seat) => {
 
 const startTimer = () => {
 	if (timer) clearInterval(timer);
+
 	timer = setInterval(() => {
 		if (reservationExpiry.value) {
 			const now = new Date();
-			const diff = Math.floor((reservationExpiry.value - now) / 1000);
+			const expiry = new Date(reservationExpiry.value);
+			const diff = Math.floor((expiry - now) / 1000);
 			timeLeft.value = Math.max(0, diff);
+
 			if (timeLeft.value === 0) {
 				clearInterval(timer);
 				alert("Hết thời gian giữ ghế. Vui lòng chọn lại.");
 				selectedSeats.value = [];
-				loadSeatMap();
+				reservationExpiry.value = null;
+				sessionStorage.removeItem("reservationExpiry");
+				sessionStorage.removeItem("selectedSeats");
+				bookingStore.reservationExpiry = null;
+				setTimeout(() => {
+					window.location.reload();
+				}, 500);
 			}
 		}
 	}, 1000);
 };
-
 const continueToCustomerInfo = () => {
 	if (selectedSeats.value.length > 0) {
 		bookingStore.selectedSeats = selectedSeats.value;
@@ -1645,6 +1673,15 @@ const continueToCustomerInfo = () => {
 			"selectedSeats",
 			JSON.stringify(selectedSeats.value)
 		);
+
+		if (reservationExpiry.value) {
+			const expiryISO = reservationExpiry.value.toISOString
+				? reservationExpiry.value.toISOString()
+				: reservationExpiry.value;
+			sessionStorage.setItem("reservationExpiry", expiryISO);
+			bookingStore.reservationExpiry = expiryISO;
+		}
+
 		router.push(`/booking/${route.params.showId}/customer-info`);
 	}
 };
@@ -1657,12 +1694,6 @@ const loadSeatMap = async () => {
 	} catch (error) {
 		console.error("Failed to load seat map:", error);
 	}
-};
-
-// Instructions management
-const showInstructions = () => {
-	instructionsClosed.value = false;
-	showZoomInstructions.value = true;
 };
 
 const closeInstructions = () => {
@@ -1724,10 +1755,69 @@ const handleZoomOut = () => {
 };
 
 // Reset View Handler
-const handleResetView = () => {
-	zoomLevel.value = initialZoomLevel.value;
-	panX.value = initialPanX.value;
-	panY.value = initialPanY.value;
+// const handleResetView = async () => {
+// 	await calculateAutoFit();
+// };
+
+const calculateAutoFit = async () => {
+	const container = document.getElementById("seat-map-container");
+	if (!container) return;
+
+	await nextTick();
+	await new Promise((resolve) => setTimeout(resolve, 100));
+
+	const containerRect = container.getBoundingClientRect();
+	const containerWidth = containerRect.width;
+	const containerHeight = containerRect.height;
+
+	const contentElement = container.querySelector('[style*="transform"]');
+	if (!contentElement) return;
+
+	zoomLevel.value = 1;
+	panX.value = 0;
+	panY.value = 0;
+
+	await nextTick();
+
+	const contentRect = contentElement.getBoundingClientRect();
+	const actualContentWidth = contentRect.width;
+	const actualContentHeight = contentRect.height;
+
+	// Padding (desktop: 60px, mobile: 20px)
+	const padding = window.innerWidth >= 1024 ? 60 : 20;
+
+	const zoomX = (containerWidth - padding * 2) / actualContentWidth;
+	const zoomY = (containerHeight - padding * 2) / actualContentHeight;
+	const optimalZoom = Math.min(zoomX, zoomY, 1);
+
+	const scaledContentWidth = actualContentWidth * optimalZoom;
+	const scaledContentHeight = actualContentHeight * optimalZoom;
+	const spaceX = containerWidth - scaledContentWidth;
+	const spaceY = containerHeight - scaledContentHeight;
+	const optimalPanX = spaceX / 2;
+	const optimalPanY = spaceY / 2;
+
+	zoomLevel.value = optimalZoom;
+	panX.value = optimalPanX;
+	panY.value = optimalPanY;
+
+	initialZoomLevel.value = optimalZoom;
+	initialPanX.value = optimalPanX;
+	initialPanY.value = optimalPanY;
+
+	console.log("Auto-fit calculated:", {
+		containerSize: { width: containerWidth, height: containerHeight },
+		actualContentSize: {
+			width: actualContentWidth,
+			height: actualContentHeight,
+		},
+		scaledContentSize: {
+			width: scaledContentWidth,
+			height: scaledContentHeight,
+		},
+		optimalZoom,
+		optimalPan: { x: optimalPanX, y: optimalPanY },
+	});
 };
 
 // Lifecycle
@@ -1743,19 +1833,17 @@ onMounted(async () => {
 
 		await loadSeatMap();
 
-		document.addEventListener("touchstart", handleGlobalTouch);
-
-		// Show zoom instructions if first time
-		const hasSeenInstructions = localStorage.getItem(
-			"zoom_instructions_seen"
-		);
-		if (!hasSeenInstructions) {
-			setTimeout(() => {
-				showZoomInstructions.value = true;
-				startInstructionsTimer();
-			}, 1500);
-		} else {
-			instructionsClosed.value = true;
+		const savedExpiry = sessionStorage.getItem("reservationExpiry");
+		if (savedExpiry) {
+			reservationExpiry.value = new Date(savedExpiry);
+			const now = new Date();
+			if (reservationExpiry.value > now) {
+				startTimer();
+			} else {
+				reservationExpiry.value = null;
+				sessionStorage.removeItem("reservationExpiry");
+				sessionStorage.removeItem("selectedSeats");
+			}
 		}
 	} catch (error) {
 		console.error("Failed to load:", error);
@@ -1763,7 +1851,6 @@ onMounted(async () => {
 		loading.value = false;
 	}
 });
-
 onUnmounted(() => {
 	if (timer) clearInterval(timer);
 

@@ -120,7 +120,7 @@ class Booking(models.Model):
     def save(self, *args, **kwargs):
         if not self.expires_at:
             from django.conf import settings
-            timeout_minutes = getattr(settings, 'BOOKING_TIMEOUT_MINUTES', 10)
+            timeout_minutes = getattr(settings, 'PAYMENT_TIMEOUT_MINUTES', 15)
             self.expires_at = timezone.now() + timedelta(minutes=timeout_minutes)
         super().save(*args, **kwargs)
 
