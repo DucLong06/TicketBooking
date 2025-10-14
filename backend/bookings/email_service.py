@@ -52,9 +52,9 @@ def send_booking_confirmation(booking):
         performance_datetime_display = f"{performance.datetime.strftime('%H')}h - {performance.datetime.strftime('%d/%m/%Y')}"
 
         # Calendar format for Google Calendar link
-        performance_datetime_cal = performance.datetime.strftime('%Y%m%dT%H%M00Z')
+        performance_datetime_cal = performance.datetime.strftime('%Y%m%dT%H%M00')
         performance_end_cal = (performance.datetime + timedelta(minutes=show.duration_minutes)
-                               ).strftime('%Y%m%dT%H%M00Z')
+                               ).strftime('%Y%m%dT%H%M00')
 
         # Determine payment status section
         payment_section = ""

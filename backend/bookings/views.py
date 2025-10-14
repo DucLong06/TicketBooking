@@ -58,6 +58,8 @@ def get_performance_seat_map(performance):
         performance=performance
     ).values('price_category_id', 'price')
     price_map = {pp['price_category_id']: pp['price'] for pp in performance_prices}
+    utc_plus_7 = timezone(timedelta(hours=7))
+    datetime_in_utc7 = performance.datetime.astimezone(utc_plus_7)
 
     # Build seat map data
     seat_map_data = {
@@ -79,10 +81,10 @@ def get_performance_seat_map(performance):
         },
         'performance': {
             'id': performance.id,
-            'datetime': performance.datetime.isoformat(),
-            'date': performance.datetime.strftime('%d/%m/%Y'),
-            'time': performance.datetime.strftime('%H:%M'),
-            'day_of_week': ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'][performance.datetime.weekday()],
+            'datetime': datetime_in_utc7.isoformat(),
+            'date': datetime_in_utc7.strftime('%d/%m/%Y'),
+            'time': datetime_in_utc7.strftime('%H:%M'),
+            'day_of_week': ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'][datetime_in_utc7.weekday()],
         },
         'sections': [],
         'seats': [],

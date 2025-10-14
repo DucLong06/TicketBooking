@@ -84,7 +84,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -180,8 +180,8 @@ REST_FRAMEWORK = {
 }
 
 # Booking settings
-SEAT_RESERVATION_TIMEOUT_MINUTES = 5    
-PAYMENT_TIMEOUT_MINUTES = 15
+SEAT_RESERVATION_TIMEOUT_MINUTES = 5
+PAYMENT_TIMEOUT_MINUTES = 30
 
 # 9Pay Settings
 NINEPAY_MERCHANT_KEY = os.getenv('NINEPAY_MERCHANT_KEY', '')
