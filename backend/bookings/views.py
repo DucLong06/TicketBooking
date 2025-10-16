@@ -230,6 +230,7 @@ def performance_seat_map(request, performance_id):
 @csrf_exempt
 def reserve_seats(request):
     """Reserve seats temporarily"""
+    from .utils import validate_session_ownership
     serializer = ReserveSeatSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
@@ -237,8 +238,14 @@ def reserve_seats(request):
     seat_ids = serializer.validated_data['seat_ids']
     session_id = serializer.validated_data['session_id']
 
+    if not validate_session_ownership(session_id, request):
+        logger.warning(f"⚠️ Potential session hijacking: {session_id}")
+        return Response(
+            {'error': 'Session không hợp lệ'},
+            status=status.HTTP_403_FORBIDDEN
+        )
     performance = Performance.objects.get(id=performance_id)
-
+    client_ip = request.META.get('REMOTE_ADDR')
     with transaction.atomic():
         # Release expired reservations
         expired_reservations = SeatReservation.objects.filter(
@@ -247,7 +254,6 @@ def reserve_seats(request):
             expires_at__lt=timezone.now()
         )
         expired_reservations.update(status='available', session_id='', expires_at=None)
-
         existing_session_reservations = SeatReservation.objects.filter(
             performance=performance,
             session_id=session_id,
@@ -324,7 +330,8 @@ def reserve_seats(request):
                     'status': 'reserved',
                     'session_id': session_id,
                     'price': seat_price,
-                    'expires_at': expires_at
+                    'expires_at': expires_at,
+                    'client_ip': client_ip,
                 }
             )
 

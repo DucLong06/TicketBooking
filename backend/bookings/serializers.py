@@ -5,6 +5,7 @@ from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 
+from django.conf import settings
 from payments.models import Payment
 from discounts.models import Discount, DiscountUsage
 from discounts.services import validate_and_calculate_discount, DiscountError
@@ -169,8 +170,9 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         final_amount = total_amount + service_fee - discount_amount
 
         with transaction.atomic():
-            # Lock seats để tránh race condition
-            locked_reservations = SeatReservation.objects.select_for_update().filter(
+            locked_reservations = SeatReservation.objects.select_for_update(
+                nowait=True
+            ).filter(
                 performance_id=performance_id,
                 seat_id__in=seat_ids,
                 session_id=session_id,
@@ -184,8 +186,20 @@ class BookingCreateSerializer(serializers.ModelSerializer):
                     "shouldRedirect": True
                 })
 
+            duplicate_check = SeatReservation.objects.filter(
+                performance_id=performance_id,
+                seat_id__in=seat_ids,
+                status__in=['reserved', 'sold']
+            ).exclude(session_id=session_id).exists()
+
+            if duplicate_check:
+                raise serializers.ValidationError({
+                    "detail": "Có ghế đã được người khác đặt. Vui lòng chọn lại.",
+                    "shouldRedirect": True
+                })
+
             from datetime import timedelta
-            cutoff_time = timezone.now() - timedelta(minutes=30)
+            cutoff_time = timezone.now() - timedelta(minutes=settings.PAYMENT_TIMEOUT_MINUTES)
 
             old_pending_bookings = Booking.objects.filter(
                 session_id=session_id,
@@ -211,9 +225,15 @@ class BookingCreateSerializer(serializers.ModelSerializer):
                 **validated_data
             )
 
-            locked_reservations.update(booking=booking)
+            update_count = locked_reservations.update(booking=booking)
 
-            if booking.seat_reservations.count() != len(seat_ids):
+            if update_count != len(seat_ids):
+                logger.error(f"🚨 Update mismatch: expected {len(seat_ids)}, got {update_count}")
+                raise Exception("CRITICAL: Seat update mismatch")
+
+            actual_seat_count = booking.seat_reservations.filter(status='reserved').count()
+            if actual_seat_count != len(seat_ids):
+                logger.error(f"🚨 Seat count mismatch: expected {len(seat_ids)}, got {actual_seat_count}")
                 raise Exception("CRITICAL: Seat count mismatch after creation")
 
             if discount_instance:

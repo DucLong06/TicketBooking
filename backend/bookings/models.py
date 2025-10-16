@@ -206,15 +206,23 @@ class SeatReservation(models.Model):
     reserved_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(null=True, blank=True, verbose_name='Hết hạn giữ chỗ')
 
+    client_ip = models.GenericIPAddressField(null=True, blank=True)
+
     class Meta:
-        verbose_name = 'Ghế đặt'
-        verbose_name_plural = 'Ghế đặt'
-        unique_together = ['performance', 'seat']
+        verbose_name='Ghế đặt'
+        verbose_name_plural='Ghế đặt'
+        unique_together=['performance', 'seat']
+
+        indexes=[
+            models.Index(fields=['performance', 'seat', 'status']),
+            models.Index(fields=['session_id', 'status', 'expires_at']),
+            models.Index(fields=['booking', 'status']),
+        ]
 
     def __str__(self):
         return f"{self.performance} - {self.seat} - {self.status}"
 
-    @property
+    @ property
     def is_expired(self):
         if self.expires_at and self.status == 'reserved':
             return timezone.now() > self.expires_at
@@ -223,9 +231,9 @@ class SeatReservation(models.Model):
     def check_and_release_expired(self):
         """Release seat if reservation expired"""
         if self.is_expired:
-            self.status = 'available'
-            self.session_id = ''
-            self.expires_at = None
+            self.status='available'
+            self.session_id=''
+            self.expires_at=None
             self.save()
             return True
         return False
