@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Show, Performance, PerformancePrice
+from .models import Show, Performance, PerformancePrice, Poster
 from venues.serializers import VenueSerializer
 
 
@@ -9,11 +9,17 @@ class ShowListSerializer(serializers.ModelSerializer):
     min_price = serializers.SerializerMethodField()
     max_price = serializers.SerializerMethodField()
 
+    service_fee_per_ticket = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        read_only=True
+    )
+
     class Meta:
         model = Show
         fields = [
             'id', 'name', 'slug', 'category', 'duration_minutes',
-            'description', 'poster', 'venue_name', 'min_price', 'max_price'
+            'description', 'poster', 'venue_name', 'min_price', 'max_price', 'service_fee_per_ticket'
         ]
 
     def get_min_price(self, obj):
@@ -55,12 +61,17 @@ class PerformanceSerializer(serializers.ModelSerializer):
 class ShowDetailSerializer(serializers.ModelSerializer):
     venue = VenueSerializer(read_only=True)
     performances = serializers.SerializerMethodField()
+    service_fee_per_ticket = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        read_only=True
+    )
 
     class Meta:
         model = Show
         fields = [
             'id', 'name', 'slug', 'category', 'duration_minutes',
-            'description', 'poster', 'venue', 'performances'
+            'description', 'poster', 'venue', 'performances', 'service_fee_per_ticket'
         ]
 
     def get_performances(self, obj):
@@ -70,3 +81,17 @@ class ShowDetailSerializer(serializers.ModelSerializer):
             status='on_sale'
         ).order_by('datetime')
         return PerformanceSerializer(performances, many=True).data
+
+
+class PosterSerializer(serializers.ModelSerializer):
+    show_id = serializers.IntegerField(source='show.id', read_only=True)
+    show_name = serializers.CharField(source='show.name', read_only=True)
+    show_slug = serializers.CharField(source='show.slug', read_only=True)
+
+    class Meta:
+        model = Poster
+        fields = [
+            'id', 'title', 'image',
+            'show_id', 'show_name', 'show_slug',
+            'order'
+        ]

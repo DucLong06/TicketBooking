@@ -1,24 +1,25 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from .email_service import send_booking_confirmation
+from logzero import logger
+from shows.models import Performance, PerformancePrice
+from venues.models import Seat
+from .serializers import (
+    BookingDetailSerializer,
+    BookingCreateSerializer,
+    ReserveSeatSerializer,
+)
+from .models import Booking, SeatReservation
+from django.conf import settings
+from django.db.models import Prefetch, Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db import transaction
+from datetime import timezone as dt_timezone
 from datetime import timedelta
-from django.conf import settings
-from .models import Booking, SeatReservation
-from .serializers import (
-    BookingDetailSerializer,
-    CreateBookingSerializer,
-    ReserveSeatSerializer,
-    SeatMapSerializer
-)
-from venues.models import Seat
-from shows.models import Performance, PerformancePrice
-from logzero import logger
-from .email_service import send_booking_confirmation
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 
 
 def get_performance_seat_map(performance):
@@ -33,7 +34,16 @@ def get_performance_seat_map(performance):
         'row',
         'row__section',
         'row__price_category',
-        'price_category'  # ← SELECT seat's price_category
+        'price_category'
+    ).prefetch_related(
+        Prefetch(
+            'reservations',
+            queryset=SeatReservation.objects.filter(
+                performance=performance,
+                status__in=['reserved', 'sold', 'blocked']
+            ),
+            to_attr='active_reservations'
+        )
     )
 
     # Get reservations
@@ -49,6 +59,9 @@ def get_performance_seat_map(performance):
     ).values('price_category_id', 'price')
     price_map = {pp['price_category_id']: pp['price'] for pp in performance_prices}
 
+    utc_plus_7 = dt_timezone(timedelta(hours=7))
+    datetime_in_utc7 = performance.datetime.astimezone(utc_plus_7)
+
     # Build seat map data
     seat_map_data = {
         'venue': {
@@ -56,7 +69,7 @@ def get_performance_seat_map(performance):
             'address': venue.address,
             'phone': venue.phone,
             'hotline': venue.hotline_display,
-            # ===== THÊM LAYOUT IMAGE URL =====
+
             'layout_image_url': venue.layout_image.url if venue.layout_image else None,
             'checkin_minutes_before': venue.checkin_minutes_before,
             'width': 800,
@@ -69,11 +82,10 @@ def get_performance_seat_map(performance):
         },
         'performance': {
             'id': performance.id,
-            'datetime': performance.datetime.isoformat(),
-            'date': performance.datetime.strftime('%d/%m/%Y'),
-            'time': performance.datetime.strftime('%H:%M'),
-            # ===== THÊM DAY OF WEEK =====
-            'day_of_week': ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'][performance.datetime.weekday()],
+            'datetime': datetime_in_utc7.isoformat(),
+            'date': datetime_in_utc7.strftime('%d/%m/%Y'),
+            'time': datetime_in_utc7.strftime('%H:%M'),
+            'day_of_week': ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'][datetime_in_utc7.weekday()],
         },
         'sections': [],
         'seats': [],
@@ -138,11 +150,13 @@ def get_performance_seat_map(performance):
             'section_id': section.code,
             'section_name': section.name,
             'row': seat.row.label,
+            'row_position_y': seat.row.position_y,
+            'row_spacing_after': seat.row.spacing_after,
             'number': seat.number,
             'display_number': seat.display_label,
             'full_label': seat.full_display_label,
-            'x': seat.position_x,
-            'y': seat.position_y,
+            'position_x': seat.position_x,
+            'position_y': seat.position_y,
             'spacing_after': seat.spacing_after,
             'status': seat_status,
 
@@ -151,9 +165,8 @@ def get_performance_seat_map(performance):
             'price_category': effective_pc.code if effective_pc else 'standard',
             'price_category_color': effective_pc.color if effective_pc else '#10B981',
             'effective_price_category_name': effective_pc.name if effective_pc else 'Standard',
-            'has_custom_price_category': seat.price_category is not None,
 
-            # ===== THÊM SEAT IMAGE URL =====
+
             'seat_image_url': seat.seat_image.url if seat.seat_image else None,
 
             'is_accessible': seat.is_accessible,
@@ -184,9 +197,9 @@ def get_performance_seat_map(performance):
     # Add price categories
     from venues.models import PriceCategory
     all_categories = PriceCategory.objects.all()
-
+    sorted_categories = all_categories.order_by('base_price')
     seat_map_data['price_categories'] = {}
-    for pc in all_categories:
+    for pc in sorted_categories:
         performance_price = price_map.get(pc.id, pc.base_price)
         seat_map_data['price_categories'][pc.code] = {
             'name': pc.name,
@@ -235,7 +248,28 @@ def reserve_seats(request):
         )
         expired_reservations.update(status='available', session_id='', expires_at=None)
 
-        # Check availability
+        existing_session_reservations = SeatReservation.objects.filter(
+            performance=performance,
+            session_id=session_id,
+            status='reserved',
+            expires_at__gt=timezone.now()
+        )
+
+        existing_seat_ids = set(existing_session_reservations.values_list('seat_id', flat=True))
+        new_seat_ids = set(seat_ids)
+        total_seat_ids = existing_seat_ids | new_seat_ids  # Union of both sets
+
+        if len(total_seat_ids) > 8:
+            return Response(
+                {
+                    'error': f'Không thể giữ quá 8 ghế. Bạn đang có {len(existing_seat_ids)} ghế, yêu cầu thêm {len(new_seat_ids)} ghế.',
+                    'current_count': len(existing_seat_ids),
+                    'requested_count': len(new_seat_ids),
+                    'max_allowed': 8
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         existing_reservations = SeatReservation.objects.filter(
             performance=performance,
             seat_id__in=seat_ids,
@@ -254,10 +288,19 @@ def reserve_seats(request):
         ).values('price_category_id', 'price')
         price_map = {pp['price_category_id']: pp['price'] for pp in performance_prices}
 
-        # Reserve seats
         reserved_seats = []
-        timeout_minutes = getattr(settings, 'BOOKING_TIMEOUT_MINUTES', 10)
-        expires_at = timezone.now() + timedelta(minutes=timeout_minutes)
+        timeout_minutes = getattr(settings, 'SEAT_RESERVATION_TIMEOUT_MINUTES', 5)
+        existing_reservation = SeatReservation.objects.filter(
+            performance=performance,
+            session_id=session_id,
+            status='reserved',
+            expires_at__isnull=False
+        ).first()
+
+        if existing_reservation and existing_reservation.expires_at:
+            expires_at = existing_reservation.expires_at
+        else:
+            expires_at = timezone.now() + timedelta(minutes=timeout_minutes)
 
         for seat_id in seat_ids:
             seat = Seat.objects.select_related(
@@ -266,7 +309,7 @@ def reserve_seats(request):
                 'price_category'
             ).get(id=seat_id)
 
-            # ===== GET PRICE FROM SEAT'S PRICE_CATEGORY =====
+            # Get price from seat's price_category
             effective_pc = seat.effective_price_category
             price_category_id = effective_pc.id if effective_pc else None
             seat_price = price_map.get(
@@ -280,7 +323,7 @@ def reserve_seats(request):
                 defaults={
                     'status': 'reserved',
                     'session_id': session_id,
-                    'price': seat_price,  # ← Giá theo price_category của ghế
+                    'price': seat_price,
                     'expires_at': expires_at
                 }
             )
@@ -288,7 +331,7 @@ def reserve_seats(request):
             reserved_seats.append({
                 'id': seat.id,
                 'row': seat.row.label,
-                'number': seat.display_label,      # ← Display number
+                'number': seat.display_label,
                 'full_label': seat.full_display_label,
                 'section_name': seat.row.section.name,
                 'price': float(seat_price)
@@ -329,6 +372,39 @@ def release_seats(request):
     return Response({'released': count})
 
 
+@api_view(['GET'])
+def search_bookings(request):
+    """
+    Search for bookings by booking code or customer phone number.
+    Only returns paid bookings for performances that happened yesterday or are in the future.
+    """
+    search_query = request.query_params.get('search', None)
+    if not search_query:
+        return Response(
+            {'error': 'Vui lòng cung cấp mã vé hoặc số điện thoại để tra cứu.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Calculate the cutoff date: today minus one day.
+    # This allows searching for shows that happened yesterday as well.
+    cutoff_date = timezone.now().date() - timedelta(days=1)
+
+    bookings = Booking.objects.filter(
+        # Search by booking code (case-insensitive) or exact phone number
+        Q(booking_code__iexact=search_query) | Q(customer_phone__exact=search_query),
+        # Only show successfully paid bookings
+        status='paid',
+        # Only show bookings for performances from yesterday onwards
+        performance__datetime__date__gte=cutoff_date
+    ).order_by('-performance__datetime')  # Order by most recent performance first
+
+    if not bookings.exists():
+        return Response([], status=status.HTTP_200_OK)
+
+    serializer = BookingDetailSerializer(bookings, many=True)
+    return Response(serializer.data)
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class BookingViewSet(viewsets.ModelViewSet):
     """API for Bookings"""
@@ -338,7 +414,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'create':
-            return CreateBookingSerializer
+            return BookingCreateSerializer
         return BookingDetailSerializer
 
     def create(self, request, *args, **kwargs):
@@ -351,8 +427,13 @@ class BookingViewSet(viewsets.ModelViewSet):
 
         # Return booking details
         detail_serializer = BookingDetailSerializer(booking)
+        response_data = detail_serializer.data
+
+        response_data['expires_at'] = booking.expires_at.isoformat()
+        response_data['timeout_seconds'] = int((booking.expires_at - timezone.now()).total_seconds())
+
         return Response(
-            detail_serializer.data,
+            response_data,
             status=status.HTTP_201_CREATED
         )
 
@@ -385,7 +466,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         """Resend booking confirmation email"""
         booking = self.get_object()
 
-        if booking.status not in ['paid', 'confirmed']:
+        if booking.status not in ['paid']:
             return Response(
                 {'error': 'Chỉ có thể gửi lại email cho đơn đã thanh toán'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -411,3 +492,90 @@ class BookingViewSet(viewsets.ModelViewSet):
                 {'error': 'Lỗi hệ thống. Vui lòng thử lại sau.'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+@api_view(['GET'])
+@csrf_exempt
+def get_session_reservations(request):
+    """
+    Get all reserved seats for a session
+    Used to restore seats after page refresh
+    ALWAYS returns valid response, never throws errors
+    """
+    session_id = request.query_params.get('session_id')
+    performance_id = request.query_params.get('performance_id')
+
+    # Default empty response
+    empty_response = {
+        'seats': [],
+        'expires_at': None,
+        'count': 0
+    }
+
+    # Missing params → return empty
+    if not session_id or not performance_id:
+        logger.info(f"get_session_reservations: Missing params (session={session_id}, perf={performance_id})")
+        return Response(empty_response)
+
+    try:
+        # Get performance
+        try:
+            performance = Performance.objects.get(id=performance_id)
+        except Performance.DoesNotExist:
+            logger.warning(f"get_session_reservations: Performance {performance_id} not found")
+            return Response(empty_response)
+
+        # Get reservations for this session
+        reservations = SeatReservation.objects.filter(
+            performance=performance,
+            session_id=session_id,
+            status='reserved',
+            expires_at__gt=timezone.now()
+        ).select_related(
+            'seat',
+            'seat__row',
+            'seat__row__section'
+        )
+
+        # No reservations → return empty
+        if not reservations.exists():
+            logger.info(f"get_session_reservations: No active reservations for session {session_id}")
+            return Response(empty_response)
+
+        # Build response
+        first_reservation = reservations.first()
+        expires_at = first_reservation.expires_at
+
+        reserved_seats = []
+        for reservation in reservations:
+            try:
+                seat = reservation.seat
+                reserved_seats.append({
+                    'id': seat.id,
+                    'row': seat.row.label,
+                    'number': seat.display_label,
+                    'full_label': seat.full_display_label,
+                    'section_name': seat.row.section.name,
+                    'price': float(reservation.price)
+                })
+            except Exception as seat_error:
+                # Skip this seat if error, don't fail entire request
+                logger.error(f"Error processing seat {reservation.seat_id}: {seat_error}")
+                continue
+
+        # If all seats failed to process, return empty
+        if not reserved_seats:
+            logger.warning(f"get_session_reservations: All seats failed to process")
+            return Response(empty_response)
+
+        logger.info(f"get_session_reservations: Found {len(reserved_seats)} seats for session {session_id}")
+        return Response({
+            'seats': reserved_seats,
+            'expires_at': expires_at.isoformat(),
+            'count': len(reserved_seats)
+        })
+
+    except Exception as e:
+        # Log error but return empty instead of 500
+        logger.error(f"get_session_reservations: Unexpected error: {e}", exc_info=True)
+        return Response(empty_response)

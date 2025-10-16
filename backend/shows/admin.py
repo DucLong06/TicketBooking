@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django import forms
 from datetime import datetime, timedelta
 from django.utils import timezone
-from .models import Show, Performance, PerformancePrice
+from .models import Show, Performance, PerformancePrice, Poster
 from venues.models import PriceCategory
 
 
@@ -53,18 +53,37 @@ class PerformanceInline(admin.TabularInline):
 
 @admin.register(Show)
 class ShowAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'venue', 'duration_minutes', 'is_active', 'upcoming_performances']
+    list_display = ['name', 'category', 'venue', 'duration_minutes',
+                    'service_fee_per_ticket', 'is_active', 'upcoming_performances']
     list_filter = ['venue', 'category', 'is_active']
     search_fields = ['name', 'description']
     prepopulated_fields = {'slug': ('name',)}
     inlines = [PerformanceInline]
     readonly_fields = ['created_at', 'updated_at']
 
+    fieldsets = (
+        ('Thông tin cơ bản', {
+            'fields': ('name', 'slug', 'category', 'venue', 'duration_minutes', 'description', 'poster')
+        }),
+        ('Cấu hình giá', {
+            'fields': ('service_fee_per_ticket',),
+            'description': 'Cấu hình phí dịch vụ cho vở diễn này'
+        }),
+        ('Trạng thái', {
+            'fields': ('is_active',)
+        }),
+        ('Thông tin khác', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
     def get_fields(self, request, obj=None):
         if request.user.is_superuser:
             return super().get_fields(request, obj)
         else:
-            return ['name', 'slug', 'category', 'duration_minutes', 'description', 'poster', 'is_active']
+            return ['name', 'slug', 'category', 'duration_minutes', 'description',
+                    'poster', 'service_fee_per_ticket', 'is_active']
 
     def get_readonly_fields(self, request, obj=None):
         if request.user.is_superuser:
@@ -175,3 +194,32 @@ class SimplePerformanceAdmin(admin.ModelAdmin):
 
         self.message_user(request, f"Đã nhân bản {queryset.count()} suất diễn sang ngày tiếp theo")
     duplicate_performance.short_description = "Nhân bản sang ngày tiếp theo"
+
+
+@admin.register(Poster)
+class PosterAdmin(admin.ModelAdmin):
+    list_display = ['title', 'show', 'order', 'is_active', 'poster_preview', 'created_at']
+    list_filter = ['is_active', 'show']
+    search_fields = ['title', 'show__name']
+    list_editable = ['order', 'is_active']
+    ordering = ['order', '-created_at']
+
+    fieldsets = (
+        ('Thông tin cơ bản', {
+            'fields': ('title', 'show', 'image')
+        }),
+        ('Cấu hình hiển thị', {
+            'fields': ('order', 'is_active')
+        }),
+    )
+
+    readonly_fields = ['created_at', 'updated_at']
+
+    def poster_preview(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="max-height: 50px; max-width: 100px; object-fit: cover;" />',
+                obj.image.url
+            )
+        return "Chưa có ảnh"
+    poster_preview.short_description = 'Preview'

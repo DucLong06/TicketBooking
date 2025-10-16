@@ -1,20 +1,29 @@
+from django.db.models import Q
+from logzero import logger
 from rest_framework import serializers
 from django.utils import timezone
 from datetime import timedelta
+from decimal import Decimal
+
+from payments.models import Payment
+from discounts.models import Discount, DiscountUsage
+from discounts.services import validate_and_calculate_discount, DiscountError
 from .models import Booking, SeatReservation
 from venues.models import Seat
 from shows.models import Performance
+from django.db import transaction
 
 
 class SeatReservationSerializer(serializers.ModelSerializer):
     seat = serializers.IntegerField(source='seat.id', read_only=True)
-    seat_label = serializers.CharField(source='seat.full_label', read_only=True)
+    seat_label = serializers.CharField(source='seat.full_display_label', read_only=True)
     row = serializers.CharField(source='seat.row.label', read_only=True)
-    number = serializers.IntegerField(source='seat.number', read_only=True)
+    number = serializers.CharField(source='seat.display_label', read_only=True)
     section_name = serializers.CharField(source='seat.row.section.name', read_only=True)
 
     class Meta:
         model = SeatReservation
+        ordering = ['-price']
         fields = [
             'id', 'seat', 'seat_label', 'row', 'number',
             'section_name', 'status', 'price'
@@ -64,28 +73,25 @@ class ReserveSeatSerializer(serializers.Serializer):
         return value
 
 
-class CreateBookingSerializer(serializers.ModelSerializer):
-    seat_ids = serializers.ListField(
-        child=serializers.IntegerField(),
-        write_only=True
-    )
+class BookingCreateSerializer(serializers.ModelSerializer):
+    seat_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True)
     performance_id = serializers.IntegerField(write_only=True)
     session_id = serializers.CharField(write_only=True)
+    discount_code = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
     class Meta:
         model = Booking
         fields = [
             'performance_id', 'seat_ids', 'session_id',
             'customer_name', 'customer_email', 'customer_phone',
-            'customer_id_number', 'notes'
+            'customer_address', 'shipping_time', 'notes', 'discount_code'
         ]
 
     def validate(self, data):
-        performance_id = data.get('performance_id')
-        seat_ids = data.get('seat_ids')
-        session_id = data.get('session_id')
+        seat_ids = data['seat_ids']
+        performance_id = data['performance_id']
+        session_id = data['session_id']
 
-        # Check if seats are reserved by this session
         reserved_seats = SeatReservation.objects.filter(
             performance_id=performance_id,
             seat_id__in=seat_ids,
@@ -94,43 +100,129 @@ class CreateBookingSerializer(serializers.ModelSerializer):
         )
 
         if reserved_seats.count() != len(seat_ids):
-            raise serializers.ValidationError("Một số ghế không được giữ bởi phiên này")
-
+            alternative = SeatReservation.objects.filter(
+                performance_id=performance_id,
+                seat_id__in=seat_ids,
+                status='reserved',
+                expires_at__gt=timezone.now(),
+                booking__isnull=True
+            )
+            if alternative.count() == len(seat_ids):
+                alternative.update(session_id=session_id)
+            else:
+                raise serializers.ValidationError(
+                    "Ghế không hợp lệ. Vui lòng chọn lại."
+                )
         return data
 
     def create(self, validated_data):
         seat_ids = validated_data.pop('seat_ids')
         performance_id = validated_data.pop('performance_id')
         session_id = validated_data.pop('session_id')
+        discount_code_str = validated_data.pop('discount_code', None)
 
-        # Get performance
-        performance = Performance.objects.get(id=performance_id)
+        performance = Performance.objects.select_related('show').get(id=performance_id)
 
-        # Get seat reservations
         seat_reservations = SeatReservation.objects.filter(
             performance_id=performance_id,
             seat_id__in=seat_ids,
             session_id=session_id,
-            status='reserved'
+            status='reserved',
+            expires_at__gt=timezone.now()
         )
 
-        # Calculate total amount
-        total_amount = sum([sr.price for sr in seat_reservations])
-        service_fee = len(seat_ids) * 10000  # 10k per ticket
-        final_amount = total_amount + service_fee
+        if seat_reservations.count() != len(seat_ids):
+            raise serializers.ValidationError({
+                "detail": "Ghế không hợp lệ hoặc đã hết hạn. Vui lòng chọn lại.",
+                "shouldRedirect": True
+            })
 
-        # Create booking
-        booking = Booking.objects.create(
-            performance=performance,
+        total_amount = sum(sr.price for sr in seat_reservations)
+        service_fee = len(seat_ids) * performance.show.service_fee_per_ticket
+
+        if total_amount <= 0:
+            raise serializers.ValidationError({
+                "detail": "Lỗi tính tiền. Vui lòng thử lại.",
+                "shouldRedirect": True
+            })
+
+        discount_instance = None
+        discount_amount = Decimal('0')
+
+        temp_booking_for_validation = Booking(
             total_amount=total_amount,
-            service_fee=service_fee,
-            final_amount=final_amount,
-            session_id=session_id,
-            **validated_data
+            customer_email=validated_data.get('customer_email'),
+            customer_phone=validated_data.get('customer_phone'),
+            **{k: v for k, v in validated_data.items()
+               if k in ['customer_name', 'customer_address', 'shipping_time', 'notes']}
         )
 
-        # Update seat reservations
-        seat_reservations.update(booking=booking)
+        if discount_code_str:
+            try:
+                discount_instance, discount_amount = validate_and_calculate_discount(
+                    booking=temp_booking_for_validation,
+                    code=discount_code_str
+                )
+            except DiscountError as e:
+                raise serializers.ValidationError({'discount_code': str(e)})
+
+        final_amount = total_amount + service_fee - discount_amount
+
+        with transaction.atomic():
+            # Lock seats để tránh race condition
+            locked_reservations = SeatReservation.objects.select_for_update().filter(
+                performance_id=performance_id,
+                seat_id__in=seat_ids,
+                session_id=session_id,
+                status='reserved',
+                expires_at__gt=timezone.now()
+            )
+
+            if locked_reservations.count() != len(seat_ids):
+                raise serializers.ValidationError({
+                    "detail": "Có ghế đã được người khác đặt. Vui lòng chọn lại.",
+                    "shouldRedirect": True
+                })
+
+            from datetime import timedelta
+            cutoff_time = timezone.now() - timedelta(minutes=30)
+
+            old_pending_bookings = Booking.objects.filter(
+                session_id=session_id,
+                status='pending',
+                created_at__lt=cutoff_time
+            ).exclude(
+                Q(seat_reservations__status='sold') |
+                Q(id__in=Payment.objects.values_list('booking_id', flat=True))
+            )
+
+            deleted_count = old_pending_bookings.delete()[0]
+            if deleted_count > 0:
+                logger.info(f"✅ Deleted {deleted_count} old pending bookings for session {session_id}")
+
+            booking = Booking.objects.create(
+                performance=performance,
+                session_id=session_id,
+                total_amount=total_amount,
+                service_fee=service_fee,
+                discount=discount_instance,
+                discount_amount=discount_amount,
+                final_amount=final_amount,
+                **validated_data
+            )
+
+            locked_reservations.update(booking=booking)
+
+            if booking.seat_reservations.count() != len(seat_ids):
+                raise Exception("CRITICAL: Seat count mismatch after creation")
+
+            if discount_instance:
+                DiscountUsage.objects.create(
+                    discount=discount_instance,
+                    booking=booking,
+                    status='PENDING'
+                )
+                logger.info(f"✅ Created pending discount usage for code '{discount_code_str}'")
 
         return booking
 
@@ -140,13 +232,14 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     show_name = serializers.CharField(source='performance.show.name', read_only=True)
     performance_datetime = serializers.DateTimeField(source='performance.datetime', read_only=True)
     venue_name = serializers.CharField(source='performance.show.venue.name', read_only=True)
-
-    # Add computed fields for frontend compatibility
+    discount_code = serializers.CharField(source='discount.code', read_only=True, allow_null=True)
     showInfo = serializers.SerializerMethodField()
     performance = serializers.SerializerMethodField()
     customerInfo = serializers.SerializerMethodField()
     selectedSeats = serializers.SerializerMethodField()
     amount = serializers.DecimalField(source='final_amount', max_digits=10, decimal_places=0, read_only=True)
+    serviceFee = serializers.DecimalField(source='service_fee', max_digits=10, decimal_places=0, read_only=True)
+    ticketAmount = serializers.DecimalField(source='total_amount', max_digits=10, decimal_places=0, read_only=True)
 
     class Meta:
         model = Booking
@@ -155,13 +248,12 @@ class BookingDetailSerializer(serializers.ModelSerializer):
             'venue_name', 'customer_name', 'customer_email', 'customer_phone',
             'status', 'total_amount', 'service_fee', 'discount_amount',
             'final_amount', 'seat_reservations', 'created_at', 'expires_at',
-            'showInfo', 'performance', 'customerInfo', 'selectedSeats', 'amount'
+            'showInfo', 'performance', 'customerInfo', 'selectedSeats',
+            'amount', 'serviceFee', 'ticketAmount', 'discount_code',
         ]
 
     def get_showInfo(self, obj):
-        return {
-            'name': obj.performance.show.name
-        }
+        return {'name': obj.performance.show.name}
 
     def get_performance(self, obj):
         return {
@@ -173,7 +265,9 @@ class BookingDetailSerializer(serializers.ModelSerializer):
         return {
             'fullName': obj.customer_name,
             'email': obj.customer_email,
-            'phone': obj.customer_phone
+            'phone': obj.customer_phone,
+            'address': obj.customer_address,
+            'shippingTime': obj.get_shipping_time_display(),
         }
 
     def get_selectedSeats(self, obj):
@@ -181,8 +275,10 @@ class BookingDetailSerializer(serializers.ModelSerializer):
             {
                 'id': sr.seat.id,
                 'row': sr.seat.row.label,
-                'number': sr.seat.number,
-                'price': float(sr.price)
+                'number': sr.seat.display_label,
+                'price': float(sr.price),
+                'full_label': sr.seat.full_display_label,
+                'section_name': sr.seat.row.section.name,
             }
             for sr in obj.seat_reservations.all()
         ]

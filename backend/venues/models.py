@@ -83,6 +83,12 @@ class Venue(models.Model):
     # Check-in settings
     checkin_minutes_before = models.IntegerField(default=45, verbose_name='Check-in trước bao nhiêu phút')
 
+    rules = models.TextField(
+        blank=True,
+        verbose_name='Quy định và lưu ý',
+        help_text='Các quy định, lưu ý quan trọng cho khách hàng. Mỗi quy định nên viết trên 1 dòng.'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -152,6 +158,7 @@ class ContactInfo(models.Model):
     instagram_url = models.URLField(blank=True, verbose_name='Instagram URL')
     website_url = models.URLField(blank=True, verbose_name='Website URL')
     logo_url = models.URLField(
+        max_length=500,
         default='https://lh3.googleusercontent.com/pw/AP1GczOeY1ZKKsObbQ5Em5H14byD0GRz_-ydPBGZWzBOQbun4cB783CMb3NsYbucZAmrMlCE-YJ8r3Ll71Fthb-wyaMjuQbPTc1jAPLcf-3-NzjBqBuS_3NB2W6JzfAWZP3sRYBVzVxethfg4iJBam3EhoDp=w489-h301-s-no-gm',
         verbose_name='Logo URL'
     )
@@ -256,6 +263,13 @@ class Row(models.Model):
     label = models.CharField(max_length=10, verbose_name='Nhãn hàng')
     seat_count = models.IntegerField(validators=[MinValueValidator(1)], verbose_name='Số ghế')
     position_y = models.IntegerField(default=0, verbose_name='Vị trí Y')
+
+    spacing_after = models.IntegerField(
+        default=0,
+        verbose_name='Khoảng cách sau hàng (px)',
+        help_text='Khoảng trống sau hàng này (để tạo lối đi giữa các nhóm hàng)'
+    )
+
     price_category = models.ForeignKey(
         PriceCategory,
         on_delete=models.SET_NULL,
@@ -472,3 +486,11 @@ class Seat(models.Model):
     @property
     def full_display_label(self):
         return f"{self.row.label}{self.display_label}"
+
+    @property
+    def full_display_label_with_section(self):
+        return f"{self.row.section.name} - {self.row.label}{self.display_label}"
+
+    @property
+    def section_name(self):
+        return self.row.section.name

@@ -127,11 +127,14 @@ class RowAdmin(admin.ModelAdmin):
         'seat_count',
         'actual_seats',
         'numbering_style',
-        'price_category'
+        'price_category',
+        'spacing_after'
     ]
     list_filter = ['section__venue', 'section', 'price_category', 'numbering_style']
     search_fields = ['label']
     inlines = [SeatInline]
+
+    list_editable = ['spacing_after']
 
     fieldsets = (
         ('Thông tin cơ bản', {
@@ -208,7 +211,7 @@ class RowAdmin(admin.ModelAdmin):
 @admin.register(Seat)
 class SeatAdmin(admin.ModelAdmin):
     list_display = [
-        'full_display_label',
+        'full_label_display',
         'number',
         'display_number',
         'row',
@@ -277,6 +280,11 @@ class SeatAdmin(admin.ModelAdmin):
         return format_html('<p style="color: #999; font-style: italic;">Chưa có ảnh</p>')
     seat_image_preview.short_description = 'Preview ảnh'
 
+    def full_label_display(self, obj):
+        return obj.full_display_label
+    full_label_display.short_description = 'Mã ghế'
+    full_label_display.admin_order_field = 'row__label'
+
 
 @admin.register(Venue)
 class VenueAdmin(admin.ModelAdmin):
@@ -300,17 +308,17 @@ class VenueAdmin(admin.ModelAdmin):
         ('Layout', {
             'fields': ('layout', 'layout_image', 'layout_image_preview_large', 'description')
         }),
+        ('Quy định và lưu ý', {
+            'fields': ('rules',),
+            'description': 'Mỗi quy định viết trên 1 dòng. Hệ thống sẽ tự động đánh số.'
+        }),
         ('Liên hệ (Legacy)', {
             'fields': ('phone', 'email', 'hotline', 'support_email'),
             'classes': ('collapse',),
-            'description': 'Các field này để tương thích ngược. Nên dùng ContactInfo thay vì.'
         }),
-        ('Social Media (Legacy)', {
-            'fields': ('facebook_url', 'tiktok_url', 'instagram_url', 'website_url', 'logo_url', 'copyright_text'),
+        ('Social Media', {
+            'fields': ('facebook_url', 'tiktok_url', 'instagram_url', 'website_url', 'logo_url'),
             'classes': ('collapse',)
-        }),
-        ('Cài đặt', {
-            'fields': ('checkin_minutes_before',)
         }),
         ('Thông tin khác', {
             'fields': ('created_at', 'updated_at'),
@@ -320,40 +328,29 @@ class VenueAdmin(admin.ModelAdmin):
 
     def layout_name(self, obj):
         return obj.layout.name if obj.layout else '-'
-    layout_name.short_description = 'Layout Template'
+    layout_name.short_description = 'Layout'
 
     def layout_image_preview(self, obj):
-        """Preview ảnh layout nhỏ trong list"""
         if obj.layout_image:
             return format_html(
-                '<img src="{}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" />',
+                '<img src="{}" style="width: 80px; height: 50px; object-fit: cover; border-radius: 4px;" />',
                 obj.layout_image.url
             )
-        return format_html('<span style="color: #999; font-size: 11px;">Chưa có</span>')
-    layout_image_preview.short_description = 'Layout'
+        return '-'
+    layout_image_preview.short_description = 'Sơ đồ'
 
     def layout_image_preview_large(self, obj):
-        """Preview ảnh layout lớn trong detail page"""
         if obj.layout_image:
             return format_html(
-                '<div style="margin: 10px 0;">'
-                '<img src="{}" style="max-width: 600px; max-height: 400px; object-fit: contain; border-radius: 8px; border: 2px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />'
-                '<p style="margin-top: 10px; color: #666; font-size: 12px;">💡 Ảnh này sẽ hiển thị trên trang chọn ghế</p>'
-                '</div>',
+                '<img src="{}" style="max-width: 600px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />',
                 obj.layout_image.url
             )
-        return format_html(
-            '<div style="padding: 20px; background: #f9f9f9; border-radius: 8px; text-align: center;">'
-            '<p style="color: #999; font-style: italic;">Chưa có ảnh layout</p>'
-            '<p style="color: #666; font-size: 12px; margin-top: 5px;">Upload ảnh sơ đồ nhà hát để khách hàng dễ hình dung</p>'
-            '</div>'
-        )
-    layout_image_preview_large.short_description = 'Preview Layout'
+        return format_html('<p style="color: #999;">Chưa có sơ đồ</p>')
+    layout_image_preview_large.short_description = 'Preview Sơ đồ'
 
     def total_seats_display(self, obj):
-        total = obj.total_seats
-        return format_html('<strong style="color: #2563eb;">{}</strong>', total)
-    total_seats_display.short_description = 'Tổng ghế'
+        return obj.total_seats
+    total_seats_display.short_description = 'Số ghế'
 
     def sections_count(self, obj):
         return obj.sections.count()

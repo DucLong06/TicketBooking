@@ -79,12 +79,13 @@ INSTALLED_APPS = [
     'shows',
     'bookings',
     'payments',
+    'discounts'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # Add this
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -180,14 +181,15 @@ REST_FRAMEWORK = {
 }
 
 # Booking settings
-BOOKING_TIMEOUT_MINUTES = 10
-PAYMENT_TIMEOUT_MINUTES = 15
+SEAT_RESERVATION_TIMEOUT_MINUTES = 5
+PAYMENT_TIMEOUT_MINUTES = 30
 
-# Email settings (config sau)
-VNP_TMNCODE = os.getenv('VNP_TMNCODE', '')
-VNP_HASTSECRET = os.getenv('VNP_HASTSECRET', '')
-VNP_URL = os.getenv('VNP_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html')
-VNP_RETURNURL = f"{BACKEND_URL}/api/payment/vnpay/return/"
+# 9Pay Settings
+NINEPAY_MERCHANT_KEY = os.getenv('NINEPAY_MERCHANT_KEY', '')
+NINEPAY_SECRET_KEY = os.getenv('NINEPAY_SECRET_KEY', '')
+NINEPAY_URL = os.getenv('NINEPAY_URL', 'https://sand-payment.9pay.vn')
+NINEPAY_RETURN_URL = f"{BACKEND_URL}/api/payment/ninepay/return/"
+NINEPAY_CHECKSUM_KEY = os.getenv('NINEPAY_CHECKSUM_KEY', '')
 
 # Jazzmin Admin Configuration
 JAZZMIN_SETTINGS = {

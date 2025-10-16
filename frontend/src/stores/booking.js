@@ -6,72 +6,244 @@ import { useToast } from 'vue-toastification'
 export const useBookingStore = defineStore('booking', () => {
     const toast = useToast()
 
-    // STATE
-    // Session
-    const sessionId = ref(null)
+    // Helper function to format price
+    const formatPrice = (price) => {
+        if (price === undefined || price === null) return '0 ₫';
+        return new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+        }).format(price);
+    };
 
-    // Shows
+    // STATE
+    const sessionId = ref(null)
     const shows = ref([])
     const currentShow = ref(null)
-
-    // Performance
     const performances = ref([])
     const selectedPerformance = ref(null)
-
-    // Seats
     const seatMap = ref(null)
     const selectedSeats = ref([])
     const reservationExpiry = ref(null)
-
-    // Customer
     const customerInfo = ref({
         customer_name: '',
         customer_email: '',
         customer_phone: '',
-        customer_id_number: '',
-        notes: ''
+        customer_address: '',
+        shipping_time: 'business_hours',
+        notes: '',
+        discount_code: ''
     })
-
-    // Booking
     const currentBooking = ref(null)
     const bookingCode = ref(null)
-
-    // Payment
     const currentTransaction = ref(null)
-
-    // UI State
     const loading = ref(false)
 
-    // GETTERS (computed)
-    const totalAmount = computed(() => {
-        return selectedSeats.value.reduce((sum, seat) => sum + seat.price, 0)
-    })
+    // Discount related state - Simplified
+    const discountMessage = ref('');
+    const isDiscountSuccess = ref(false);
 
-    const serviceFee = computed(() => {
-        return selectedSeats.value.length * 10000
+    // GETTERS
+    const totalAmount = computed(() => {
+        return selectedSeats.value.reduce((sum, seat) => sum + (seat.price || 0), 0)
     })
 
     const finalAmount = computed(() => {
-        return totalAmount.value + serviceFee.value
+        if (currentBooking.value) {
+            return currentBooking.value.final_amount;
+        }
+        const serviceFee = (currentShow.value?.service_fee_per_ticket || 10000) * selectedSeats.value.length;
+        return totalAmount.value + serviceFee;
+    });
+
+    const discountAmount = computed(() => currentBooking.value?.discount_amount || 0);
+
+    const showInfo = computed(() => {
+        return currentShow.value || {}
     })
 
-    // ACTIONS (functions)
-
-    // Initialize session
+    // ACTIONS
     const initSession = () => {
-        if (!sessionId.value) {
-            sessionId.value = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
-            sessionStorage.setItem('session_id', sessionId.value)
+        let sid = sessionStorage.getItem('session_id');
+        if (!sid) {
+            sid = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+            sessionStorage.setItem('session_id', sid)
+        }
+        sessionId.value = sid;
+    }
+
+    // This function now acts as a "preview" by creating/updating a pending booking
+    const applyDiscount = async (code, currentCustomerInfo) => {
+        if (!selectedPerformance.value || selectedSeats.value.length === 0) {
+            toast.error("Vui lòng chọn ghế trước khi áp dụng mã.");
+            return;
+        }
+
+        try {
+            const bookingData = {
+                performance_id: selectedPerformance.value.id,
+                seat_ids: selectedSeats.value.map(s => s.id),
+                session_id: sessionId.value,
+                customer_name: currentCustomerInfo.fullName || 'temp',
+                customer_email: currentCustomerInfo.email || 'temp@example.com',
+                customer_phone: currentCustomerInfo.phone || '0000000000',
+                customer_address: currentCustomerInfo.address || 'temp',
+                shipping_time: currentCustomerInfo.shippingTime || 'business_hours',
+                notes: currentCustomerInfo.notes || '',
+                discount_code: code,
+            };
+
+            const response = await bookingAPI.createBooking(bookingData);
+            currentBooking.value = response.data;
+            bookingCode.value = response.data.booking_code; // Important for subsequent payment
+
+            isDiscountSuccess.value = true;
+            discountMessage.value = `Áp dụng thành công! Bạn được giảm ${formatPrice(response.data.discount_amount)}.`;
+            toast.success(discountMessage.value);
+
+        } catch (error) {
+            const errorMessage = error.response?.data?.discount_code?.[0] || "Mã giảm giá không hợp lệ hoặc có lỗi xảy ra.";
+            isDiscountSuccess.value = false;
+            discountMessage.value = errorMessage;
+
+            // Reset discount values in any existing booking preview
+            if (currentBooking.value) {
+                currentBooking.value.discount_amount = 0;
+                currentBooking.value.discount = null;
+                currentBooking.value.final_amount = currentBooking.value.total_amount + currentBooking.value.service_fee;
+            }
+
+            toast.error(errorMessage);
         }
     }
 
-    // Load all shows
+
+    const createBooking = async () => {
+        console.log("=== 🚀 createBooking START ===");
+
+        try {
+            loading.value = true
+
+            // ========================================
+            // STEP 1: Validate inputs
+            // ========================================
+            console.log("📊 Store State:");
+            console.log("- sessionId:", sessionId.value);
+            console.log("- selectedPerformance:", selectedPerformance.value);
+            console.log("- selectedSeats:", selectedSeats.value);
+            console.log("- customerInfo:", customerInfo.value);
+
+            if (!selectedPerformance.value?.id) {
+                console.error("❌ NO_PERFORMANCE - selectedPerformance:", selectedPerformance.value);
+                throw new Error('NO_PERFORMANCE')
+            }
+
+            if (!selectedSeats.value?.length) {
+                console.error("❌ NO_SEATS - selectedSeats:", selectedSeats.value);
+                throw new Error('NO_SEATS')
+            }
+
+            if (!sessionId.value) {
+                console.error("❌ NO_SESSION_ID");
+                throw new Error('NO_SESSION_ID')
+            }
+
+            console.log("✅ All inputs validated");
+
+            // ========================================
+            // STEP 2: Prepare booking data
+            // ========================================
+            const bookingData = {
+                performance_id: selectedPerformance.value.id,
+                seat_ids: selectedSeats.value.map(s => s.id),
+                session_id: sessionId.value,
+                ...customerInfo.value
+            }
+
+            console.log("📦 Booking data to send:", bookingData);
+
+            // ========================================
+            // STEP 3: Call API
+            // ========================================
+            console.log("🔄 Calling bookingAPI.createBooking...");
+            const response = await bookingAPI.createBooking(bookingData)
+            console.log("✅ API Response:", response.data);
+
+            // ========================================
+            // STEP 4: Validate response
+            // ========================================
+            if (!response.data.seat_reservations?.length) {
+                console.error("❌ NO_SEATS_IN_BOOKING - Response:", response.data);
+                throw new Error('NO_SEATS_IN_BOOKING')
+            }
+
+            console.log("✅ Booking has", response.data.seat_reservations.length, "seats");
+
+            // ========================================
+            // STEP 5: Save to store
+            // ========================================
+            currentBooking.value = response.data
+            bookingCode.value = response.data.booking_code
+
+            if (response.data.expires_at) {
+                const expiresAt = new Date(response.data.expires_at);
+                sessionStorage.setItem('bookingExpiry', expiresAt.toISOString());
+            }
+
+            sessionStorage.setItem('currentBooking', JSON.stringify(response.data))
+
+            console.log("✅ Booking saved - Code:", bookingCode.value);
+            console.log("=== ✅ createBooking SUCCESS ===");
+
+            return response.data
+        } catch (error) {
+            console.error("=== ❌ createBooking FAILED ===");
+            console.error("Error type:", error.constructor.name);
+            console.error("Error message:", error.message);
+            console.error("Error response:", error.response?.data);
+            console.error("Error status:", error.response?.status);
+            console.error("Full error:", error);
+
+            clearBooking()
+
+            let errorMessage = 'Có lỗi xảy ra.'
+            if (error.response?.data?.non_field_errors) {
+                errorMessage = error.response.data.non_field_errors[0]
+            } else if (error.response?.data?.error) {
+                errorMessage = error.response.data.error
+            } else if (error.response?.data?.detail) {
+                errorMessage = error.response.data.detail
+            } else if (error.message && error.message !== 'NO_PERFORMANCE' && error.message !== 'NO_SEATS') {
+                errorMessage = error.message
+            }
+
+            const enhancedError = new Error(errorMessage)
+            enhancedError.shouldRedirect = true
+            enhancedError.originalError = error
+            throw enhancedError
+        } finally {
+            loading.value = false
+        }
+    }
+    const processPayment = async (paymentMethod) => {
+        try {
+            loading.value = true
+            const response = await bookingAPI.createPayment(bookingCode.value, paymentMethod)
+            currentTransaction.value = response.data.transaction_id
+            return response.data
+        } catch (error) {
+            console.error('Failed to process payment:', error)
+            throw error
+        } finally {
+            loading.value = false
+        }
+    }
+
+    // Other actions like loadShows, loadShowDetail etc. remain unchanged...
     const loadShows = async () => {
         try {
             loading.value = true
             const response = await bookingAPI.getShows()
             shows.value = response.data.results || response.data
-
         } catch (error) {
             console.error('Failed to load shows:', error)
             throw error
@@ -80,7 +252,6 @@ export const useBookingStore = defineStore('booking', () => {
         }
     }
 
-    // Load show detail
     const loadShowDetail = async (showId) => {
         try {
             loading.value = true
@@ -95,234 +266,52 @@ export const useBookingStore = defineStore('booking', () => {
         }
     }
 
-    // Set selected performance
     const setSelectedPerformance = (performance) => {
         selectedPerformance.value = performance
         sessionStorage.setItem('selectedPerformance', JSON.stringify(performance))
     }
 
-    // Load seat map
-    const loadSeatMap = async (performanceId) => {
-        try {
-            loading.value = true
-            const response = await bookingAPI.getSeatMap(performanceId)
-            seatMap.value = response.data
-        } catch (error) {
-            console.error('Failed to load seat map:', error)
-            throw error
-        } finally {
-            loading.value = false
+    const resetDiscount = () => {
+        isDiscountSuccess.value = false
+        discountMessage.value = ''
+
+        if (currentBooking.value) {
+            currentBooking.value.discount_amount = 0
+            currentBooking.value.discount = null
+            currentBooking.value.discount_code = null
         }
     }
-
-    // Toggle seat selection
-    const toggleSeat = async (seat) => {
-        const index = selectedSeats.value.findIndex(s => s.id === seat.id)
-
-        if (index > -1) {
-            // Deselect
-            const seatToRemove = selectedSeats.value[index]
-            selectedSeats.value.splice(index, 1)
-
-            // Release seat
-            try {
-                await bookingAPI.releaseSeats([seatToRemove.id], sessionId.value)
-            } catch (error) {
-                console.error('Failed to release seat:', error)
-            }
-        } else {
-            // Select
-            if (selectedSeats.value.length >= 8) {
-                toast.warning('Bạn chỉ có thể chọn tối đa 8 ghế')
-                return
-            }
-
-            // Reserve seats
-            try {
-                const response = await bookingAPI.reserveSeats(
-                    selectedPerformance.value.id,
-                    [...selectedSeats.value.map(s => s.id), seat.id],
-                    sessionId.value
-                )
-
-                selectedSeats.value = response.data.seats
-                reservationExpiry.value = response.data.expires_at
-
-                toast.success('Đã giữ ghế thành công!')
-            } catch (error) {
-                toast.error('Không thể giữ ghế này')
-            }
-        }
-    }
-
-    // Create booking
-    const createBooking = async () => {
-        try {
-            loading.value = true
-
-            const bookingData = {
-                performance_id: selectedPerformance.value.id,
-                seat_ids: selectedSeats.value.map(s => s.id),
-                session_id: sessionId.value,
-                ...customerInfo.value
-            }
-
-            const response = await bookingAPI.createBooking(bookingData)
-            currentBooking.value = response.data
-            bookingCode.value = response.data.booking_code
-
-            // Save comprehensive booking data to sessionStorage
-            const completeBookingData = {
-                showInfo: {
-                    name: selectedPerformance.value.show_name || currentShow.value?.name
-                },
-                performance: {
-                    date: new Date(selectedPerformance.value.datetime).toLocaleDateString("vi-VN"),
-                    time: new Date(selectedPerformance.value.datetime).toLocaleTimeString("vi-VN", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                    })
-                },
-                customerInfo: {
-                    fullName: customerInfo.value.customer_name,
-                    email: customerInfo.value.customer_email,
-                    phone: customerInfo.value.customer_phone
-                },
-                amount: finalAmount.value,
-                selectedSeats: selectedSeats.value,
-                bookingCode: response.data.booking_code,
-                status: response.data.status,
-                // Keep raw response for debugging
-                _rawResponse: response.data
-            };
-
-            sessionStorage.setItem('bookingData', JSON.stringify(completeBookingData));
-
-            toast.success('Đặt vé thành công!')
-            return response.data
-        } catch (error) {
-            console.error('Failed to create booking:', error)
-            throw error
-        } finally {
-            loading.value = false
-        }
-    }
-
-    // Process payment
-    const processPayment = async (paymentMethod) => {
-        try {
-            loading.value = true
-            const response = await bookingAPI.createPayment(bookingCode.value, paymentMethod)
-
-            currentTransaction.value = response.data.transaction_id
-
-            // If payment_url exists, it means we need to redirect (VNPay, MoMo, etc.)
-            if (response.data.payment_url) {
-                return response.data // Return data to let component handle redirect
-            }
-
-            // Fallback for mock/auto payment
-            if (response.data.auto_complete) {
-                startPaymentStatusPolling(response.data.transaction_id)
-            }
-
-            return response.data
-        } catch (error) {
-            console.error('Payment failed:', error)
-            throw error
-        } finally {
-            loading.value = false
-        }
-    }
-
-    // Check payment status
-    const checkPaymentStatus = async (transactionId) => {
-        try {
-            const response = await bookingAPI.checkPaymentStatus(transactionId)
-            return response
-        } catch (error) {
-            console.error('Failed to check payment status:', error)
-            throw error
-        }
-    }
-
-    // Poll payment status
-    const startPaymentStatusPolling = async (transactionId) => {
-        const checkStatus = async () => {
-            try {
-                const response = await bookingAPI.checkPaymentStatus(transactionId)
-
-                if (response.data.status === 'success') {
-                    toast.success('Thanh toán thành công!')
-                    clearSession()
-                    return true
-                } else if (response.data.status === 'failed') {
-                    toast.error('Thanh toán thất bại!')
-                    return false
-                }
-
-                // Continue polling if pending
-                if (response.data.status === 'pending') {
-                    setTimeout(checkStatus, 5000) // Check every 5 seconds
-                }
-            } catch (error) {
-                console.error('Failed to check payment status:', error)
-            }
-        }
-
-        // Start checking after 5 seconds
-        setTimeout(checkStatus, 5000)
-    }
-
-    // Clear session
-    const clearSession = () => {
+    const clearBooking = () => {
         selectedSeats.value = []
+        currentBooking.value = null
+        bookingCode.value = null
         customerInfo.value = {
             customer_name: '',
             customer_email: '',
             customer_phone: '',
-            customer_id_number: '',
-            notes: ''
+            customer_address: '',
+            shipping_time: 'business_hours',
+            notes: '',
+            discount_code: ''
         }
-        reservationExpiry.value = null
-        selectedPerformance.value = null
-        sessionStorage.removeItem('session_id')
-        sessionId.value = null
+        isDiscountSuccess.value = false;
+        discountMessage.value = '';
+
+        resetDiscount()
+
+        sessionStorage.removeItem('selectedSeats')
+        sessionStorage.removeItem('bookingData')
+        sessionStorage.removeItem('bookingExpiry')
+        sessionStorage.removeItem('reservationExpiry')
+        sessionStorage.removeItem('selectedPerformance')
     }
 
-    // Return all state and methods
     return {
-        // State
-        sessionId,
-        shows,
-        currentShow,
-        performances,
-        selectedPerformance,
-        seatMap,
-        selectedSeats,
-        reservationExpiry,
-        customerInfo,
-        currentBooking,
-        bookingCode,
-        currentTransaction,
-        loading,
-
-        // Getters
-        totalAmount,
-        serviceFee,
-        finalAmount,
-
-        // Actions
-        initSession,
-        loadShows,
-        loadShowDetail,
-        setSelectedPerformance,
-        loadSeatMap,
-        toggleSeat,
-        createBooking,
-        processPayment,
-        checkPaymentStatus,
-        startPaymentStatusPolling,
-        clearSession
+        sessionId, shows, currentShow, performances, selectedPerformance, seatMap,
+        selectedSeats, reservationExpiry, customerInfo, currentBooking, bookingCode,
+        currentTransaction, loading, totalAmount, finalAmount, showInfo,
+        discountAmount, discountMessage, isDiscountSuccess,
+        initSession, applyDiscount, loadShows, loadShowDetail,
+        setSelectedPerformance, createBooking, processPayment, clearBooking, resetDiscount,
     }
 })

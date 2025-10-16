@@ -1,4 +1,4 @@
-from .models import Venue, Section, Row, Seat, PriceCategory, VenueLayout
+from .models import Venue, Section, Row, Seat, PriceCategory, VenueLayout, ContactInfo
 from rest_framework import serializers
 from django.db import models
 
@@ -25,6 +25,10 @@ class SeatSerializer(serializers.ModelSerializer):
     section_name = serializers.CharField(source='row.section.name', read_only=True)
     section_id = serializers.CharField(source='row.section.code', read_only=True)
 
+    numbering_style = serializers.CharField(source='row.numbering_style', read_only=True)
+    row_position_y = serializers.IntegerField(source='row.position_y', read_only=True)
+    row_spacing_after = serializers.IntegerField(default=0, read_only=True)
+
     # Display fields
     display_number = serializers.CharField(source='display_label', read_only=True)
     full_display_label = serializers.CharField(read_only=True)
@@ -42,7 +46,6 @@ class SeatSerializer(serializers.ModelSerializer):
         source='effective_price_category.color',
         read_only=True
     )
-    has_custom_price_category = serializers.SerializerMethodField()
 
     seat_image_url = serializers.SerializerMethodField()
 
@@ -56,6 +59,9 @@ class SeatSerializer(serializers.ModelSerializer):
             'row_label',
             'section_name',
             'section_id',
+            'numbering_style',
+            'row_position_y',
+            'row_spacing_after',  # THÊM field này
             'position_x',
             'position_y',
             'spacing_after',
@@ -64,12 +70,8 @@ class SeatSerializer(serializers.ModelSerializer):
             'effective_price_category_code',
             'effective_price_category_name',
             'effective_price_category_color',
-            'has_custom_price_category',
             'seat_image_url'
         ]
-
-    def get_has_custom_price_category(self, obj):
-        return obj.price_category is not None and obj.price_category != obj.row.price_category
 
     def get_seat_image_url(self, obj):
         if obj.seat_image:
@@ -120,16 +122,14 @@ class VenueSerializer(serializers.ModelSerializer):
         model = Venue
         fields = [
             'id', 'name', 'venue_type', 'address', 'phone', 'email',
-            'description', 'layout', 'total_seats', 'sections'
+            'description', 'rules', 'layout', 'total_seats', 'sections'
         ]
 
     def get_total_seats(self, obj):
-        return sum(
-            section.rows.aggregate(
-                total=models.Sum('seats__id')
-            )['total'] or 0
-            for section in obj.sections.all()
-        )
+        return Seat.objects.filter(
+            row__section__venue=obj,
+            status='active'
+        ).count()
 
 
 class VenueListSerializer(serializers.ModelSerializer):
@@ -145,5 +145,17 @@ class VenueListSerializer(serializers.ModelSerializer):
         ]
 
     def get_total_seats(self, obj):
-        # Simplified calculation for list view
         return obj.sections.count() * 200  # Rough estimate
+
+
+class ContactInfoSerializer(serializers.ModelSerializer):
+    hotline_display = serializers.ReadOnlyField()
+
+    class Meta:
+        model = ContactInfo
+        fields = [
+            'id', 'name', 'hotline', 'hotline_display',
+            'support_email', 'facebook_url', 'tiktok_url',
+            'instagram_url', 'website_url', 'logo_url',
+            'copyright_text'
+        ]

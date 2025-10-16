@@ -1,3 +1,4 @@
+import uuid
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -5,21 +6,17 @@ from django.shortcuts import get_object_or_404, redirect
 from django.db import transaction
 from django.utils import timezone
 from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt
 from logzero import logger
-from .constant import VNPAY_RESPONSE_CODES
-
-import uuid
-
 
 from .models import Payment
-from .vnpay import VNPay
-from bookings.models import Booking
+from .ninepay import NinePay
+from bookings.models import Booking, SeatReservation
+from discounts.models import DiscountUsage
 
 
 @api_view(['POST'])
 def create_payment(request, booking_code):
-    """Create payment for booking"""
+    """Create payment for booking with 9Pay"""
     booking = get_object_or_404(Booking, booking_code=booking_code)
 
     if booking.status != 'pending':
@@ -28,12 +25,37 @@ def create_payment(request, booking_code):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    payment_method = request.data.get('payment_method', 'vnpay')
+    seat_count = booking.seat_reservations.filter(status='reserved').count()
+    if seat_count == 0:
+        logger.error(f"🚨 CRITICAL: Booking {booking_code} has NO SEATS")
+        return Response(
+            {'error': 'Booking không có ghế. Vui lòng đặt lại.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
-    # Generate transaction ID
+    if booking.final_amount <= 0:
+        logger.error(f"🚨 CRITICAL: Booking {booking_code} has invalid amount: {booking.final_amount}")
+        return Response(
+            {'error': 'Giá trị booking không hợp lệ. Vui lòng đặt lại.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    duplicate_check = SeatReservation.objects.filter(
+        seat_id__in=booking.seat_reservations.values_list('seat_id', flat=True),
+        performance=booking.performance,
+        status__in=['reserved', 'sold']
+    ).exclude(booking=booking)
+
+    if duplicate_check.exists():
+        logger.error(f"🚨 CRITICAL: Booking {booking_code} has duplicate seats")
+        return Response(
+            {'error': 'Có ghế bị trùng. Vui lòng đặt lại.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    payment_method = '9pay'
     transaction_id = f"TXN{uuid.uuid4().hex[:10].upper()}"
 
-    # Create payment record
     payment = Payment.objects.create(
         booking=booking,
         transaction_id=transaction_id,
@@ -42,89 +64,152 @@ def create_payment(request, booking_code):
         status='pending'
     )
 
-    if payment_method == 'vnpay':
-        vnpay = VNPay()
+    ninepay = NinePay()
 
-        # Create VNPay payment URL
-        payment_url = vnpay.get_payment_url(
-            request=request,
-            order_id=transaction_id,
-            amount=float(booking.final_amount),
-            order_desc=f"Thanh toan ve {booking.booking_code}",
-            bank_code=""
-        )
+    logger.info(f"Creating 9Pay payment for booking {booking.booking_code}")
+    logger.info(f"Transaction ID: {transaction_id}")
+    logger.info(f"Amount: {booking.final_amount}")
 
+    payment_url = ninepay.get_payment_url(
+        invoice_no=transaction_id,
+        amount=booking.final_amount,
+        description=f"Thanh toan ve {booking.booking_code}",
+        return_url=settings.NINEPAY_RETURN_URL,
+        back_url=f'{settings.FRONTEND_URL}/payment'
+    )
+
+    if payment_url:
+        logger.info(f"9Pay payment URL created successfully")
         return Response({
             'payment_url': payment_url,
             'transaction_id': transaction_id,
             'amount': float(booking.final_amount),
-            'method': 'vnpay'
+            'method': '9pay'
         })
-
     else:
+        logger.error("Failed to create 9Pay payment URL")
         return Response(
-            {'error': 'Payment method not supported'},
-            status=status.HTTP_400_BAD_REQUEST
+            {'error': 'Không thể tạo yêu cầu thanh toán với 9Pay'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-@csrf_exempt
-@api_view(['GET'])
-def vnpay_return(request):
-    """Handle VNPay return callback"""
-    vnpay = VNPay()
+@api_view(['GET', 'POST'])
+def ninepay_return(request):
+    """Handle 9Pay return callback"""
+    params = request.GET.dict() if request.method == 'GET' else request.POST.dict()
 
-    # Validate response
-    if vnpay.validate_response(request.GET):
-        transaction_id = request.GET.get('vnp_TxnRef')
-        response_code = request.GET.get('vnp_ResponseCode')
+    logger.info(f"===== 9Pay Return Callback =====")
+    logger.debug(f"Full params: {params}")
 
-        try:
-            payment = Payment.objects.get(transaction_id=transaction_id)
+    ninepay = NinePay()
 
-            if response_code == '00':  # Success
-                with transaction.atomic():
-                    # Update payment
-                    payment.status = 'success'
-                    payment.paid_at = timezone.now()
-                    payment.gateway_response = dict(request.GET)
-                    payment.gateway_transaction_id = request.GET.get('vnp_TransactionNo')
-                    payment.save()
+    if not ninepay.verify_return(params):
+        logger.error("Invalid signature/checksum")
+        return redirect(f'{settings.FRONTEND_URL}/payment/error?reason=invalid_signature')
 
-                    # Update booking
-                    booking = payment.booking
-                    booking.status = 'paid'
-                    booking.paid_at = timezone.now()
-                    booking.save()
+    payment_data = ninepay.parse_return_data(params)
 
-                    # Update seats
-                    booking.seat_reservations.update(status='sold')
+    if not payment_data:
+        logger.error("Failed to parse payment data")
+        return redirect(f'{settings.FRONTEND_URL}/payment/error?reason=parse_error')
 
-                    # Send confirmation email
-                    from bookings.email_service import send_booking_confirmation
-                    try:
-                        send_booking_confirmation(booking)
-                    except Exception as e:
-                        logger.debug(f"Failed to send email: {e}")
+    transaction_id = payment_data.get('invoice_no')
+    payment_status_code = payment_data.get('status')
+    error_code = str(payment_data.get('error_code', ''))
 
-                # Redirect to success page
-                return redirect(f'{settings.FRONTEND_URL}/booking/confirmation/{booking.booking_code}')
+    logger.info(f"Transaction {transaction_id} - Status: {payment_status_code}, Error code: {error_code}")
 
-            else:  # Failed
-                payment.status = 'failed'
-                payment.gateway_response = dict(request.GET)
+    if not transaction_id:
+        logger.error("Missing invoice_no")
+        return redirect(f'{settings.FRONTEND_URL}/payment/error?reason=missing_invoice')
+
+    try:
+        payment = Payment.objects.select_related('booking').get(transaction_id=transaction_id)
+        booking = payment.booking
+
+        if payment_status_code == 5 and error_code == '000':
+            logger.info(f"✅ Payment {transaction_id} successful")
+
+            with transaction.atomic():
+                payment.status = 'success'
+                payment.paid_at = timezone.now()
+                payment.gateway_response = payment_data
+                payment.gateway_transaction_id = payment_data.get('payment_no')
                 payment.save()
 
-                error_message = VNPAY_RESPONSE_CODES.get(response_code, f'Lỗi không xác định (Mã lỗi: {response_code})')
-                failure_url = f'{settings.FRONTEND_URL}/payment/failed?code={response_code}&message={error_message}'
-                return redirect(failure_url)
+                booking.status = 'paid'
+                booking.paid_at = timezone.now()
+                booking.save()
 
-        except Payment.DoesNotExist:
-            return redirect(f'{settings.FRONTEND_URL}/payment/error')
+                old_session = booking.session_id
+                booking.session_id = ''
+                booking.save()
 
-    else:
-        # Invalid signature
-        return redirect(f'{settings.FRONTEND_URL}/payment/error')
+                logger.info(f"Cleared session_id '{old_session}' for booking {booking.booking_code}")
+
+                seat_count = booking.seat_reservations.count()
+
+                updated = booking.seat_reservations.update(status='sold')
+
+                logger.info(f"Seats: {seat_count}, Updated: {updated}")
+
+                if updated == 0:
+                    logger.error(f"🚨 CRITICAL: Payment OK but NO SEATS for {booking.booking_code}")
+
+                try:
+                    usage = DiscountUsage.objects.select_for_update().get(booking=booking, status='PENDING')
+                    usage.status = 'COMPLETED'
+                    usage.save()
+
+                    discount = usage.discount
+                    discount.usage_count += 1
+                    discount.save()
+                    logger.info(
+                        f"✅ Discount code '{discount.code}' usage confirmed for booking {booking.booking_code}.")
+                except DiscountUsage.DoesNotExist:
+                    pass
+
+                from bookings.email_service import send_booking_confirmation
+                try:
+                    send_booking_confirmation(booking)
+                except Exception as e:
+                    logger.error(f"Failed to send confirmation email: {e}")
+
+            return redirect(f'{settings.FRONTEND_URL}/booking/confirmation/{booking.booking_code}')
+
+        else:
+            logger.warning(
+                f"❌ Payment {transaction_id} failed - Status: {payment_status_code}, Error code: {error_code}")
+
+            payment.status = 'failed'
+            payment.gateway_response = payment_data
+            payment.save()
+
+            if booking.status == 'pending':
+                booking.status = 'cancelled'
+                booking.save()
+                booking.seat_reservations.update(status='available', session_id=None, expires_at=None)
+
+            try:
+                usage = DiscountUsage.objects.select_for_update().get(booking=booking, status='PENDING')
+                usage.status = 'CANCELLED'
+                usage.save()
+                logger.warning(
+                    f"❌ Discount code '{usage.discount.code}' usage cancelled for booking {booking.booking_code}.")
+            except DiscountUsage.DoesNotExist:
+                pass
+
+            failure_reason = payment_data.get('failure_reason', 'Giao dịch thất bại')
+            failure_url = f'{settings.FRONTEND_URL}/payment/failed?code={error_code}&message={failure_reason}'
+            return redirect(failure_url)
+
+    except Payment.DoesNotExist:
+        logger.error(f"Payment not found: {transaction_id}")
+        return redirect(f'{settings.FRONTEND_URL}/payment/error?reason=payment_not_found')
+    except Exception as e:
+        logger.error(f"Error processing payment callback: {e}", exc_info=True)
+        return redirect(f'{settings.FRONTEND_URL}/payment/error?reason=server_error')
 
 
 @api_view(['GET'])
