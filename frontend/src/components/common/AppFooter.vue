@@ -35,7 +35,7 @@
 						</li>
 						<li>
 							<a
-								href="/#about"
+								href="/https://www.giacmochipheo.com.vn/"
 								class="hover:text-white transition"
 							>
 								Giới thiệu

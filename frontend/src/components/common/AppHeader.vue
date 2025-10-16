@@ -31,7 +31,7 @@
 						Tra cứu vé
 					</a>
 					<a
-						href="/#about"
+						href="/https://www.giacmochipheo.com.vn/"
 						class="text-gray-700 hover:text-primary-600 transition font-medium"
 					>
 						Về chúng tôi
@@ -109,7 +109,7 @@
 							🔍 Tra cứu vé
 						</a>
 						<a
-							href="/#about"
+							href="/https://www.giacmochipheo.com.vn/"
 							@click="closeMenu"
 							class="text-gray-700 hover:text-primary-600 hover:bg-gray-50 px-4 py-3 rounded-lg transition font-medium"
 						>

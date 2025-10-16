@@ -71,7 +71,6 @@ export const useBookingStore = defineStore('booking', () => {
         sessionId.value = sid;
     }
 
-    // This function now acts as a "preview" by creating/updating a pending booking
     const applyDiscount = async (code, currentCustomerInfo) => {
         if (!selectedPerformance.value || selectedSeats.value.length === 0) {
             toast.error("Vui lòng chọn ghế trước khi áp dụng mã.");
@@ -94,7 +93,7 @@ export const useBookingStore = defineStore('booking', () => {
 
             const response = await bookingAPI.createBooking(bookingData);
             currentBooking.value = response.data;
-            bookingCode.value = response.data.booking_code; // Important for subsequent payment
+            bookingCode.value = response.data.booking_code;
 
             isDiscountSuccess.value = true;
             discountMessage.value = `Áp dụng thành công! Bạn được giảm ${formatPrice(response.data.discount_amount)}.`;
@@ -105,7 +104,6 @@ export const useBookingStore = defineStore('booking', () => {
             isDiscountSuccess.value = false;
             discountMessage.value = errorMessage;
 
-            // Reset discount values in any existing booking preview
             if (currentBooking.value) {
                 currentBooking.value.discount_amount = 0;
                 currentBooking.value.discount = null;
@@ -118,40 +116,13 @@ export const useBookingStore = defineStore('booking', () => {
 
 
     const createBooking = async () => {
-        console.log("=== 🚀 createBooking START ===");
-
         try {
             loading.value = true
 
-            // ========================================
-            // STEP 1: Validate inputs
-            // ========================================
-            console.log("📊 Store State:");
-            console.log("- sessionId:", sessionId.value);
-            console.log("- selectedPerformance:", selectedPerformance.value);
-            console.log("- selectedSeats:", selectedSeats.value);
-            console.log("- customerInfo:", customerInfo.value);
+            if (!selectedPerformance.value?.id) throw new Error('NO_PERFORMANCE')
+            if (!selectedSeats.value?.length) throw new Error('NO_SEATS')
+            if (!sessionId.value) throw new Error('NO_SESSION_ID')
 
-            if (!selectedPerformance.value?.id) {
-                console.error("❌ NO_PERFORMANCE - selectedPerformance:", selectedPerformance.value);
-                throw new Error('NO_PERFORMANCE')
-            }
-
-            if (!selectedSeats.value?.length) {
-                console.error("❌ NO_SEATS - selectedSeats:", selectedSeats.value);
-                throw new Error('NO_SEATS')
-            }
-
-            if (!sessionId.value) {
-                console.error("❌ NO_SESSION_ID");
-                throw new Error('NO_SESSION_ID')
-            }
-
-            console.log("✅ All inputs validated");
-
-            // ========================================
-            // STEP 2: Prepare booking data
-            // ========================================
             const bookingData = {
                 performance_id: selectedPerformance.value.id,
                 seat_ids: selectedSeats.value.map(s => s.id),
@@ -159,28 +130,12 @@ export const useBookingStore = defineStore('booking', () => {
                 ...customerInfo.value
             }
 
-            console.log("📦 Booking data to send:", bookingData);
-
-            // ========================================
-            // STEP 3: Call API
-            // ========================================
-            console.log("🔄 Calling bookingAPI.createBooking...");
             const response = await bookingAPI.createBooking(bookingData)
-            console.log("✅ API Response:", response.data);
 
-            // ========================================
-            // STEP 4: Validate response
-            // ========================================
             if (!response.data.seat_reservations?.length) {
-                console.error("❌ NO_SEATS_IN_BOOKING - Response:", response.data);
                 throw new Error('NO_SEATS_IN_BOOKING')
             }
 
-            console.log("✅ Booking has", response.data.seat_reservations.length, "seats");
-
-            // ========================================
-            // STEP 5: Save to store
-            // ========================================
             currentBooking.value = response.data
             bookingCode.value = response.data.booking_code
 
@@ -188,37 +143,19 @@ export const useBookingStore = defineStore('booking', () => {
                 const expiresAt = new Date(response.data.expires_at);
                 sessionStorage.setItem('bookingExpiry', expiresAt.toISOString());
             }
-
             sessionStorage.setItem('currentBooking', JSON.stringify(response.data))
-
-            console.log("✅ Booking saved - Code:", bookingCode.value);
-            console.log("=== ✅ createBooking SUCCESS ===");
 
             return response.data
         } catch (error) {
-            console.error("=== ❌ createBooking FAILED ===");
-            console.error("Error type:", error.constructor.name);
-            console.error("Error message:", error.message);
-            console.error("Error response:", error.response?.data);
-            console.error("Error status:", error.response?.status);
-            console.error("Full error:", error);
-
             clearBooking()
-
-            let errorMessage = 'Có lỗi xảy ra.'
-            if (error.response?.data?.non_field_errors) {
-                errorMessage = error.response.data.non_field_errors[0]
-            } else if (error.response?.data?.error) {
+            let errorMessage = 'Có lỗi xảy ra khi tạo đơn hàng.'
+            if (error.response?.data?.error) {
                 errorMessage = error.response.data.error
             } else if (error.response?.data?.detail) {
                 errorMessage = error.response.data.detail
-            } else if (error.message && error.message !== 'NO_PERFORMANCE' && error.message !== 'NO_SEATS') {
-                errorMessage = error.message
             }
-
             const enhancedError = new Error(errorMessage)
             enhancedError.shouldRedirect = true
-            enhancedError.originalError = error
             throw enhancedError
         } finally {
             loading.value = false
@@ -229,6 +166,15 @@ export const useBookingStore = defineStore('booking', () => {
             loading.value = true
             const response = await bookingAPI.createPayment(bookingCode.value, paymentMethod)
             currentTransaction.value = response.data.transaction_id
+
+            // ** CRITICAL FIX **
+            // Clear session data related to seat selection to prevent accidental release
+            // after the user is sent to the payment gateway.
+            selectedSeats.value = []
+            reservationExpiry.value = null
+            sessionStorage.removeItem('selectedSeats')
+            sessionStorage.removeItem('reservationExpiry')
+
             return response.data
         } catch (error) {
             console.error('Failed to process payment:', error)
@@ -238,7 +184,6 @@ export const useBookingStore = defineStore('booking', () => {
         }
     }
 
-    // Other actions like loadShows, loadShowDetail etc. remain unchanged...
     const loadShows = async () => {
         try {
             loading.value = true

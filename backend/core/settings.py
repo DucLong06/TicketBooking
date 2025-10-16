@@ -3,8 +3,11 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+import configparser
 
 load_dotenv()
+
+
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -79,7 +82,8 @@ INSTALLED_APPS = [
     'shows',
     'bookings',
     'payments',
-    'discounts'
+    'discounts',
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -183,6 +187,7 @@ REST_FRAMEWORK = {
 # Booking settings
 SEAT_RESERVATION_TIMEOUT_MINUTES = 5
 PAYMENT_TIMEOUT_MINUTES = 30
+BOOKING_EXPIRATION_BUFFER_MINUTES = 2
 
 # 9Pay Settings
 NINEPAY_MERCHANT_KEY = os.getenv('NINEPAY_MERCHANT_KEY', '')
@@ -190,6 +195,29 @@ NINEPAY_SECRET_KEY = os.getenv('NINEPAY_SECRET_KEY', '')
 NINEPAY_URL = os.getenv('NINEPAY_URL', 'https://sand-payment.9pay.vn')
 NINEPAY_RETURN_URL = f"{BACKEND_URL}/api/payment/ninepay/return/"
 NINEPAY_CHECKSUM_KEY = os.getenv('NINEPAY_CHECKSUM_KEY', '')
+
+
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_PORT = os.getenv('REDIS_PORT', 6379)
+REDIS_INDEX = os.getenv('REDIS_INDEX', 0)
+REDIS_PASSWD = os.getenv('REDIS_PASSWD', '')
+
+REDIS_URL = os.getenv('REDIS_URL', f'redis://:{REDIS_PASSWD}@{REDIS_HOST}/{REDIS_INDEX}')
+
+if REDIS_URL.startswith('sentinel'):
+    CELERY_BROKER_URL = '/'.join(REDIS_URL.split('/')[:-1])
+    CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', CELERY_BROKER_URL)
+    CELERY_BROKER_TRANSPORT_OPTIONS = {'master_name': REDIS_URL.split('/')[-1]}
+    CELERY_RESULT_BACKEND_TRANSPORT_OPTIONS = {'master_name': REDIS_URL.split('/')[-1]}
+else:
+    CELERY_BROKER_URL = REDIS_URL
+    CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', REDIS_URL)
+
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Ho_Chi_Minh'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # Jazzmin Admin Configuration
 JAZZMIN_SETTINGS = {
