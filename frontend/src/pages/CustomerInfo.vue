@@ -266,11 +266,16 @@
 									formatPrice(ticketAmount)
 								}}</span>
 							</div>
-
 							<div class="flex justify-between text-sm">
 								<span class="text-gray-600"
 									>Phí vận chuyển:</span
 								>
+								<span class="font-semibold text-primary-600">
+									{{ formatPrice(shippingFee) }}
+								</span>
+							</div>
+							<div class="flex justify-between text-sm">
+								<span class="text-gray-600">Phí dịch vụ:</span>
 								<span class="font-semibold text-primary-600">{{
 									formatPrice(serviceFee)
 								}}</span>
@@ -349,11 +354,17 @@
 								}}</span>
 							</div>
 							<div class="flex justify-between">
+								<span class="text-gray-600">Phí dịch vụ:</span>
+								<span class="font-semibold">{{
+									formatPrice(serviceFee)
+								}}</span>
+							</div>
+							<div class="flex justify-between">
 								<span class="text-gray-600"
 									>Phí vận chuyển:</span
 								>
 								<span class="font-semibold">{{
-									formatPrice(serviceFee)
+									formatPrice(shippingFee)
 								}}</span>
 							</div>
 							<div
@@ -488,7 +499,9 @@ const addressDescription = ref(
 const emailDescription = ref(
 	"Email để nhận xác nhận thanh toán hoặc xác nhận đặt vé"
 );
-
+const shippingFee = computed(() => {
+	return bookingStore.shippingFee || 30000;
+});
 const selectedSeats = ref([]);
 
 // Mobile order summary toggle
@@ -539,7 +552,7 @@ const serviceFee = computed(() => {
 });
 
 const totalAmount = computed(() => {
-	return ticketAmount.value + serviceFee.value;
+	return ticketAmount.value + serviceFee.value + shippingFee.value;
 });
 
 const finalAmount = computed(() => {

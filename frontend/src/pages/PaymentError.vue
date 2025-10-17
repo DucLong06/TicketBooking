@@ -85,19 +85,9 @@
 				<div class="mt-6 text-sm text-gray-600">
 					<p>
 						Hotline:
-						<a
-							href="tel:1900xxxx"
-							class="font-medium text-red-600 hover:underline"
-							>1900 xxxx</a
-						>
-					</p>
-					<p>
-						Email:
-						<a
-							href="mailto:support@example.com"
-							class="font-medium text-red-600 hover:underline"
-							>support@example.com</a
-						>
+						<a class="font-medium text-red-600 hover:underline">{{
+							contactInfo.hotline_display
+						}}</a>
 					</p>
 				</div>
 			</div>
@@ -111,7 +101,11 @@ import { useRouter, useRoute } from "vue-router";
 
 const router = useRouter();
 const route = useRoute();
+import { useContact } from "@/composables/useContact";
 
+const { contactInfo, fetchContactInfo } = useContact();
+
+onMounted(async () => {});
 const errorReason = ref("Có lỗi xảy ra trong quá trình xử lý thanh toán");
 const errorDetails = ref(
 	"Vui lòng thử lại sau hoặc liên hệ với bộ phận hỗ trợ để được trợ giúp."
@@ -148,7 +142,8 @@ const contactSupport = () => {
 	window.location.href = "mailto:support@example.com";
 };
 
-onMounted(() => {
+onMounted(async () => {
+	await fetchContactInfo();
 	const reason = route.query.reason || "unknown";
 	errorReason.value = errorReasons[reason] || errorReason.value;
 	errorDetails.value = errorDetailsMap[reason] || errorDetails.value;

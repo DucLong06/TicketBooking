@@ -73,7 +73,8 @@ def create_payment(request, booking_code):
 
         calculated_ticket_amount = sum(sr.price for sr in seat_reservations)
         calculated_service_fee = seat_reservations.count() * booking.performance.show.service_fee_per_ticket
-        calculated_final = calculated_ticket_amount + calculated_service_fee - booking.discount_amount
+        calculated_shipping_fee = booking.shipping_fee
+        calculated_final = calculated_ticket_amount + calculated_shipping_fee + calculated_service_fee - booking.discount_amount
 
         if abs(calculated_final - booking.final_amount) > 1:  # Allow 1đ rounding error
             logger.error(f"🚨 AMOUNT MISMATCH: calculated={calculated_final}, stored={booking.final_amount}")

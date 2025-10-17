@@ -202,18 +202,13 @@
 							</div>
 
 							<!-- Support -->
-							<div class="mt-6 text-center">
-								<p class="text-sm text-slate-500">
-									Cần hỗ trợ?
-									<a
-										href="mailto:support@example.com"
-										class="font-medium hover:underline"
-										:style="{ color: responseInfo.color }"
-									>
-										Liên hệ chúng tôi
-									</a>
-								</p>
-							</div>
+							<p>
+								Hotline:
+								<a
+									class="font-medium text-red-600 hover:underline"
+									>{{ contactInfo.hotline_display }}</a
+								>
+							</p>
 						</div>
 					</div>
 				</transition>
@@ -332,6 +327,7 @@ const formatCurrency = (amount) => {
 const formatDateTime = (timestamp) => {
 	return new Date(timestamp).toLocaleString("vi-VN");
 };
+const { contactInfo, fetchContactInfo } = useContact();
 
 const retryPayment = () => {
 	if (transactionDetails.value?.bookingCode) {
@@ -346,7 +342,8 @@ const goToHome = () => {
 };
 
 // Lifecycle
-onMounted(() => {
+onMounted(async () => {
+	await fetchContactInfo();
 	errorCode.value = route.query.code || "99";
 	errorMessage.value = route.query.message || "";
 

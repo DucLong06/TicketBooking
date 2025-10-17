@@ -140,6 +140,7 @@ class BookingCreateSerializer(serializers.ModelSerializer):
 
         total_amount = sum(sr.price for sr in seat_reservations)
         service_fee = len(seat_ids) * performance.show.service_fee_per_ticket
+        shipping_fee = performance.shipping_fee
 
         if total_amount <= 0:
             raise serializers.ValidationError({
@@ -167,7 +168,7 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             except DiscountError as e:
                 raise serializers.ValidationError({'discount_code': str(e)})
 
-        final_amount = total_amount + service_fee - discount_amount
+        final_amount = total_amount + service_fee + shipping_fee - discount_amount
 
         with transaction.atomic():
             booking = Booking.objects.create(
@@ -175,6 +176,7 @@ class BookingCreateSerializer(serializers.ModelSerializer):
                 session_id=session_id,
                 total_amount=total_amount,
                 service_fee=service_fee,
+                shipping_fee=shipping_fee,
                 discount=discount_instance,
                 discount_amount=discount_amount,
                 final_amount=final_amount,
@@ -213,6 +215,7 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     amount = serializers.DecimalField(source='final_amount', max_digits=10, decimal_places=0, read_only=True)
     serviceFee = serializers.DecimalField(source='service_fee', max_digits=10, decimal_places=0, read_only=True)
     ticketAmount = serializers.DecimalField(source='total_amount', max_digits=10, decimal_places=0, read_only=True)
+    shippingFee = serializers.DecimalField(source='shipping_fee', max_digits=10, decimal_places=0, read_only=True)
 
     class Meta:
         model = Booking
@@ -222,7 +225,7 @@ class BookingDetailSerializer(serializers.ModelSerializer):
             'status', 'total_amount', 'service_fee', 'discount_amount',
             'final_amount', 'seat_reservations', 'created_at', 'expires_at',
             'showInfo', 'performance', 'customerInfo', 'selectedSeats',
-            'amount', 'serviceFee', 'ticketAmount', 'discount_code',
+            'amount', 'serviceFee', 'ticketAmount', 'discount_code', 'shippingFee'
         ]
 
     def get_showInfo(self, obj):
