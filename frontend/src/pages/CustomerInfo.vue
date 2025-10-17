@@ -39,7 +39,7 @@
 			<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 				<div class="lg:col-span-2">
 					<div
-						class="bg-white rounded-lg shadow-lg p-6 mb-20 lg:mb-0"
+						class="bg-white rounded-lg shadow-lg p-6 mb-28 lg:mb-0"
 					>
 						<h2 class="text-2xl font-bold mb-6">
 							Thông tin người đặt vé
@@ -173,6 +173,66 @@
 								></textarea>
 							</div>
 
+							<div class="lg:hidden mb-6">
+								<h2 class="text-xl font-bold mb-4">
+									Mã giảm giá
+								</h2>
+								<div class="flex gap-2">
+									<input
+										v-model="discountCodeInput"
+										type="text"
+										class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+										placeholder="Nhập mã giảm giá"
+										:disabled="
+											bookingStore.isDiscountSuccess
+										"
+									/>
+									<button
+										@click="applyDiscountCode"
+										:disabled="
+											bookingStore.isDiscountSuccess
+										"
+										class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+									>
+										Áp dụng
+									</button>
+								</div>
+								<div
+									v-if="availableDiscounts.length > 0"
+									class="mt-3 space-y-2"
+								>
+									<p
+										class="text-xs text-gray-600 font-medium"
+									>
+										Mã khuyến mãi dành cho bạn:
+									</p>
+									<div class="flex gap-2 flex-wrap">
+										<button
+											v-for="discount in availableDiscounts"
+											:key="discount.code"
+											@click="
+												selectDiscount(discount.code)
+											"
+											class="px-3 py-1.5 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-300 rounded-lg text-xs font-semibold text-orange-700 hover:from-orange-100 hover:to-red-100 transition"
+										>
+											{{ discount.code }}
+										</button>
+									</div>
+								</div>
+								<p
+									v-if="bookingStore.discountMessage"
+									class="mt-2 text-sm"
+									:class="{
+										'text-green-600':
+											bookingStore.isDiscountSuccess,
+										'text-red-500':
+											!bookingStore.isDiscountSuccess,
+									}"
+								>
+									{{ bookingStore.discountMessage }}
+								</p>
+							</div>
+
 							<div class="hidden lg:flex justify-between">
 								<button
 									type="button"
@@ -244,6 +304,24 @@
 								>
 									Áp dụng
 								</button>
+							</div>
+							<div
+								v-if="availableDiscounts.length > 0"
+								class="mt-3 space-y-2"
+							>
+								<p class="text-xs text-gray-600 font-medium">
+									Mã khuyến mãi dành cho bạn:
+								</p>
+								<div class="flex gap-2 flex-wrap">
+									<button
+										v-for="discount in availableDiscounts"
+										:key="discount.code"
+										@click="selectDiscount(discount.code)"
+										class="px-3 py-1.5 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-300 rounded-lg text-xs font-semibold text-orange-700 hover:from-orange-100 hover:to-red-100 transition"
+									>
+										{{ discount.code }}
+									</button>
+								</div>
 							</div>
 							<p
 								v-if="bookingStore.discountMessage"
@@ -367,44 +445,6 @@
 									}}</span
 								>
 							</div>
-							<div class="pt-2 border-t">
-								<label
-									class="block text-xs font-medium text-gray-700 mb-1"
-									>Mã giảm giá</label
-								>
-								<div class="flex gap-2">
-									<input
-										v-model="discountCodeInput"
-										type="text"
-										class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-primary-500"
-										placeholder="Nhập mã"
-										:disabled="
-											bookingStore.isDiscountSuccess
-										"
-									/>
-									<button
-										@click="applyDiscountCode"
-										:disabled="
-											bookingStore.isDiscountSuccess
-										"
-										class="px-3 py-1 bg-primary-600 text-white rounded-md text-xs hover:bg-primary-700 disabled:bg-gray-400"
-									>
-										Áp dụng
-									</button>
-								</div>
-								<p
-									v-if="bookingStore.discountMessage"
-									class="mt-1 text-xs"
-									:class="{
-										'text-green-600':
-											bookingStore.isDiscountSuccess,
-										'text-red-500':
-											!bookingStore.isDiscountSuccess,
-									}"
-								>
-									{{ bookingStore.discountMessage }}
-								</p>
-							</div>
 							<div class="border-t pt-2 mt-2">
 								<p class="text-xs text-gray-500 mb-1">
 									Ghế:
@@ -458,7 +498,7 @@ const toast = useToast();
 const bookingStore = useBookingStore();
 const router = useRouter();
 const route = useRoute();
-
+const availableDiscounts = ref([]);
 // Form data
 const showInfo = ref({
 	name: "",
@@ -560,6 +600,11 @@ const applyDiscountCode = async () => {
 		discountCodeInput.value,
 		customerInfo.value
 	);
+};
+
+const selectDiscount = (code) => {
+	discountCodeInput.value = code;
+	applyDiscountCode();
 };
 
 // Methods
@@ -707,7 +752,7 @@ const startTimer = () => {
 		}
 	}, 1000);
 };
-onMounted(() => {
+onMounted(async () => {
 	console.log("🚀 [CustomerInfo] Validating data...");
 
 	bookingStore.resetDiscount();
@@ -852,8 +897,21 @@ onMounted(() => {
 			router.push(`/booking/${route.params.showId}/seats`);
 		}
 	}, 1000);
-});
 
+	// Fetch available discounts
+	if (selectedSeats.value.length > 0) {
+		try {
+			const response = await bookingAPI.getAvailableDiscounts(
+				selectedSeats.value.length,
+				customerInfo.value.email,
+				customerInfo.value.phone
+			);
+			availableDiscounts.value = response.data.discounts;
+		} catch (error) {
+			console.error("Failed to fetch available discounts:", error);
+		}
+	}
+});
 onUnmounted(() => {
 	if (timer) {
 		clearInterval(timer);

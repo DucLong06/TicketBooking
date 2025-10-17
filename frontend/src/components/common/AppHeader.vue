@@ -1,38 +1,33 @@
 <template>
-	<header class="bg-white shadow-md top-0">
+	<header class="bg-black shadow-md top-0">
 		<div class="container mx-auto px-4">
 			<div class="flex items-center justify-between h-16">
 				<!-- Logo -->
 				<div class="flex items-center space-x-3">
 					<img
 						class="h-12 w-auto object-contain"
-						src="/LogoDC.png"
+						src="/logo_DCART-1.png"
 						alt="Dương Cầm ART Logo"
 					/>
-					<h1
-						class="text-xl md:text-2xl font-bold whitespace-nowrap bg-gradient-to-r from-pink-600 via-red-500 to-orange-500 bg-clip-text text-transparent"
-					>
-						Dương Cầm Art
-					</h1>
 				</div>
 
 				<!-- Desktop Navigation -->
 				<nav class="hidden md:flex items-center space-x-8">
 					<a
 						href="/"
-						class="text-gray-700 hover:text-primary-600 transition font-medium"
+						class="text-white hover:text-primary-600 transition font-medium"
 					>
 						Trang chủ
 					</a>
 					<a
 						href="/lookup"
-						class="text-gray-700 hover:text-primary-600 transition font-medium"
+						class="text-white hover:text-primary-600 transition font-medium"
 					>
 						Tra cứu vé
 					</a>
 					<a
 						href="/https://www.giacmochipheo.com.vn/"
-						class="text-gray-700 hover:text-primary-600 transition font-medium"
+						class="text-white hover:text-primary-600 transition font-medium"
 					>
 						Về chúng tôi
 					</a>

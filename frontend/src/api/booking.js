@@ -92,4 +92,10 @@ export const bookingAPI = {
             }
         })
     },
+
+    getAvailableDiscounts: (ticketCount, email = '', phone = '') => {
+        return api.get('/discounts/available/', {
+            params: { ticket_count: ticketCount, email, phone }
+        })
+    }
 }

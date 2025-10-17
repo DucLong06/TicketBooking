@@ -154,6 +154,7 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             total_amount=total_amount,
             customer_email=validated_data.get('customer_email'),
             customer_phone=validated_data.get('customer_phone'),
+            session_id=session_id,
             **{k: v for k, v in validated_data.items()
                if k in ['customer_name', 'customer_address', 'shipping_time', 'notes']}
         )
