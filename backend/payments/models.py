@@ -9,6 +9,7 @@ class Payment(models.Model):
         ('momo', 'MoMo'),
         ('bank', 'Chuyển khoản'),
         ('card', 'Thẻ quốc tế'),
+        ('9pay', '9Pay'),
     ]
 
     STATUS_CHOICES = [

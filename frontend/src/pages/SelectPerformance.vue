@@ -229,14 +229,6 @@ const continueToSeatSelection = () => {
 	}
 };
 
-const parseRules = (rulesText) => {
-	if (!rulesText) return [];
-	return rulesText
-		.split("\n")
-		.map((rule) => rule.trim())
-		.filter((rule) => rule.length > 0);
-};
-
 onMounted(async () => {
 	try {
 		// Initialize session

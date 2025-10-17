@@ -31,7 +31,6 @@ class Show(models.Model):
         help_text='Phí dịch vụ tính cho mỗi vé (VNĐ)'
     )
 
-    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -64,6 +63,13 @@ class Performance(models.Model):
     notes = models.TextField(blank=True, verbose_name='Ghi chú')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    shipping_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=0,
+        verbose_name='Phí vận chuyển'
+    )
 
     class Meta:
         verbose_name = 'Suất diễn'

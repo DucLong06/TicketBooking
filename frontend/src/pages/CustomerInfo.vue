@@ -266,11 +266,16 @@
 									formatPrice(ticketAmount)
 								}}</span>
 							</div>
-
 							<div class="flex justify-between text-sm">
 								<span class="text-gray-600"
 									>Phí vận chuyển:</span
 								>
+								<span class="font-semibold text-primary-600">
+									{{ formatPrice(shippingFee) }}
+								</span>
+							</div>
+							<div class="flex justify-between text-sm">
+								<span class="text-gray-600">Phí dịch vụ:</span>
 								<span class="font-semibold text-primary-600">{{
 									formatPrice(serviceFee)
 								}}</span>
@@ -349,11 +354,17 @@
 								}}</span>
 							</div>
 							<div class="flex justify-between">
+								<span class="text-gray-600">Phí dịch vụ:</span>
+								<span class="font-semibold">{{
+									formatPrice(serviceFee)
+								}}</span>
+							</div>
+							<div class="flex justify-between">
 								<span class="text-gray-600"
 									>Phí vận chuyển:</span
 								>
 								<span class="font-semibold">{{
-									formatPrice(serviceFee)
+									formatPrice(shippingFee)
 								}}</span>
 							</div>
 							<div
@@ -488,7 +499,9 @@ const addressDescription = ref(
 const emailDescription = ref(
 	"Email để nhận xác nhận thanh toán hoặc xác nhận đặt vé"
 );
-
+const shippingFee = computed(() => {
+	return bookingStore.shippingFee || 30000;
+});
 const selectedSeats = ref([]);
 
 // Mobile order summary toggle
@@ -539,7 +552,7 @@ const serviceFee = computed(() => {
 });
 
 const totalAmount = computed(() => {
-	return ticketAmount.value + serviceFee.value;
+	return ticketAmount.value + serviceFee.value + shippingFee.value;
 });
 
 const finalAmount = computed(() => {
@@ -707,90 +720,12 @@ const startTimer = () => {
 		}
 	}, 1000);
 };
-const loadFullBookingData = async () => {
-	try {
-		// Load show detail
-		const showId = route.params.showId;
-		await bookingStore.loadShowDetail(showId);
-
-		// Load show info
-		if (bookingStore.currentShow) {
-			showInfo.value = {
-				name: bookingStore.currentShow.name,
-				service_fee_per_ticket:
-					bookingStore.currentShow.service_fee_per_ticket || 10000,
-			};
-		}
-
-		// Load performance info
-		let performance = null;
-		const savedPerformance = sessionStorage.getItem("selectedPerformance");
-		if (savedPerformance) {
-			performance = JSON.parse(savedPerformance);
-		} else if (bookingStore.selectedPerformance) {
-			performance = bookingStore.selectedPerformance;
-		}
-
-		if (performance) {
-			if (!showInfo.value.name) {
-				showInfo.value.name = performance.show_name || "";
-			}
-			if (
-				!showInfo.value.service_fee_per_ticket &&
-				performance.service_fee_per_ticket
-			) {
-				showInfo.value.service_fee_per_ticket =
-					performance.service_fee_per_ticket;
-			}
-
-			performanceInfo.value = {
-				date: new Date(performance.datetime).toLocaleDateString(
-					"vi-VN"
-				),
-				time: new Date(performance.datetime).toLocaleTimeString(
-					"vi-VN",
-					{
-						hour: "2-digit",
-						minute: "2-digit",
-					}
-				),
-			};
-		}
-
-		// Ensure service_fee has default value
-		if (!showInfo.value.service_fee_per_ticket) {
-			console.warn("Service fee not found, using default 10,000đ");
-			showInfo.value.service_fee_per_ticket = 10000;
-		}
-
-		// Load selected seats
-		if (bookingStore.selectedSeats?.length > 0) {
-			selectedSeats.value = bookingStore.selectedSeats;
-		} else {
-			const savedSeats = sessionStorage.getItem("selectedSeats");
-			if (savedSeats) {
-				selectedSeats.value = JSON.parse(savedSeats);
-			} else {
-				throw new Error("No seats found");
-			}
-		}
-
-		return true;
-	} catch (error) {
-		console.error("Failed to load full booking data:", error);
-		return false;
-	}
-};
-
 onMounted(() => {
 	console.log("🚀 [CustomerInfo] Validating data...");
 
 	bookingStore.resetDiscount();
 	discountCodeInput.value = "";
 
-	// ========================================
-	// CHECK 0: Restore session_id vào store
-	// ========================================
 	const existingSessionId = sessionStorage.getItem("session_id");
 	if (existingSessionId) {
 		bookingStore.sessionId = existingSessionId;
@@ -802,9 +737,6 @@ onMounted(() => {
 		return;
 	}
 
-	// ========================================
-	// CHECK 1: Load seats và set vào STORE
-	// ========================================
 	let hasSeats = false;
 
 	if (bookingStore.selectedSeats?.length > 0) {
@@ -818,7 +750,6 @@ onMounted(() => {
 				const parsedSeats = JSON.parse(savedSeats);
 				selectedSeats.value = parsedSeats;
 
-				// ✅ QUAN TRỌNG: Set vào store
 				bookingStore.selectedSeats = parsedSeats;
 
 				hasSeats = parsedSeats.length > 0;
@@ -839,15 +770,11 @@ onMounted(() => {
 		return;
 	}
 
-	// ========================================
-	// CHECK 2: Load show info & performance info + Restore to store
-	// ========================================
 	const savedPerformance = sessionStorage.getItem("selectedPerformance");
 	if (savedPerformance) {
 		try {
 			const performance = JSON.parse(savedPerformance);
 
-			// ✅ QUAN TRỌNG: Restore selectedPerformance vào store
 			if (
 				!bookingStore.selectedPerformance ||
 				!bookingStore.selectedPerformance.id
@@ -859,7 +786,6 @@ onMounted(() => {
 				);
 			}
 
-			// Load show info
 			showInfo.value = {
 				name:
 					performance.show_name ||
@@ -870,7 +796,6 @@ onMounted(() => {
 					bookingStore.currentShow?.service_fee_per_ticket,
 			};
 
-			// Load performance info (date, time)
 			if (performance.datetime) {
 				performanceInfo.value = {
 					date: new Date(performance.datetime).toLocaleDateString(
@@ -885,14 +810,6 @@ onMounted(() => {
 					),
 				};
 			}
-
-			console.log("✅ Show & Performance info loaded:", {
-				performanceId: performance.id,
-				showName: showInfo.value.name,
-				serviceFee: showInfo.value.service_fee_per_ticket,
-				date: performanceInfo.value.date,
-				time: performanceInfo.value.time,
-			});
 		} catch (e) {
 			console.error("Failed to parse savedPerformance:", e);
 		}
@@ -903,12 +820,8 @@ onMounted(() => {
 			service_fee_per_ticket:
 				bookingStore.currentShow.service_fee_per_ticket,
 		};
-		console.log("✅ Show info from store");
 	}
 
-	// ========================================
-	// CHECK 3: Validate thông tin hiển thị
-	// ========================================
 	if (!showInfo.value.name || !performanceInfo.value.date) {
 		console.error("❌ Missing show or performance info");
 		toast.warning("Thiếu thông tin suất diễn. Vui lòng chọn lại.");
@@ -916,9 +829,6 @@ onMounted(() => {
 		return;
 	}
 
-	// ========================================
-	// CHECK 4: Có service_fee không?
-	// ========================================
 	if (!serviceFeePerTicket.value) {
 		console.error("❌ Service fee not found");
 		toast.warning("Thiếu thông tin phí dịch vụ. Vui lòng chọn lại ghế.");
@@ -926,9 +836,6 @@ onMounted(() => {
 		return;
 	}
 
-	// ========================================
-	// CHECK 5: Có timer không?
-	// ========================================
 	const savedExpiry = sessionStorage.getItem("reservationExpiry");
 	if (!savedExpiry) {
 		console.error("❌ No reservation expiry");
@@ -946,26 +853,6 @@ onMounted(() => {
 		return;
 	}
 
-	// ========================================
-	// ✅ ALL CHECKS PASSED
-	// ========================================
-	console.log("✅ All validation passed");
-	console.log("📊 Final State (Local):", {
-		showName: showInfo.value.name,
-		performanceDate: performanceInfo.value.date,
-		performanceTime: performanceInfo.value.time,
-		seats: selectedSeats.value.length,
-		serviceFee: serviceFeePerTicket.value,
-		ticketAmount: ticketAmount.value,
-		totalAmount: totalAmount.value,
-	});
-
-	console.log("📊 Final State (Store):", {
-		sessionId: bookingStore.sessionId,
-		selectedPerformanceId: bookingStore.selectedPerformance?.id,
-		selectedSeatsCount: bookingStore.selectedSeats?.length,
-	});
-
 	// Start timer
 	timer = setInterval(() => {
 		const now = new Date();
@@ -978,12 +865,6 @@ onMounted(() => {
 			router.push(`/booking/${route.params.showId}/seats`);
 		}
 	}, 1000);
-
-	console.log(
-		"✅ Timer started - expires in:",
-		Math.floor((expiryDate - now) / 1000),
-		"seconds"
-	);
 });
 
 onUnmounted(() => {

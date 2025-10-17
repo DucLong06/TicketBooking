@@ -230,6 +230,7 @@ def performance_seat_map(request, performance_id):
 @csrf_exempt
 def reserve_seats(request):
     """Reserve seats temporarily"""
+    from .utils import validate_session_ownership
     serializer = ReserveSeatSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
@@ -237,16 +238,23 @@ def reserve_seats(request):
     seat_ids = serializer.validated_data['seat_ids']
     session_id = serializer.validated_data['session_id']
 
+    if not validate_session_ownership(session_id, request):
+        logger.warning(f"⚠️ Potential session hijacking: {session_id}")
+        return Response(
+            {'error': 'Session không hợp lệ'},
+            status=status.HTTP_403_FORBIDDEN
+        )
     performance = Performance.objects.get(id=performance_id)
-
+    client_ip = request.META.get('REMOTE_ADDR')
     with transaction.atomic():
-        # Release expired reservations
+        # Release expired reservations that are not linked to any booking yet
         expired_reservations = SeatReservation.objects.filter(
             performance=performance,
             status='reserved',
-            expires_at__lt=timezone.now()
+            expires_at__lt=timezone.now(),
+            booking__isnull=True
         )
-        expired_reservations.update(status='available', session_id='', expires_at=None)
+        expired_reservations.update(status='available', session_id='', expires_at=None, client_ip=None)
 
         existing_session_reservations = SeatReservation.objects.filter(
             performance=performance,
@@ -270,15 +278,16 @@ def reserve_seats(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        existing_reservations = SeatReservation.objects.filter(
+        # Check if any requested seats are already reserved (by another session) or sold
+        conflicting_reservations = SeatReservation.objects.filter(
             performance=performance,
             seat_id__in=seat_ids,
             status__in=['reserved', 'sold']
         ).exclude(session_id=session_id)
 
-        if existing_reservations.exists():
+        if conflicting_reservations.exists():
             return Response(
-                {'error': 'Một số ghế đã được đặt'},
+                {'error': 'Một số ghế đã được đặt hoặc đang được giữ bởi người khác. Vui lòng tải lại trang.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -309,7 +318,6 @@ def reserve_seats(request):
                 'price_category'
             ).get(id=seat_id)
 
-            # Get price from seat's price_category
             effective_pc = seat.effective_price_category
             price_category_id = effective_pc.id if effective_pc else None
             seat_price = price_map.get(
@@ -317,6 +325,8 @@ def reserve_seats(request):
                 effective_pc.base_price if effective_pc else 0
             )
 
+            # Use update_or_create but be careful, this can "steal" reservations.
+            # The check above should prevent this from happening for 'sold' or other 'reserved' seats.
             reservation, created = SeatReservation.objects.update_or_create(
                 performance=performance,
                 seat_id=seat_id,
@@ -324,7 +334,9 @@ def reserve_seats(request):
                     'status': 'reserved',
                     'session_id': session_id,
                     'price': seat_price,
-                    'expires_at': expires_at
+                    'expires_at': expires_at,
+                    'client_ip': client_ip,
+                    'booking': None  # Ensure it's not linked to a booking yet
                 }
             )
 
@@ -347,7 +359,10 @@ def reserve_seats(request):
 @api_view(['POST'])
 @csrf_exempt
 def release_seats(request):
-    """Release reserved seats"""
+    """
+    Release reserved seats that are NOT associated with a booking.
+    This is the key fix to prevent releasing seats for a pending payment.
+    """
     session_id = request.data.get('session_id')
     seat_ids = request.data.get('seat_ids', [])
 
@@ -357,17 +372,23 @@ def release_seats(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    reservations = SeatReservation.objects.filter(
+    # CRITICAL FIX: Only release seats that are temporarily reserved and NOT yet part of a booking.
+    reservations_to_release = SeatReservation.objects.filter(
         session_id=session_id,
         seat_id__in=seat_ids,
-        status='reserved'
+        status='reserved',
+        booking__isnull=True  # This ensures we don't release seats for a pending payment.
     )
 
-    count = reservations.update(
+    count = reservations_to_release.update(
         status='available',
         session_id='',
-        expires_at=None
+        expires_at=None,
+        client_ip=None
     )
+
+    if count > 0:
+        logger.info(f"Released {count} seats for session {session_id}")
 
     return Response({'released': count})
 
@@ -385,18 +406,13 @@ def search_bookings(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Calculate the cutoff date: today minus one day.
-    # This allows searching for shows that happened yesterday as well.
     cutoff_date = timezone.now().date() - timedelta(days=1)
 
     bookings = Booking.objects.filter(
-        # Search by booking code (case-insensitive) or exact phone number
         Q(booking_code__iexact=search_query) | Q(customer_phone__exact=search_query),
-        # Only show successfully paid bookings
         status='paid',
-        # Only show bookings for performances from yesterday onwards
         performance__datetime__date__gte=cutoff_date
-    ).order_by('-performance__datetime')  # Order by most recent performance first
+    ).order_by('-performance__datetime')
 
     if not bookings.exists():
         return Response([], status=status.HTTP_200_OK)
@@ -425,7 +441,6 @@ class BookingViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             booking = serializer.save()
 
-        # Return booking details
         detail_serializer = BookingDetailSerializer(booking)
         response_data = detail_serializer.data
 
@@ -456,7 +471,8 @@ class BookingViewSet(viewsets.ModelViewSet):
             booking.seat_reservations.update(
                 status='available',
                 session_id='',
-                expires_at=None
+                expires_at=None,
+                booking=None
             )
 
         return Response({'status': 'cancelled'})
@@ -473,7 +489,6 @@ class BookingViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            # Send email
             success = send_booking_confirmation(booking)
 
             if success:
@@ -500,75 +515,49 @@ def get_session_reservations(request):
     """
     Get all reserved seats for a session
     Used to restore seats after page refresh
-    ALWAYS returns valid response, never throws errors
     """
     session_id = request.query_params.get('session_id')
     performance_id = request.query_params.get('performance_id')
 
-    # Default empty response
     empty_response = {
         'seats': [],
         'expires_at': None,
         'count': 0
     }
 
-    # Missing params → return empty
     if not session_id or not performance_id:
-        logger.info(f"get_session_reservations: Missing params (session={session_id}, perf={performance_id})")
         return Response(empty_response)
 
     try:
-        # Get performance
-        try:
-            performance = Performance.objects.get(id=performance_id)
-        except Performance.DoesNotExist:
-            logger.warning(f"get_session_reservations: Performance {performance_id} not found")
-            return Response(empty_response)
+        performance = Performance.objects.get(id=performance_id)
 
-        # Get reservations for this session
+        # We only care about reservations not yet linked to a final booking
         reservations = SeatReservation.objects.filter(
             performance=performance,
             session_id=session_id,
             status='reserved',
+            booking__isnull=True,
             expires_at__gt=timezone.now()
-        ).select_related(
-            'seat',
-            'seat__row',
-            'seat__row__section'
-        )
+        ).select_related('seat', 'seat__row', 'seat__row__section')
 
-        # No reservations → return empty
         if not reservations.exists():
-            logger.info(f"get_session_reservations: No active reservations for session {session_id}")
             return Response(empty_response)
 
-        # Build response
         first_reservation = reservations.first()
         expires_at = first_reservation.expires_at
 
         reserved_seats = []
         for reservation in reservations:
-            try:
-                seat = reservation.seat
-                reserved_seats.append({
-                    'id': seat.id,
-                    'row': seat.row.label,
-                    'number': seat.display_label,
-                    'full_label': seat.full_display_label,
-                    'section_name': seat.row.section.name,
-                    'price': float(reservation.price)
-                })
-            except Exception as seat_error:
-                # Skip this seat if error, don't fail entire request
-                logger.error(f"Error processing seat {reservation.seat_id}: {seat_error}")
-                continue
+            seat = reservation.seat
+            reserved_seats.append({
+                'id': seat.id,
+                'row': seat.row.label,
+                'number': seat.display_label,
+                'full_label': seat.full_display_label,
+                'section_name': seat.row.section.name,
+                'price': float(reservation.price)
+            })
 
-        # If all seats failed to process, return empty
-        if not reserved_seats:
-            logger.warning(f"get_session_reservations: All seats failed to process")
-            return Response(empty_response)
-
-        logger.info(f"get_session_reservations: Found {len(reserved_seats)} seats for session {session_id}")
         return Response({
             'seats': reserved_seats,
             'expires_at': expires_at.isoformat(),
@@ -576,6 +565,5 @@ def get_session_reservations(request):
         })
 
     except Exception as e:
-        # Log error but return empty instead of 500
         logger.error(f"get_session_reservations: Unexpected error: {e}", exc_info=True)
         return Response(empty_response)

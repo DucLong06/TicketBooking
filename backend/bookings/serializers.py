@@ -5,6 +5,7 @@ from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 
+from django.conf import settings
 from payments.models import Payment
 from discounts.models import Discount, DiscountUsage
 from discounts.services import validate_and_calculate_discount, DiscountError
@@ -139,6 +140,7 @@ class BookingCreateSerializer(serializers.ModelSerializer):
 
         total_amount = sum(sr.price for sr in seat_reservations)
         service_fee = len(seat_ids) * performance.show.service_fee_per_ticket
+        shipping_fee = performance.shipping_fee
 
         if total_amount <= 0:
             raise serializers.ValidationError({
@@ -166,55 +168,28 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             except DiscountError as e:
                 raise serializers.ValidationError({'discount_code': str(e)})
 
-        final_amount = total_amount + service_fee - discount_amount
+        final_amount = total_amount + service_fee + shipping_fee - discount_amount
 
         with transaction.atomic():
-            # Lock seats để tránh race condition
-            locked_reservations = SeatReservation.objects.select_for_update().filter(
-                performance_id=performance_id,
-                seat_id__in=seat_ids,
-                session_id=session_id,
-                status='reserved',
-                expires_at__gt=timezone.now()
-            )
-
-            if locked_reservations.count() != len(seat_ids):
-                raise serializers.ValidationError({
-                    "detail": "Có ghế đã được người khác đặt. Vui lòng chọn lại.",
-                    "shouldRedirect": True
-                })
-
-            from datetime import timedelta
-            cutoff_time = timezone.now() - timedelta(minutes=30)
-
-            old_pending_bookings = Booking.objects.filter(
-                session_id=session_id,
-                status='pending',
-                created_at__lt=cutoff_time
-            ).exclude(
-                Q(seat_reservations__status='sold') |
-                Q(id__in=Payment.objects.values_list('booking_id', flat=True))
-            )
-
-            deleted_count = old_pending_bookings.delete()[0]
-            if deleted_count > 0:
-                logger.info(f"✅ Deleted {deleted_count} old pending bookings for session {session_id}")
-
             booking = Booking.objects.create(
                 performance=performance,
                 session_id=session_id,
                 total_amount=total_amount,
                 service_fee=service_fee,
+                shipping_fee=shipping_fee,
                 discount=discount_instance,
                 discount_amount=discount_amount,
                 final_amount=final_amount,
                 **validated_data
             )
 
-            locked_reservations.update(booking=booking)
+            update_count = seat_reservations.update(booking=booking)
 
-            if booking.seat_reservations.count() != len(seat_ids):
-                raise Exception("CRITICAL: Seat count mismatch after creation")
+            seat_reservations.update(expires_at=booking.expires_at)
+
+            if update_count != len(seat_ids):
+                logger.error(f"🚨 Update mismatch: expected {len(seat_ids)}, got {update_count}")
+                raise Exception("CRITICAL: Seat update mismatch")
 
             if discount_instance:
                 DiscountUsage.objects.create(
@@ -240,6 +215,7 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     amount = serializers.DecimalField(source='final_amount', max_digits=10, decimal_places=0, read_only=True)
     serviceFee = serializers.DecimalField(source='service_fee', max_digits=10, decimal_places=0, read_only=True)
     ticketAmount = serializers.DecimalField(source='total_amount', max_digits=10, decimal_places=0, read_only=True)
+    shippingFee = serializers.DecimalField(source='shipping_fee', max_digits=10, decimal_places=0, read_only=True)
 
     class Meta:
         model = Booking
@@ -249,7 +225,7 @@ class BookingDetailSerializer(serializers.ModelSerializer):
             'status', 'total_amount', 'service_fee', 'discount_amount',
             'final_amount', 'seat_reservations', 'created_at', 'expires_at',
             'showInfo', 'performance', 'customerInfo', 'selectedSeats',
-            'amount', 'serviceFee', 'ticketAmount', 'discount_code',
+            'amount', 'serviceFee', 'ticketAmount', 'discount_code', 'shippingFee'
         ]
 
     def get_showInfo(self, obj):

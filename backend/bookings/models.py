@@ -46,7 +46,12 @@ class Booking(models.Model):
         related_name='bookings',
         verbose_name='Suất diễn'
     )
-
+    shipping_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=0,
+        verbose_name='Phí vận chuyển'
+    )
     # Customer info
     customer_name = models.CharField(max_length=200, verbose_name='Tên khách hàng')
     customer_email = models.EmailField(verbose_name='Email')
@@ -206,10 +211,18 @@ class SeatReservation(models.Model):
     reserved_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(null=True, blank=True, verbose_name='Hết hạn giữ chỗ')
 
+    client_ip = models.GenericIPAddressField(null=True, blank=True)
+
     class Meta:
         verbose_name = 'Ghế đặt'
         verbose_name_plural = 'Ghế đặt'
         unique_together = ['performance', 'seat']
+
+        indexes = [
+            models.Index(fields=['performance', 'seat', 'status']),
+            models.Index(fields=['session_id', 'status', 'expires_at']),
+            models.Index(fields=['booking', 'status']),
+        ]
 
     def __str__(self):
         return f"{self.performance} - {self.seat} - {self.status}"
