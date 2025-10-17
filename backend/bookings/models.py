@@ -46,7 +46,12 @@ class Booking(models.Model):
         related_name='bookings',
         verbose_name='Suất diễn'
     )
-
+    shipping_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=0,
+        verbose_name='Phí vận chuyển'
+    )
     # Customer info
     customer_name = models.CharField(max_length=200, verbose_name='Tên khách hàng')
     customer_email = models.EmailField(verbose_name='Email')
@@ -209,11 +214,11 @@ class SeatReservation(models.Model):
     client_ip = models.GenericIPAddressField(null=True, blank=True)
 
     class Meta:
-        verbose_name='Ghế đặt'
-        verbose_name_plural='Ghế đặt'
-        unique_together=['performance', 'seat']
+        verbose_name = 'Ghế đặt'
+        verbose_name_plural = 'Ghế đặt'
+        unique_together = ['performance', 'seat']
 
-        indexes=[
+        indexes = [
             models.Index(fields=['performance', 'seat', 'status']),
             models.Index(fields=['session_id', 'status', 'expires_at']),
             models.Index(fields=['booking', 'status']),
@@ -222,7 +227,7 @@ class SeatReservation(models.Model):
     def __str__(self):
         return f"{self.performance} - {self.seat} - {self.status}"
 
-    @ property
+    @property
     def is_expired(self):
         if self.expires_at and self.status == 'reserved':
             return timezone.now() > self.expires_at
@@ -231,9 +236,9 @@ class SeatReservation(models.Model):
     def check_and_release_expired(self):
         """Release seat if reservation expired"""
         if self.is_expired:
-            self.status='available'
-            self.session_id=''
-            self.expires_at=None
+            self.status = 'available'
+            self.session_id = ''
+            self.expires_at = None
             self.save()
             return True
         return False

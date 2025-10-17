@@ -51,10 +51,14 @@ export const useBookingStore = defineStore('booking', () => {
         if (currentBooking.value) {
             return currentBooking.value.final_amount;
         }
-        const serviceFee = (currentShow.value?.service_fee_per_ticket || 10000) * selectedSeats.value.length;
-        return totalAmount.value + serviceFee;
+        const shippingFee = currentShow.value?.shipping_fee || 0;
+        const serviceFee = (currentShow.value?.service_fee_per_ticket || 0) * selectedSeats.value.length;
+        return totalAmount.value + serviceFee + shippingFee;
     });
 
+    const shippingFee = computed(() => {
+        return currentBooking.value?.shipping_fee || currentShow.value?.shipping_fee || 0;
+    });
     const discountAmount = computed(() => currentBooking.value?.discount_amount || 0);
 
     const showInfo = computed(() => {
