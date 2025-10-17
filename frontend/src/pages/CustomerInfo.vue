@@ -39,7 +39,7 @@
 			<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 				<div class="lg:col-span-2">
 					<div
-						class="bg-white rounded-lg shadow-lg p-6 mb-20 lg:mb-0"
+						class="bg-white rounded-lg shadow-lg p-6 mb-28 lg:mb-0"
 					>
 						<h2 class="text-2xl font-bold mb-6">
 							Thông tin người đặt vé
@@ -173,6 +173,66 @@
 								></textarea>
 							</div>
 
+							<div class="lg:hidden mb-6">
+								<h2 class="text-xl font-bold mb-4">
+									Mã giảm giá
+								</h2>
+								<div class="flex gap-2">
+									<input
+										v-model="discountCodeInput"
+										type="text"
+										class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+										placeholder="Nhập mã giảm giá"
+										:disabled="
+											bookingStore.isDiscountSuccess
+										"
+									/>
+									<button
+										@click="applyDiscountCode"
+										:disabled="
+											bookingStore.isDiscountSuccess
+										"
+										class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+									>
+										Áp dụng
+									</button>
+								</div>
+								<div
+									v-if="availableDiscounts.length > 0"
+									class="mt-3 space-y-2"
+								>
+									<p
+										class="text-xs text-gray-600 font-medium"
+									>
+										Mã khuyến mãi dành cho bạn:
+									</p>
+									<div class="flex gap-2 flex-wrap">
+										<button
+											v-for="discount in availableDiscounts"
+											:key="discount.code"
+											@click="
+												selectDiscount(discount.code)
+											"
+											class="px-3 py-1.5 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-300 rounded-lg text-xs font-semibold text-orange-700 hover:from-orange-100 hover:to-red-100 transition"
+										>
+											{{ discount.code }}
+										</button>
+									</div>
+								</div>
+								<p
+									v-if="bookingStore.discountMessage"
+									class="mt-2 text-sm"
+									:class="{
+										'text-green-600':
+											bookingStore.isDiscountSuccess,
+										'text-red-500':
+											!bookingStore.isDiscountSuccess,
+									}"
+								>
+									{{ bookingStore.discountMessage }}
+								</p>
+							</div>
+
 							<div class="hidden lg:flex justify-between">
 								<button
 									type="button"
@@ -244,6 +304,24 @@
 								>
 									Áp dụng
 								</button>
+							</div>
+							<div
+								v-if="availableDiscounts.length > 0"
+								class="mt-3 space-y-2"
+							>
+								<p class="text-xs text-gray-600 font-medium">
+									Mã khuyến mãi dành cho bạn:
+								</p>
+								<div class="flex gap-2 flex-wrap">
+									<button
+										v-for="discount in availableDiscounts"
+										:key="discount.code"
+										@click="selectDiscount(discount.code)"
+										class="px-3 py-1.5 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-300 rounded-lg text-xs font-semibold text-orange-700 hover:from-orange-100 hover:to-red-100 transition"
+									>
+										{{ discount.code }}
+									</button>
+								</div>
 							</div>
 							<p
 								v-if="bookingStore.discountMessage"
@@ -367,44 +445,6 @@
 									}}</span
 								>
 							</div>
-							<div class="pt-2 border-t">
-								<label
-									class="block text-xs font-medium text-gray-700 mb-1"
-									>Mã giảm giá</label
-								>
-								<div class="flex gap-2">
-									<input
-										v-model="discountCodeInput"
-										type="text"
-										class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-primary-500"
-										placeholder="Nhập mã"
-										:disabled="
-											bookingStore.isDiscountSuccess
-										"
-									/>
-									<button
-										@click="applyDiscountCode"
-										:disabled="
-											bookingStore.isDiscountSuccess
-										"
-										class="px-3 py-1 bg-primary-600 text-white rounded-md text-xs hover:bg-primary-700 disabled:bg-gray-400"
-									>
-										Áp dụng
-									</button>
-								</div>
-								<p
-									v-if="bookingStore.discountMessage"
-									class="mt-1 text-xs"
-									:class="{
-										'text-green-600':
-											bookingStore.isDiscountSuccess,
-										'text-red-500':
-											!bookingStore.isDiscountSuccess,
-									}"
-								>
-									{{ bookingStore.discountMessage }}
-								</p>
-							</div>
 							<div class="border-t pt-2 mt-2">
 								<p class="text-xs text-gray-500 mb-1">
 									Ghế:
@@ -458,7 +498,7 @@ const toast = useToast();
 const bookingStore = useBookingStore();
 const router = useRouter();
 const route = useRoute();
-
+const availableDiscounts = ref([]);
 // Form data
 const showInfo = ref({
 	name: "",
@@ -560,6 +600,11 @@ const applyDiscountCode = async () => {
 		discountCodeInput.value,
 		customerInfo.value
 	);
+};
+
+const selectDiscount = (code) => {
+	discountCodeInput.value = code;
+	applyDiscountCode();
 };
 
 // Methods
@@ -707,90 +752,12 @@ const startTimer = () => {
 		}
 	}, 1000);
 };
-const loadFullBookingData = async () => {
-	try {
-		// Load show detail
-		const showId = route.params.showId;
-		await bookingStore.loadShowDetail(showId);
-
-		// Load show info
-		if (bookingStore.currentShow) {
-			showInfo.value = {
-				name: bookingStore.currentShow.name,
-				service_fee_per_ticket:
-					bookingStore.currentShow.service_fee_per_ticket || 10000,
-			};
-		}
-
-		// Load performance info
-		let performance = null;
-		const savedPerformance = sessionStorage.getItem("selectedPerformance");
-		if (savedPerformance) {
-			performance = JSON.parse(savedPerformance);
-		} else if (bookingStore.selectedPerformance) {
-			performance = bookingStore.selectedPerformance;
-		}
-
-		if (performance) {
-			if (!showInfo.value.name) {
-				showInfo.value.name = performance.show_name || "";
-			}
-			if (
-				!showInfo.value.service_fee_per_ticket &&
-				performance.service_fee_per_ticket
-			) {
-				showInfo.value.service_fee_per_ticket =
-					performance.service_fee_per_ticket;
-			}
-
-			performanceInfo.value = {
-				date: new Date(performance.datetime).toLocaleDateString(
-					"vi-VN"
-				),
-				time: new Date(performance.datetime).toLocaleTimeString(
-					"vi-VN",
-					{
-						hour: "2-digit",
-						minute: "2-digit",
-					}
-				),
-			};
-		}
-
-		// Ensure service_fee has default value
-		if (!showInfo.value.service_fee_per_ticket) {
-			console.warn("Service fee not found, using default 10,000đ");
-			showInfo.value.service_fee_per_ticket = 10000;
-		}
-
-		// Load selected seats
-		if (bookingStore.selectedSeats?.length > 0) {
-			selectedSeats.value = bookingStore.selectedSeats;
-		} else {
-			const savedSeats = sessionStorage.getItem("selectedSeats");
-			if (savedSeats) {
-				selectedSeats.value = JSON.parse(savedSeats);
-			} else {
-				throw new Error("No seats found");
-			}
-		}
-
-		return true;
-	} catch (error) {
-		console.error("Failed to load full booking data:", error);
-		return false;
-	}
-};
-
-onMounted(() => {
+onMounted(async () => {
 	console.log("🚀 [CustomerInfo] Validating data...");
 
 	bookingStore.resetDiscount();
 	discountCodeInput.value = "";
 
-	// ========================================
-	// CHECK 0: Restore session_id vào store
-	// ========================================
 	const existingSessionId = sessionStorage.getItem("session_id");
 	if (existingSessionId) {
 		bookingStore.sessionId = existingSessionId;
@@ -802,9 +769,6 @@ onMounted(() => {
 		return;
 	}
 
-	// ========================================
-	// CHECK 1: Load seats và set vào STORE
-	// ========================================
 	let hasSeats = false;
 
 	if (bookingStore.selectedSeats?.length > 0) {
@@ -818,7 +782,6 @@ onMounted(() => {
 				const parsedSeats = JSON.parse(savedSeats);
 				selectedSeats.value = parsedSeats;
 
-				// ✅ QUAN TRỌNG: Set vào store
 				bookingStore.selectedSeats = parsedSeats;
 
 				hasSeats = parsedSeats.length > 0;
@@ -839,15 +802,11 @@ onMounted(() => {
 		return;
 	}
 
-	// ========================================
-	// CHECK 2: Load show info & performance info + Restore to store
-	// ========================================
 	const savedPerformance = sessionStorage.getItem("selectedPerformance");
 	if (savedPerformance) {
 		try {
 			const performance = JSON.parse(savedPerformance);
 
-			// ✅ QUAN TRỌNG: Restore selectedPerformance vào store
 			if (
 				!bookingStore.selectedPerformance ||
 				!bookingStore.selectedPerformance.id
@@ -859,7 +818,6 @@ onMounted(() => {
 				);
 			}
 
-			// Load show info
 			showInfo.value = {
 				name:
 					performance.show_name ||
@@ -870,7 +828,6 @@ onMounted(() => {
 					bookingStore.currentShow?.service_fee_per_ticket,
 			};
 
-			// Load performance info (date, time)
 			if (performance.datetime) {
 				performanceInfo.value = {
 					date: new Date(performance.datetime).toLocaleDateString(
@@ -885,14 +842,6 @@ onMounted(() => {
 					),
 				};
 			}
-
-			console.log("✅ Show & Performance info loaded:", {
-				performanceId: performance.id,
-				showName: showInfo.value.name,
-				serviceFee: showInfo.value.service_fee_per_ticket,
-				date: performanceInfo.value.date,
-				time: performanceInfo.value.time,
-			});
 		} catch (e) {
 			console.error("Failed to parse savedPerformance:", e);
 		}
@@ -903,12 +852,8 @@ onMounted(() => {
 			service_fee_per_ticket:
 				bookingStore.currentShow.service_fee_per_ticket,
 		};
-		console.log("✅ Show info from store");
 	}
 
-	// ========================================
-	// CHECK 3: Validate thông tin hiển thị
-	// ========================================
 	if (!showInfo.value.name || !performanceInfo.value.date) {
 		console.error("❌ Missing show or performance info");
 		toast.warning("Thiếu thông tin suất diễn. Vui lòng chọn lại.");
@@ -916,9 +861,6 @@ onMounted(() => {
 		return;
 	}
 
-	// ========================================
-	// CHECK 4: Có service_fee không?
-	// ========================================
 	if (!serviceFeePerTicket.value) {
 		console.error("❌ Service fee not found");
 		toast.warning("Thiếu thông tin phí dịch vụ. Vui lòng chọn lại ghế.");
@@ -926,9 +868,6 @@ onMounted(() => {
 		return;
 	}
 
-	// ========================================
-	// CHECK 5: Có timer không?
-	// ========================================
 	const savedExpiry = sessionStorage.getItem("reservationExpiry");
 	if (!savedExpiry) {
 		console.error("❌ No reservation expiry");
@@ -946,26 +885,6 @@ onMounted(() => {
 		return;
 	}
 
-	// ========================================
-	// ✅ ALL CHECKS PASSED
-	// ========================================
-	console.log("✅ All validation passed");
-	console.log("📊 Final State (Local):", {
-		showName: showInfo.value.name,
-		performanceDate: performanceInfo.value.date,
-		performanceTime: performanceInfo.value.time,
-		seats: selectedSeats.value.length,
-		serviceFee: serviceFeePerTicket.value,
-		ticketAmount: ticketAmount.value,
-		totalAmount: totalAmount.value,
-	});
-
-	console.log("📊 Final State (Store):", {
-		sessionId: bookingStore.sessionId,
-		selectedPerformanceId: bookingStore.selectedPerformance?.id,
-		selectedSeatsCount: bookingStore.selectedSeats?.length,
-	});
-
 	// Start timer
 	timer = setInterval(() => {
 		const now = new Date();
@@ -979,13 +898,20 @@ onMounted(() => {
 		}
 	}, 1000);
 
-	console.log(
-		"✅ Timer started - expires in:",
-		Math.floor((expiryDate - now) / 1000),
-		"seconds"
-	);
+	// Fetch available discounts
+	if (selectedSeats.value.length > 0) {
+		try {
+			const response = await bookingAPI.getAvailableDiscounts(
+				selectedSeats.value.length,
+				customerInfo.value.email,
+				customerInfo.value.phone
+			);
+			availableDiscounts.value = response.data.discounts;
+		} catch (error) {
+			console.error("Failed to fetch available discounts:", error);
+		}
+	}
 });
-
 onUnmounted(() => {
 	if (timer) {
 		clearInterval(timer);

@@ -11,8 +11,8 @@ class DiscountUsageInline(admin.TabularInline):
 
 @admin.register(Discount)
 class DiscountAdmin(admin.ModelAdmin):
-    list_display = ('code', 'discount_type', 'value', 'max_usage', 'usage_count',
-                    'valid_from', 'valid_to', 'is_active', 'all_users')
+    list_display = ('code', 'discount_type', 'value', 'min_ticket_quantity', 'max_usage', 'usage_count',
+                    'valid_from', 'valid_to', 'is_active')
     list_filter = ('discount_type', 'is_active', 'all_users')
     search_fields = ('code', 'allowed_users')
     inlines = [DiscountUsageInline]
@@ -20,8 +20,8 @@ class DiscountAdmin(admin.ModelAdmin):
         ('Thông tin cơ bản', {
             'fields': ('code', 'discount_type', 'value', 'is_active')
         }),
-        ('Giới hạn sử dụng', {
-            'fields': ('max_usage', 'valid_from', 'valid_to')
+        ('Điều kiện áp dụng', {
+            'fields': ('min_ticket_quantity', 'max_usage', 'valid_from', 'valid_to')
         }),
         ('Phân quyền người dùng', {
             'fields': ('all_users', 'allowed_users')

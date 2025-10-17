@@ -11,5 +11,7 @@ logzero
 python-dotenv
 psycopg2-binary
 dj-database-url
-psycopg2-binary
 django-jazzmin 
+django-celery-beat==2.8.0
+django-redis==5.4.0
+celery==5.5.2

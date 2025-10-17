@@ -49,6 +49,24 @@ def validate_and_calculate_discount(booking: Booking, code: str):
         if discount.max_usage is not None and (discount.usage_count + pending_usages) >= discount.max_usage:
             raise DiscountError('Mã giảm giá đã hết lượt sử dụng.')
 
+        # NEW: Check minimum ticket quantity
+        if discount.min_ticket_quantity:
+            ticket_count = booking.seat_reservations.count() if booking.pk else 0
+
+            # For new bookings during creation, count from seat_ids
+            if ticket_count == 0:
+                from bookings.models import SeatReservation
+                ticket_count = SeatReservation.objects.filter(
+                    booking__isnull=True,
+                    session_id=booking.session_id
+                ).count()
+
+            if ticket_count < discount.min_ticket_quantity:
+                raise DiscountError(
+                    f'Mã này yêu cầu mua tối thiểu {discount.min_ticket_quantity} vé. '
+                    f'Bạn đang mua {ticket_count} vé.'
+                )
+
         # 3. Calculate discount amount (only on ticket total, not service fee)
         ticket_total = booking.total_amount
         discount_amount = Decimal('0')

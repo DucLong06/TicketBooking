@@ -28,6 +28,12 @@ class Discount(models.Model):
     all_users = models.BooleanField(default=True, verbose_name='Áp dụng cho tất cả người dùng')
     allowed_users = models.TextField(
         blank=True, help_text='Nhập email hoặc SĐT, mỗi giá trị cách nhau bởi dấu phẩy, không có khoảng trắng. Ví dụ: user1@gmail.com,0912345678,user2@gmail.com', verbose_name='Người dùng được phép')
+    min_ticket_quantity = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name='Số lượng vé tối thiểu',
+        help_text='Để trống nếu không yêu cầu số lượng tối thiểu'
+    )
 
     class Meta:
         verbose_name = 'Mã giảm giá'
@@ -36,10 +42,14 @@ class Discount(models.Model):
 
     def __str__(self):
         if self.discount_type == 'PERCENTAGE':
-            return f"{self.code} - {self.value}%"
-        return f"{self.code} - {self.value:,.0f} VNĐ"
+            base = f"{self.code} - {self.value}%"
+        else:
+            base = f"{self.code} - {self.value:,.0f} VNĐ"
+        if self.min_ticket_quantity:
+            return f"{base} (≥{self.min_ticket_quantity} vé)"
+        return base
 
-    def is_valid(self, user_email=None, user_phone=None):
+    def is_valid(self, user_email=None, user_phone=None, ticket_quantity=None):
         if not self.is_active:
             return False, "Mã giảm giá không hoạt động."
 
@@ -59,6 +69,9 @@ class Discount(models.Model):
 
             if user_email_lower not in allowed and user_phone_lower not in allowed:
                 return False, "Bạn không đủ điều kiện sử dụng mã giảm giá này."
+
+        if self.min_ticket_quantity and (ticket_quantity is None or ticket_quantity < self.min_ticket_quantity):
+            return False, f"Mã này yêu cầu tối thiểu {self.min_ticket_quantity} vé."
 
         return True, "Mã hợp lệ."
 
