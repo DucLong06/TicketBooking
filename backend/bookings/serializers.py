@@ -170,50 +170,6 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         final_amount = total_amount + service_fee - discount_amount
 
         with transaction.atomic():
-            locked_reservations = SeatReservation.objects.select_for_update(
-                nowait=True
-            ).filter(
-                performance_id=performance_id,
-                seat_id__in=seat_ids,
-                session_id=session_id,
-                status='reserved',
-                expires_at__gt=timezone.now()
-            )
-
-            if locked_reservations.count() != len(seat_ids):
-                raise serializers.ValidationError({
-                    "detail": "Có ghế đã được người khác đặt. Vui lòng chọn lại.",
-                    "shouldRedirect": True
-                })
-
-            duplicate_check = SeatReservation.objects.filter(
-                performance_id=performance_id,
-                seat_id__in=seat_ids,
-                status__in=['reserved', 'sold']
-            ).exclude(session_id=session_id).exists()
-
-            if duplicate_check:
-                raise serializers.ValidationError({
-                    "detail": "Có ghế đã được người khác đặt. Vui lòng chọn lại.",
-                    "shouldRedirect": True
-                })
-
-            from datetime import timedelta
-            cutoff_time = timezone.now() - timedelta(minutes=settings.PAYMENT_TIMEOUT_MINUTES)
-
-            old_pending_bookings = Booking.objects.filter(
-                session_id=session_id,
-                status='pending',
-                created_at__lt=cutoff_time
-            ).exclude(
-                Q(seat_reservations__status='sold') |
-                Q(id__in=Payment.objects.values_list('booking_id', flat=True))
-            )
-
-            deleted_count = old_pending_bookings.delete()[0]
-            if deleted_count > 0:
-                logger.info(f"✅ Deleted {deleted_count} old pending bookings for session {session_id}")
-
             booking = Booking.objects.create(
                 performance=performance,
                 session_id=session_id,
@@ -225,16 +181,13 @@ class BookingCreateSerializer(serializers.ModelSerializer):
                 **validated_data
             )
 
-            update_count = locked_reservations.update(booking=booking)
+            update_count = seat_reservations.update(booking=booking)
+
+            seat_reservations.update(expires_at=booking.expires_at)
 
             if update_count != len(seat_ids):
                 logger.error(f"🚨 Update mismatch: expected {len(seat_ids)}, got {update_count}")
                 raise Exception("CRITICAL: Seat update mismatch")
-
-            actual_seat_count = booking.seat_reservations.filter(status='reserved').count()
-            if actual_seat_count != len(seat_ids):
-                logger.error(f"🚨 Seat count mismatch: expected {len(seat_ids)}, got {actual_seat_count}")
-                raise Exception("CRITICAL: Seat count mismatch after creation")
 
             if discount_instance:
                 DiscountUsage.objects.create(

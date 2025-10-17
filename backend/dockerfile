@@ -20,4 +20,4 @@ COPY docker-entrypoint.sh .
 RUN chmod +x docker-entrypoint.sh
 
 # Run daphne by default
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+CMD ["sh", "/app/docker-entrypoint.sh"]
