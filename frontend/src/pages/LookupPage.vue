@@ -1,27 +1,27 @@
 <template>
 	<DefaultLayout>
 		<div class="container mx-auto px-4 py-8">
-			<h1 class="text-3xl font-bold text-center mb-8">
+			<h1 class="text-3xl font-bold text-center mb-8 text-[#372e2d]">
 				Tra Cứu Thông Tin Vé
 			</h1>
 
 			<!-- Search Form -->
 			<div
-				class="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-md mb-8"
+				class="max-w-xl mx-auto bg-[#fdfcf0] border-2 border-[#d8a669] p-6 rounded-lg shadow-md mb-8"
 			>
 				<form @submit.prevent="handleSearch">
 					<div
-						class="flex items-center border-b-2 border-primary-500 py-2"
+						class="flex items-center border-b-2 border-[#d8a669] py-2"
 					>
 						<input
 							v-model="searchQuery"
-							class="appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
+							class="appearance-none bg-transparent border-none w-full text-[#372e2d] mr-3 py-1 px-2 leading-tight focus:outline-none placeholder-[#372e2d]/50"
 							type="text"
 							placeholder="Nhập mã vé hoặc SĐT"
 							aria-label="Search query"
 						/>
 						<button
-							class="flex-shrink-0 bg-primary-600 hover:bg-primary-700 border-primary-600 hover:border-primary-700 text-sm border-4 text-white py-1 px-4 rounded"
+							class="flex-shrink-0 bg-[#d8a669] hover:bg-[#b8884d] text-sm text-white font-bold py-2 px-6 rounded-lg transition-all hover:shadow-lg transform hover:scale-105 active:scale-95"
 							type="submit"
 							:disabled="isLoading"
 						>
@@ -35,15 +35,15 @@
 			<!-- Loading State -->
 			<div v-if="isLoading" class="text-center">
 				<div
-					class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"
+					class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#d8a669] mx-auto"
 				></div>
-				<p class="mt-2 text-gray-600">Đang tải thông tin...</p>
+				<p class="mt-2 text-[#372e2d]/70">Đang tải thông tin...</p>
 			</div>
 
 			<!-- Error Message -->
 			<div
 				v-if="error"
-				class="max-w-xl mx-auto bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+				class="max-w-xl mx-auto bg-red-100 border-2 border-red-400 text-red-700 px-4 py-3 rounded-lg relative"
 				role="alert"
 			>
 				<strong class="font-bold">Lỗi!</strong>
@@ -53,10 +53,12 @@
 			<!-- No Results Message -->
 			<div
 				v-if="searched && bookings.length === 0 && !isLoading && !error"
-				class="text-center text-gray-500"
+				class="text-center text-[#372e2d]/70"
 			>
-				<p>Không tìm thấy vé nào phù hợp với thông tin bạn cung cấp.</p>
-				<p class="text-sm">
+				<p class="text-lg font-medium">
+					Không tìm thấy vé nào phù hợp với thông tin bạn cung cấp.
+				</p>
+				<p class="text-sm mt-2">
 					Vui lòng kiểm tra lại mã vé hoặc số điện thoại.
 				</p>
 			</div>
@@ -66,29 +68,30 @@
 				<div
 					v-for="booking in bookings"
 					:key="booking.id"
-					class="bg-white rounded-lg shadow-lg overflow-hidden"
+					class="bg-[#fdfcf0] border-2 border-[#d8a669] rounded-lg shadow-lg overflow-hidden"
 				>
 					<div class="p-6">
-						<div class="flex justify-between items-start">
+						<div class="flex justify-between items-start mb-4">
 							<div>
-								<h2 class="text-2xl font-bold text-primary-700">
+								<h2 class="text-2xl font-bold text-[#372e2d]">
 									{{ booking.show_name }}
 								</h2>
-								<p class="text-sm text-gray-500">
+								<p class="text-sm text-[#372e2d]/70 mt-1">
 									Mã vé:
-									<span class="font-semibold text-gray-800">{{
-										booking.booking_code
-									}}</span>
+									<span
+										class="font-semibold text-[#d8a669]"
+										>{{ booking.booking_code }}</span
+									>
 								</p>
 							</div>
 							<span
 								class="text-sm font-semibold px-3 py-1 rounded-full"
 								:class="{
-									'bg-green-100 text-green-800':
+									'bg-green-100 text-green-800 border border-green-300':
 										booking.status === 'paid',
-									'bg-yellow-100 text-yellow-800':
+									'bg-yellow-100 text-yellow-800 border border-yellow-300':
 										booking.status === 'pending',
-									'bg-red-100 text-red-800':
+									'bg-red-100 text-red-800 border border-red-300':
 										booking.status === 'cancelled',
 								}"
 							>
@@ -100,18 +103,22 @@
 							</span>
 						</div>
 
-						<div class="mt-4 border-t pt-4 space-y-3">
+						<div
+							class="mt-4 border-t border-[#d8a669]/30 pt-4 space-y-3"
+						>
 							<div class="flex justify-between">
-								<span class="text-gray-600">Ngày diễn:</span>
-								<span class="font-medium">{{
+								<span class="text-[#372e2d]/70"
+									>Ngày diễn:</span
+								>
+								<span class="font-medium text-[#372e2d]">{{
 									new Date(
 										booking.performance_datetime
 									).toLocaleDateString("vi-VN")
 								}}</span>
 							</div>
 							<div class="flex justify-between">
-								<span class="text-gray-600">Giờ diễn:</span>
-								<span class="font-medium">{{
+								<span class="text-[#372e2d]/70">Giờ diễn:</span>
+								<span class="font-medium text-[#372e2d]">{{
 									new Date(
 										booking.performance_datetime
 									).toLocaleTimeString("vi-VN", {
@@ -121,28 +128,33 @@
 								}}</span>
 							</div>
 							<div class="flex justify-between">
-								<span class="text-gray-600">Địa điểm:</span>
-								<span class="font-medium text-right">{{
-									booking.venue_name
-								}}</span>
+								<span class="text-[#372e2d]/70">Địa điểm:</span>
+								<span
+									class="font-medium text-right text-[#372e2d]"
+									>{{ booking.venue_name }}</span
+								>
 							</div>
 							<div class="flex justify-between items-start">
-								<span class="text-gray-600">Ghế:</span>
+								<span class="text-[#372e2d]/70">Ghế:</span>
 								<div class="text-right">
 									<span
 										v-for="seat in booking.seat_reservations"
 										:key="seat.id"
-										class="block font-medium"
+										class="block font-medium text-[#372e2d]"
 									>
 										{{ seat.seat_label }} -
 										{{ seat.section_name }}
 									</span>
 								</div>
 							</div>
-							<div class="flex justify-between">
-								<span class="text-gray-600">Tổng tiền:</span>
+							<div
+								class="flex justify-between pt-3 border-t border-[#d8a669]/30"
+							>
+								<span class="text-[#372e2d] font-semibold"
+									>Tổng tiền:</span
+								>
 								<span
-									class="font-bold text-lg text-primary-600"
+									class="font-bold text-xl text-[#d8a669]"
 									>{{
 										formatPrice(booking.final_amount)
 									}}</span
@@ -156,7 +168,7 @@
 								:disabled="
 									resendingEmailCode === booking.booking_code
 								"
-								class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
+								class="bg-[#d8a669] hover:bg-[#b8884d] text-white font-bold py-2 px-6 rounded-lg transition-all hover:shadow-lg transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
 							>
 								<span
 									v-if="
@@ -174,7 +186,6 @@
 		</div>
 	</DefaultLayout>
 </template>
-
 <script setup>
 import { ref } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";

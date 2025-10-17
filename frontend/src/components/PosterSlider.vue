@@ -58,7 +58,7 @@
 									{{ poster.show_name }}
 								</p> -->
 								<button
-									class="mt-4 bg-white text-gray-900 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition shadow-lg"
+									class="hidden md:block mt-4 bg-[#372e2d] text-[#d8a669] px-6 py-3 rounded-lg font-semibold hover:bg-white transition shadow-lg"
 								>
 									Đặt vé ngay
 								</button>

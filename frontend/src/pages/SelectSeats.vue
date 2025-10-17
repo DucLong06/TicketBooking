@@ -6,9 +6,9 @@
 		>
 			<div class="text-center">
 				<div
-					class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"
+					class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#d8a669] mx-auto"
 				></div>
-				<p class="mt-4 text-gray-600">Đang tải...</p>
+				<p class="mt-4 text-[#372e2d] font-medium">Đang tải...</p>
 			</div>
 		</div>
 
@@ -23,7 +23,7 @@
 								<div
 									v-for="(category, code) in priceCategories"
 									:key="code"
-									class="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-lg px-2.5 py-2 shadow-sm border border-gray-200"
+									class="flex items-center gap-2 bg-white rounded-lg px-2.5 py-2 shadow-sm border border-[#d8a669]"
 								>
 									<div
 										class="w-3.5 h-3.5 rounded border border-white shadow-sm flex-shrink-0"
@@ -33,11 +33,13 @@
 									></div>
 									<div class="text-xs flex-1 min-w-0">
 										<div
-											class="font-semibold text-gray-800 truncate"
+											class="font-semibold text-[#372e2d] truncate"
 										>
 											{{ category.name }}
 										</div>
-										<div class="text-gray-600 text-xs">
+										<div
+											class="text-[#d8a669] text-xs font-medium"
+										>
 											{{ formatPrice(category.price) }}
 										</div>
 									</div>
@@ -48,7 +50,7 @@
 						<!-- Seat Map Container with Zoom -->
 
 						<div
-							class="relative overflow-hidden"
+							class="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-[#d8a669]/20"
 							:style="{
 								minHeight: isMobile ? '400px' : '600px',
 								maxHeight: isMobile
@@ -62,7 +64,7 @@
 							>
 								<button
 									@click="handleZoomIn"
-									class="bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-lg shadow-lg border-2 border-gray-200 transition-all hover:scale-110 active:scale-95"
+									class="bg-white hover:bg-[#fdfcf0] text-[#372e2d] p-3 rounded-lg shadow-lg border-2 border-[#d8a669] transition-all hover:scale-110 active:scale-95"
 									title="Phóng to"
 								>
 									<svg
@@ -82,7 +84,7 @@
 
 								<button
 									@click="handleZoomOut"
-									class="bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-lg shadow-lg border-2 border-gray-200 transition-all hover:scale-110 active:scale-95"
+									class="bg-white hover:bg-[#fdfcf0] text-[#372e2d] p-3 rounded-lg shadow-lg border-2 border-[#d8a669] transition-all hover:scale-110 active:scale-95"
 									title="Thu nhỏ"
 								>
 									<svg
@@ -99,26 +101,6 @@
 										/>
 									</svg>
 								</button>
-
-								<!-- <button
-									@click="handleResetView"
-									class="bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-lg shadow-lg border-2 border-gray-200 transition-all hover:scale-110 active:scale-95"
-									title="Đặt lại vị trí"
-								>
-									<svg
-										class="w-5 h-5"
-										fill="none"
-										stroke="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-										/>
-									</svg>
-								</button> -->
 							</div>
 
 							<div class=""></div>
@@ -253,7 +235,10 @@
 														"
 													>
 														{{
-															seat.display_number
+															seat.status ===
+															"sold"
+																? "✕"
+																: seat.display_number
 														}}
 													</button>
 												</div>
@@ -275,7 +260,7 @@
 											>
 												<div class="text-center mb-6">
 													<div
-														class="inline-block bg-gradient-to-r from-primary-500 to-purple-500 text-white px-6 py-2 rounded-full shadow-lg"
+														class="inline-block bg-gradient-to-r from-[#d8a669] to-[#b8884d] text-white px-6 py-2 rounded-full shadow-lg"
 													>
 														<h3
 															class="font-bold text-lg tracking-wide"
@@ -374,7 +359,10 @@
 																	"
 																>
 																	{{
-																		seat.display_number
+																		seat.status ===
+																		"sold"
+																			? "✕"
+																			: seat.display_number
 																	}}
 																</button>
 
@@ -436,7 +424,10 @@
 																	"
 																>
 																	{{
-																		seat.display_number
+																		seat.status ===
+																		"sold"
+																			? "✕"
+																			: seat.display_number
 																	}}
 																</button>
 															</div>
@@ -495,7 +486,10 @@
 																	"
 																>
 																	{{
-																		seat.display_number
+																		seat.status ===
+																		"sold"
+																			? "✕"
+																			: seat.display_number
 																	}}
 																</button>
 															</div>
@@ -566,7 +560,10 @@
 														"
 													>
 														{{
-															seat.display_number
+															seat.status ===
+															"sold"
+																? "✕"
+																: seat.display_number
 														}}
 													</button>
 												</div>
@@ -576,92 +573,20 @@
 								</div>
 							</div>
 						</div>
-
-						<!-- Status Legend -->
-						<!-- <div
-							class="mt-6 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-5 border border-gray-200 relative z-10"
-						>
-							<h4
-								class="font-bold mb-4 text-gray-700 text-center text-lg"
-							>
-								📌 Trạng thái ghế
-							</h4>
-							<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-								<div
-									class="flex items-center space-x-3 bg-green-50 p-3 rounded-lg border border-green-200"
-								>
-									<div
-										class="w-8 h-8 bg-green-500 rounded-lg border-2 border-green-600 shadow-sm flex-shrink-0"
-									></div>
-									<span
-										class="text-sm font-medium text-gray-700"
-										>Còn trống</span
-									>
-								</div>
-								<div
-									class="flex items-center space-x-3 bg-yellow-50 p-3 rounded-lg border border-yellow-200"
-								>
-									<div
-										class="w-8 h-8 bg-yellow-500 rounded-lg border-2 border-yellow-600 shadow-sm flex-shrink-0"
-									></div>
-									<span
-										class="text-sm font-medium text-gray-700"
-										>Đang chọn</span
-									>
-								</div>
-								<div
-									class="flex items-center space-x-3 bg-red-50 p-3 rounded-lg border border-red-200"
-								>
-									<div
-										class="w-8 h-8 bg-red-500 rounded-lg border-2 border-red-600 shadow-sm flex-shrink-0"
-									></div>
-									<span
-										class="text-sm font-medium text-gray-700"
-										>Đã bán</span
-									>
-								</div>
-								<div
-									class="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg border border-gray-200"
-								>
-									<div
-										class="w-8 h-8 bg-gray-400 rounded-lg border-2 border-gray-500 shadow-sm flex-shrink-0"
-									></div>
-									<span
-										class="text-sm font-medium text-gray-700"
-										>Đang giữ</span
-									>
-								</div>
-							</div>
-						</div> -->
 					</div>
 				</div>
 
 				<!-- Right Column: Price Categories & Booking Summary - DESKTOP ONLY -->
 
 				<div class="hidden lg:block lg:col-span-1">
-					<!-- Decorative background pattern -->
-					<!-- <div class="absolute inset-0 opacity-5">
-						<div
-							class="absolute inset-0"
-							style="
-								background-image: radial-gradient(
-									circle,
-									#000 1px,
-									transparent 1px
-								);
-								background-size: 20px 20px;
-							"
-						></div>
-					</div> -->
-
 					<!-- Enhanced Header -->
 
 					<div
-						class="mb-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl shadow-xl p-5 border-2 border-blue-100"
+						class="mb-6 bg-[#fdfcf0] rounded-2xl shadow-xl p-5 border-2 border-[#d8a669]"
 					>
 						<div class="text-center relative z-10">
 							<h2
-								class="text-xl lg:text-2xl font-bold text-gray-800 mb-3 lg:mb-4 flex items-center justify-center gap-2 lg:gap-3"
+								class="text-xl lg:text-2xl font-bold text-[#372e2d] mb-3 lg:mb-4 flex items-center justify-center gap-2 lg:gap-3"
 							>
 								<span class="text-2xl lg:text-3xl">🎭</span>
 								<span>{{ showInfo.name }}</span>
@@ -670,10 +595,10 @@
 								class="flex flex-wrap justify-center gap-2 lg:gap-3 text-xs"
 							>
 								<div
-									class="flex items-center gap-1.5 lg:gap-2 bg-white/80 backdrop-blur-sm px-3 lg:px-4 py-1.5 lg:py-2 rounded-full shadow-sm border border-gray-200"
+									class="flex items-center gap-1.5 lg:gap-2 bg-white backdrop-blur-sm px-3 lg:px-4 py-1.5 lg:py-2 rounded-full shadow-sm border border-[#d8a669]"
 								>
 									<svg
-										class="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary-600"
+										class="w-3.5 h-3.5 lg:w-4 lg:h-4 text-[#d8a669]"
 										fill="none"
 										stroke="currentColor"
 										viewBox="0 0 24 24"
@@ -685,15 +610,16 @@
 											d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
 										/>
 									</svg>
-									<span class="font-semibold">{{
-										performanceData.date
-									}}</span>
+									<span
+										class="font-semibold text-[#372e2d]"
+										>{{ performanceData.date }}</span
+									>
 								</div>
 								<div
-									class="flex items-center gap-1.5 lg:gap-2 bg-white/80 backdrop-blur-sm px-3 lg:px-4 py-1.5 lg:py-2 rounded-full shadow-sm border border-gray-200"
+									class="flex items-center gap-1.5 lg:gap-2 bg-white backdrop-blur-sm px-3 lg:px-4 py-1.5 lg:py-2 rounded-full shadow-sm border border-[#d8a669]"
 								>
 									<svg
-										class="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary-600"
+										class="w-3.5 h-3.5 lg:w-4 lg:h-4 text-[#d8a669]"
 										fill="none"
 										stroke="currentColor"
 										viewBox="0 0 24 24"
@@ -705,15 +631,16 @@
 											d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
 										/>
 									</svg>
-									<span class="font-semibold">{{
-										performanceData.time
-									}}</span>
+									<span
+										class="font-semibold text-[#372e2d]"
+										>{{ performanceData.time }}</span
+									>
 								</div>
 								<div
-									class="hidden lg:flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-200"
+									class="hidden lg:flex items-center gap-2 bg-white backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-[#d8a669]"
 								>
 									<svg
-										class="w-4 h-4 text-primary-600"
+										class="w-4 h-4 text-[#d8a669]"
 										fill="none"
 										stroke="currentColor"
 										viewBox="0 0 24 24"
@@ -731,16 +658,16 @@
 											d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
 										/>
 									</svg>
-									<span class="font-medium">{{
+									<span class="font-medium text-[#372e2d]">{{
 										venueInfo.name
 									}}</span>
 								</div>
 								<div
 									v-if="showInfo.duration_minutes"
-									class="hidden lg:flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-200"
+									class="hidden lg:flex items-center gap-2 bg-white backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-[#d8a669]"
 								>
 									<svg
-										class="w-4 h-4 text-primary-600"
+										class="w-4 h-4 text-[#d8a669]"
 										fill="none"
 										stroke="currentColor"
 										viewBox="0 0 24 24"
@@ -752,7 +679,7 @@
 											d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
 										/>
 									</svg>
-									<span class="font-medium"
+									<span class="font-medium text-[#372e2d]"
 										>{{
 											showInfo.duration_minutes
 										}}
@@ -760,27 +687,12 @@
 									>
 								</div>
 							</div>
-							<div
-								v-if="venueInfo.checkin_minutes_before"
-								class="mt-2 lg:mt-3 inline-block"
-							>
-								<!-- <div
-									class="bg-amber-100/80 backdrop-blur-sm border-2 border-amber-300 rounded-full px-3 lg:px-4 py-1.5 lg:py-2 shadow-sm"
-								>
-									<span
-										class="text-xs text-amber-800 font-semibold"
-									>
-										Vé không kèm trẻ em, chương trình không
-										dành cho trẻ em dưới 6 tuổi
-									</span>
-								</div> -->
-							</div>
 						</div>
-						<div class="space-y-3">
+						<div class="space-y-3 mt-4">
 							<div
 								v-for="(category, code) in priceCategories"
 								:key="code"
-								class="flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-md border border-gray-100 hover:shadow-lg transition-shadow"
+								class="flex items-center justify-between bg-white backdrop-blur-sm rounded-xl p-3 shadow-md border border-[#d8a669]/30 hover:shadow-lg hover:border-[#d8a669] transition-all"
 							>
 								<div class="flex items-center gap-3">
 									<div
@@ -790,12 +702,12 @@
 										}"
 									></div>
 									<div
-										class="text-sm font-semibold text-gray-800"
+										class="text-sm font-semibold text-[#372e2d]"
 									>
 										{{ category.name }}
 									</div>
 								</div>
-								<div class="text-sm text-primary-600 font-bold">
+								<div class="text-sm text-[#d8a669] font-bold">
 									{{ formatPrice(category.price) }}
 								</div>
 							</div>
@@ -803,30 +715,51 @@
 					</div>
 
 					<div
-						class="bg-white rounded-2xl shadow-2xl p-6 sticky top-4 border-2 border-gray-100"
+						class="bg-[#fdfcf0] rounded-2xl shadow-2xl p-6 sticky top-4 border-2 border-[#d8a669]"
 					>
-						<div class="mb-4 pb-4 border-b-2 border-gray-100">
+						<div class="mb-4 pb-4 border-b-2 border-[#d8a669]/30">
 							<h4
-								class="font-bold mb-3 text-gray-800 flex items-center gap-2"
+								class="font-bold mb-3 text-[#372e2d] flex items-center gap-2 text-lg"
 							>
 								<span class="text-lg">🎫</span>
 								<span>Ghế đã chọn</span>
 							</h4>
 
 							<div
+								v-if="selectedSeats.length === 0"
+								class="text-center py-6 text-[#372e2d]/60"
+							>
+								<svg
+									class="w-12 h-12 mx-auto mb-2 text-[#d8a669]/40"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+									/>
+								</svg>
+								<p class="text-sm">Chưa chọn ghế nào</p>
+							</div>
+
+							<div
+								v-else
 								class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"
 							>
 								<div
 									v-for="seat in selectedSeats"
 									:key="seat.id"
-									class="flex justify-between items-center text-sm bg-gradient-to-r from-primary-50 to-purple-50 p-3 rounded-xl border-2 border-primary-200 shadow-sm hover:shadow-md transition-shadow"
+									class="flex justify-between items-center text-sm bg-white p-3 rounded-xl border-2 border-[#d8a669]/40 shadow-sm hover:shadow-md hover:border-[#d8a669] transition-all"
 								>
-									<span class="font-bold text-gray-800">{{
+									<span class="font-bold text-[#372e2d]">{{
 										seat.full_label +
 										" - " +
 										seat.section_name
 									}}</span>
-									<span class="text-primary-600 font-bold">{{
+									<span class="text-[#d8a669] font-bold">{{
 										formatPrice(seat.price)
 									}}</span>
 								</div>
@@ -836,9 +769,9 @@
 						<div class="mb-4">
 							<div
 								v-if="selectedSeats.length !== 0"
-								class="flex justify-between items-center bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl shadow-md border-2 border-green-200"
+								class="flex justify-between items-center bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl shadow-md border-2 border-green-300"
 							>
-								<span class="font-bold text-gray-700 text-lg"
+								<span class="font-bold text-[#372e2d] text-lg"
 									>Tổng tiền:</span
 								>
 								<span
@@ -871,10 +804,10 @@
 							@click="continueToCustomerInfo"
 							:disabled="selectedSeats.length === 0"
 							:class="[
-								'w-full py-4 px-4 rounded-xl font-bold text-lg transition-all shadow-xl',
+								'w-full py-4 px-4 rounded-xl font-bold text-lg transition-all shadow-lg',
 								selectedSeats.length > 0
-									? 'bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 hover:shadow-2xl transform hover:scale-105 active:scale-95'
-									: 'bg-gray-200 text-gray-400 cursor-not-allowed',
+									? 'bg-[#d8a669] text-white hover:bg-[#b8884d] hover:shadow-2xl transform hover:scale-105 active:scale-95'
+									: 'bg-gray-300 text-gray-500 cursor-not-allowed',
 							]"
 						>
 							{{
@@ -898,7 +831,7 @@
 
 			<div
 				v-if="selectedSeats.length > 0"
-				class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-50 transition-transform duration-300"
+				class="fixed bottom-0 left-0 right-0 bg-[#fdfcf0] rounded-t-3xl shadow-2xl z-50 transition-transform duration-300 border-t-4 border-[#d8a669]"
 				:style="{
 					transform: getBottomSheetTransform(),
 				}"
@@ -907,7 +840,7 @@
 				@touchend="handleBottomSheetTouchEnd"
 			>
 				<div class="flex justify-center pt-3 pb-2">
-					<div class="w-12 h-1 bg-gray-300 rounded-full"></div>
+					<div class="w-12 h-1 bg-[#d8a669] rounded-full"></div>
 				</div>
 
 				<div v-if="bottomSheetState === 'minimized'" class="px-4 pb-4">
@@ -916,12 +849,12 @@
 							class="flex-1 cursor-pointer flex items-center gap-3"
 							@click="bottomSheetState = 'expanded'"
 						>
-							<span class="text-purple-600 text-xl">🎫</span>
+							<span class="text-[#d8a669] text-xl">🎫</span>
 							<div>
-								<div class="font-bold text-gray-800">
+								<div class="font-bold text-[#372e2d]">
 									{{ selectedSeats.length }} ghế đã chọn
 								</div>
-								<div class="text-sm text-gray-600">
+								<div class="text-sm text-[#372e2d]/70">
 									{{ formatPrice(totalAmount) }}
 								</div>
 							</div>
@@ -937,7 +870,7 @@
 
 						<button
 							@click.stop="continueToCustomerInfo"
-							class="bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg hover:shadow-xl transform active:scale-95 transition-all flex-shrink-0"
+							class="bg-[#d8a669] text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg hover:shadow-xl hover:bg-[#b8884d] transform active:scale-95 transition-all flex-shrink-0"
 						>
 							Tiếp tục
 						</button>
@@ -951,10 +884,10 @@
 					<div class="flex justify-center mb-3">
 						<button
 							@click="bottomSheetState = 'minimized'"
-							class="p-2 hover:bg-gray-100 rounded-full"
+							class="p-2 hover:bg-white rounded-full transition"
 						>
 							<svg
-								class="w-5 h-5 text-gray-400"
+								class="w-5 h-5 text-[#d8a669]"
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
@@ -987,19 +920,19 @@
 						</div>
 
 						<div
-							class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border-2 border-purple-300 p-3 text-center flex flex-col justify-center"
+							class="bg-gradient-to-br from-[#fdfcf0] to-white rounded-xl border-2 border-[#d8a669] p-3 text-center flex flex-col justify-center"
 						>
 							<div
-								class="text-xs text-purple-800 font-semibold mb-1"
+								class="text-xs text-[#d8a669] font-semibold mb-1"
 							>
 								🎫
 							</div>
 							<div
-								class="text-lg font-bold text-purple-600 mb-0.5"
+								class="text-lg font-bold text-[#372e2d] mb-0.5"
 							>
 								{{ selectedSeats.length }}
 							</div>
-							<div class="text-xs text-purple-700">Đã chọn</div>
+							<div class="text-xs text-[#372e2d]/70">Đã chọn</div>
 						</div>
 
 						<div
@@ -1020,7 +953,7 @@
 
 						<button
 							@click="continueToCustomerInfo"
-							class="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform active:scale-95 transition-all flex items-center justify-center px-2"
+							class="bg-[#d8a669] text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl hover:bg-[#b8884d] transform active:scale-95 transition-all flex items-center justify-center px-2"
 						>
 							Tiếp tục →
 						</button>
@@ -1028,7 +961,7 @@
 
 					<details class="mt-3">
 						<summary
-							class="text-xs text-gray-600 cursor-pointer hover:text-gray-800 text-center py-2"
+							class="text-xs text-[#372e2d] cursor-pointer hover:text-[#d8a669] text-center py-2 font-medium"
 						>
 							Xem chi tiết ghế đã chọn ▼
 						</summary>
@@ -1036,17 +969,17 @@
 							<div
 								v-for="seat in selectedSeats"
 								:key="seat.id"
-								class="flex justify-between items-center bg-gradient-to-r from-purple-50 to-blue-50 p-2 rounded-lg border border-purple-200 text-xs"
+								class="flex justify-between items-center bg-white p-2 rounded-lg border border-[#d8a669]/40 text-xs"
 							>
 								<div>
-									<div class="font-bold text-gray-800">
+									<div class="font-bold text-[#372e2d]">
 										{{ seat.full_label }}
 									</div>
-									<div class="text-gray-600">
+									<div class="text-[#372e2d]/60">
 										{{ seat.section_name }}
 									</div>
 								</div>
-								<div class="font-bold text-purple-600">
+								<div class="font-bold text-[#d8a669]">
 									{{ formatPrice(seat.price) }}
 								</div>
 							</div>
@@ -1532,7 +1465,7 @@ const getSeatBackgroundColor = (seat) => {
 		case "reserved":
 			return "#9CA3AF";
 		case "sold":
-			return "#EF4444";
+			return "'#6B7280'";
 		default:
 			return "#D1D5DB";
 	}

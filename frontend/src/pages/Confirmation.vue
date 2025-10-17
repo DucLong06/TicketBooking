@@ -3,7 +3,9 @@
 		<div class="container mx-auto px-4 py-8">
 			<!-- Success Message -->
 			<div class="max-w-3xl mx-auto">
-				<div class="bg-white rounded-lg shadow-lg p-8 text-center">
+				<div
+					class="bg-[#fdfcf0] border-2 border-[#d8a669] rounded-lg shadow-lg p-8 text-center"
+				>
 					<!-- Success Icon -->
 					<div class="mb-6">
 						<div
@@ -23,117 +25,105 @@
 						</div>
 					</div>
 
-					<h1 class="text-3xl font-bold text-gray-800 mb-2">
+					<h1 class="text-3xl font-bold text-[#372e2d] mb-2">
 						Đặt vé thành công!
 					</h1>
-					<p class="text-gray-600 mb-6">
+					<p class="text-[#372e2d]/70 mb-6">
 						Cảm ơn bạn đã đặt vé. Vé điện tử đã được gửi đến email
 						của bạn.
 					</p>
 
 					<!-- Booking Code -->
-					<div class="bg-gray-50 rounded-lg p-6 mb-6">
-						<p class="text-sm text-gray-600 mb-2">Mã đặt vé</p>
-						<p class="text-2xl font-bold text-primary-600">
+					<div
+						class="bg-white border border-[#d8a669]/30 rounded-lg p-6 mb-6"
+					>
+						<p class="text-sm text-[#372e2d]/70 mb-2">Mã đặt vé</p>
+						<p class="text-2xl font-bold text-[#d8a669]">
 							{{ bookingCode }}
 						</p>
 					</div>
 
 					<!-- Booking Details -->
-					<div class="bg-gray-50 rounded-lg p-6 text-left mb-6">
-						<h3 class="font-semibold mb-4">Chi tiết đặt vé</h3>
+					<div
+						class="bg-white border border-[#d8a669]/30 rounded-lg p-6 text-left mb-6"
+					>
+						<h3 class="font-semibold mb-4 text-[#372e2d]">
+							Chi tiết đặt vé
+						</h3>
 
 						<div class="space-y-3">
 							<div class="flex justify-between">
-								<span class="text-gray-600">Vở diễn:</span>
-								<span class="font-medium">{{
+								<span class="text-[#372e2d]/70">Vở diễn:</span>
+								<span class="font-medium text-[#372e2d]">{{
 									bookingData.showInfo?.name
 								}}</span>
 							</div>
 							<div class="flex justify-between">
-								<span class="text-gray-600">Ngày diễn:</span>
-								<span class="font-medium">{{
+								<span class="text-[#372e2d]/70"
+									>Ngày diễn:</span
+								>
+								<span class="font-medium text-[#372e2d]">{{
 									bookingData.performance?.date
 								}}</span>
 							</div>
 							<div class="flex justify-between">
-								<span class="text-gray-600">Suất diễn:</span>
-								<span class="font-medium">{{
+								<span class="text-[#372e2d]/70"
+									>Suất diễn:</span
+								>
+								<span class="font-medium text-[#372e2d]">{{
 									bookingData.performance?.time
 								}}</span>
 							</div>
 							<div class="flex justify-between">
-								<span class="text-gray-600">Ghế:</span>
-								<span class="font-medium">{{ seatsList }}</span>
+								<span class="text-[#372e2d]/70">Ghế:</span>
+								<span class="font-medium text-[#372e2d]">{{
+									seatsList
+								}}</span>
 							</div>
 							<div class="flex justify-between">
-								<span class="text-gray-600">Người đặt:</span>
-								<span class="font-medium">{{
+								<span class="text-[#372e2d]/70"
+									>Người đặt:</span
+								>
+								<span class="font-medium text-[#372e2d]">{{
 									bookingData.customerInfo?.fullName
 								}}</span>
 							</div>
 							<div class="flex justify-between">
-								<span class="text-gray-600">Email:</span>
-								<span class="font-medium">{{
+								<span class="text-[#372e2d]/70">Email:</span>
+								<span class="font-medium text-[#372e2d]">{{
 									bookingData.customerInfo?.email
 								}}</span>
 							</div>
 							<div class="flex justify-between">
-								<span class="text-gray-600">SĐT:</span>
-								<span class="font-medium">{{
+								<span class="text-[#372e2d]/70">SĐT:</span>
+								<span class="font-medium text-[#372e2d]">{{
 									bookingData.customerInfo?.phone
 								}}</span>
 							</div>
-							<div class="flex justify-between pt-3 border-t">
-								<span class="text-gray-600 font-semibold"
+							<div
+								class="flex justify-between pt-3 border-t border-[#d8a669]/30"
+							>
+								<span class="text-[#372e2d] font-semibold"
 									>Tổng thanh toán:</span
 								>
-								<span class="font-bold text-primary-600">{{
-									formatPrice(bookingData.amount)
-								}}</span>
+								<span
+									class="font-bold text-[#d8a669] text-xl"
+									>{{ formatPrice(bookingData.amount) }}</span
+								>
 							</div>
 						</div>
 					</div>
-					<!-- 
-					<div class="mb-6">
-						<p class="text-sm text-gray-600 mb-3">
-							Mã QR để check-in
-						</p>
-						<div
-							class="inline-block p-4 bg-white border-2 border-gray-200 rounded-lg"
-						>
-							<canvas ref="qrcodeCanvas"></canvas>
-						</div>
-					</div> -->
 
 					<!-- Actions -->
 					<div class="flex flex-col sm:flex-row gap-4 justify-center">
-						<!-- <button
-							@click="downloadTicket"
-							class="px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition"
-						>
-							<svg
-								class="inline-block w-5 h-5 mr-2"
-								fill="currentColor"
-								viewBox="0 0 20 20"
-							>
-								<path
-									fill-rule="evenodd"
-									d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-									clip-rule="evenodd"
-								></path>
-							</svg>
-							Tải vé
-						</button> -->
-
 						<button
 							@click="sendEmail"
 							:disabled="isResendingEmail"
 							:class="[
-								'px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold transition',
+								'px-6 py-3 bg-[#d8a669] text-white rounded-lg font-bold shadow-lg transition-all',
 								isResendingEmail
 									? 'opacity-50 cursor-not-allowed'
-									: 'hover:bg-blue-700',
+									: 'hover:bg-[#b8884d] hover:shadow-xl transform hover:scale-105 active:scale-95',
 							]"
 						>
 							<svg
@@ -180,7 +170,7 @@
 
 						<button
 							@click="goHome"
-							class="px-6 py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition"
+							class="px-6 py-3 border-2 border-[#d8a669] text-[#372e2d] rounded-lg font-semibold hover:bg-white transition"
 						>
 							Về trang chủ
 						</button>
@@ -189,7 +179,7 @@
 
 				<!-- Important Notice -->
 				<div
-					class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
+					class="mt-6 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg"
 				>
 					<h4 class="font-semibold text-yellow-800 mb-2">
 						Lưu ý quan trọng:
@@ -204,16 +194,12 @@
 							check-in
 						</li>
 						<li>• Vé đã mua không được hoàn trả hoặc đổi lịch</li>
-						<!-- <li>
-							• Mã QR là duy nhất, không chia sẻ cho người khác
-						</li> -->
 					</ul>
 				</div>
 			</div>
 		</div>
 	</DefaultLayout>
 </template>
-
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";

@@ -4,7 +4,7 @@
 		<PosterSlider />
 
 		<!-- Shows Section -->
-		<section class="py-16 bg-gray-50">
+		<section class="py-16 bg-[#fdfcf0]">
 			<div class="container mx-auto px-4">
 				<h2 class="text-3xl font-bold text-center mb-12">
 					Chương trình đang diễn
@@ -25,7 +25,7 @@
 					<div
 						v-for="show in shows"
 						:key="show.id"
-						class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition cursor-pointer"
+						class="bg-[#fdfcf0] rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition cursor-pointer"
 						@click="goToBooking(show.id)"
 					>
 						<div
@@ -41,11 +41,13 @@
 								class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
 							></div>
 						</div>
-						<div class="p-6">
-							<h3 class="text-xl font-semibold mb-2">
+						<div class="p-6 bg-[#372e2d]">
+							<h3
+								class="text-xl text-[#d8a669] font-semibold mb-2"
+							>
 								{{ show.name }}
 							</h3>
-							<p class="text-gray-600 mb-4 flex items-center">
+							<!-- <p class="text-[#372e2d]mb-4 flex items-center">
 								<svg
 									class="w-5 h-5 mr-2"
 									fill="none"
@@ -60,11 +62,11 @@
 									/>
 								</svg>
 								{{ show.category }}
-							</p>
+							</p> -->
 							<div class="flex justify-between items-center">
 								<button
 									@click.stop="goToBooking(show.id)"
-									class="bg-gradient-to-r from-pink-600 via-red-500 to-orange-500 text-white px-6 py-3 rounded-lg hover:shadow-lg transition font-semibold"
+									class="bg-[#d8a669] text-white px-6 py-3 rounded-lg font-bold shadow-lg hover:bg-[#b8884d] hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200"
 								>
 									Đặt vé ngay
 								</button>
@@ -74,7 +76,7 @@
 				</div>
 
 				<!-- No shows -->
-				<div v-else class="text-center text-gray-500 py-12">
+				<div v-else class="text-center text-[#372e2d] py-12">
 					<svg
 						class="w-16 h-16 mx-auto mb-4 text-gray-400"
 						fill="none"
