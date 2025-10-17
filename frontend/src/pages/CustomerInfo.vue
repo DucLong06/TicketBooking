@@ -85,7 +85,6 @@
 									required
 									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
 									placeholder="example@email.com"
-									@blur="fetchDiscounts"
 								/>
 								<p class="mt-1 text-xs text-gray-500">
 									{{ emailDescription }}
@@ -112,7 +111,6 @@
 									required
 									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
 									placeholder="0912345678"
-									@blur="fetchDiscounts"
 								/>
 								<p
 									v-if="errors.phone"
@@ -270,7 +268,7 @@
 											>
 												{{
 													discount.eligible
-														? `✓ ${discount.min_ticket_quantity}+ vé`
+														? `${discount.min_ticket_quantity}+ vé`
 														: `Cần ${discount.min_ticket_quantity}+ vé`
 												}}
 											</span>
@@ -293,7 +291,7 @@
 										v-if="unavailableDiscountsCount > 0"
 										class="text-[10px] text-gray-500 italic mt-2"
 									>
-										💡 Mua thêm vé để mở khóa
+										Mua thêm vé để mở khóa
 										{{ unavailableDiscountsCount }} mã giảm
 										giá
 									</p>
@@ -453,58 +451,44 @@
 								}}
 							</button>
 						</div>
-					</div>
 
-					<!-- Collapsible Details -->
-					<div
-						v-show="showOrderSummary"
-						class="mb-3 p-3 bg-gray-50 rounded-lg text-sm max-h-48 overflow-y-auto"
-					>
-						<div class="space-y-2">
-							<div class="flex justify-between">
-								<span class="text-gray-600">Tiền vé:</span>
-								<span class="font-semibold">{{
-									formatPrice(ticketAmount)
-								}}</span>
-							</div>
-							<div class="flex justify-between">
-								<span class="text-gray-600"
-									>Phí vận chuyển:</span
-								>
-								<span class="font-semibold">{{
-									formatPrice(serviceFee)
-								}}</span>
-							</div>
+						<!-- Collapsible Summary -->
+						<Transition name="order-summary">
 							<div
-								v-if="bookingStore.discountAmount > 0"
-								class="flex justify-between"
+								v-if="showOrderSummary"
+								class="mt-3 p-3 bg-gray-50 rounded-lg space-y-2"
 							>
-								<span class="text-gray-600">Giảm giá:</span>
-								<span class="font-semibold text-green-600">
-									-{{
-										formatPrice(bookingStore.discountAmount)
-									}}
-								</span>
-							</div>
-							<div class="border-t pt-2 mt-2">
-								<p class="text-xs text-gray-500 mb-1">
-									Ghế:
-									<span
-										v-for="(seat, index) in selectedSeats"
-										:key="seat.id"
+								<div class="flex justify-between text-sm">
+									<span class="text-gray-600">Tiền vé:</span>
+									<span>{{ formatPrice(ticketAmount) }}</span>
+								</div>
+								<div class="flex justify-between text-sm">
+									<span class="text-gray-600"
+										>Phí vận chuyển:</span
 									>
-										{{ seat.full_label }} -
-										{{ seat.section_name
-										}}<span
-											v-if="
-												index < selectedSeats.length - 1
-											"
-											>,
-										</span>
-									</span>
-								</p>
+									<span>{{ formatPrice(serviceFee) }}</span>
+								</div>
+								<div
+									v-if="bookingStore.discountAmount > 0"
+									class="flex justify-between text-sm"
+								>
+									<span class="text-gray-600">Giảm giá:</span>
+									<span class="text-green-600"
+										>-{{
+											formatPrice(
+												bookingStore.discountAmount
+											)
+										}}</span
+									>
+								</div>
+								<div
+									class="text-center text-xs text-gray-500 pt-2 border-t"
+								>
+									Thời gian còn lại:
+									{{ formatTime(timeLeft) }}
+								</div>
 							</div>
-						</div>
+						</Transition>
 					</div>
 
 					<!-- Action Buttons -->
@@ -512,7 +496,7 @@
 						<button
 							type="button"
 							@click="goBack"
-							class="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium"
+							class="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
 						>
 							← Quay lại
 						</button>
@@ -554,6 +538,7 @@ const showInfo = ref({
 const performanceInfo = ref({
 	date: "",
 	time: "",
+	datetime: "",
 });
 
 const customerInfo = ref({
@@ -571,6 +556,8 @@ const timeLeft = ref(600);
 const showOrderSummary = ref(false);
 const isSubmitting = ref(false);
 const isApplyingDiscount = ref(false);
+const isFetchingDiscounts = ref(false);
+const isInitialized = ref(false);
 
 // Discount
 const discountCodeInput = ref("");
@@ -629,10 +616,11 @@ const totalAmount = computed(() => {
 });
 
 const finalAmount = computed(() => {
-	if (bookingStore.currentBooking?.final_amount) {
-		return bookingStore.currentBooking.final_amount;
+	if (bookingStore.isDiscountSuccess && bookingStore.discountAmount > 0) {
+		const base = totalAmount.value - bookingStore.discountAmount;
+		return base;
 	}
-	return totalAmount.value - (bookingStore.discountAmount || 0);
+	return totalAmount.value;
 });
 
 const unavailableDiscountsCount = computed(
@@ -684,7 +672,18 @@ const validateForm = () => {
 const fetchDiscounts = async () => {
 	if (selectedSeats.value.length === 0) return;
 
+	if (isFetchingDiscounts.value) {
+		console.log("Skipping duplicate fetchDiscounts call");
+		return;
+	}
+
+	isFetchingDiscounts.value = true;
+
 	try {
+		console.log(
+			`Fetching discounts for ${selectedSeats.value.length} seats`
+		);
+
 		const response = await bookingAPI.getAvailableDiscounts(
 			selectedSeats.value.length,
 			customerInfo.value.email,
@@ -717,15 +716,20 @@ const fetchDiscounts = async () => {
 
 		allDiscounts.value = [...eligibleDiscounts, ...ineligibleDiscounts];
 
-		console.log("✅ Loaded discounts:", {
+		console.log("Loaded discounts:", {
 			eligible: eligibleDiscounts.length,
 			ineligible: ineligibleDiscounts.length,
 			total: allDiscounts.value.length,
 		});
 	} catch (error) {
 		console.error("Failed to fetch discounts:", error);
+	} finally {
+		setTimeout(() => {
+			isFetchingDiscounts.value = false;
+		}, 500);
 	}
 };
+
 const applyDiscountCode = async () => {
 	if (!discountCodeInput.value.trim()) {
 		if (toastId) toast.dismiss(toastId);
@@ -862,6 +866,7 @@ const startTimer = () => {
 	const savedExpiry = sessionStorage.getItem("reservationExpiry");
 
 	if (!savedExpiry) {
+		console.error("No reservation expiry found");
 		toast.error("Không tìm thấy thông tin đặt vé. Vui lòng chọn lại.");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
@@ -871,6 +876,7 @@ const startTimer = () => {
 	const now = new Date();
 
 	if (expiryDate <= now) {
+		console.error("Reservation expired");
 		toast.error("Hết thời gian giữ ghế. Vui lòng đặt lại.");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
@@ -891,28 +897,63 @@ const startTimer = () => {
 
 // Lifecycle
 onMounted(() => {
-	// Load data from store/session
+	// Load seats
 	const savedSeats = sessionStorage.getItem("selectedSeats");
 	if (!savedSeats) {
+		console.error("No selected seats found");
 		toast.error("Không tìm thấy ghế đã chọn. Vui lòng chọn lại.");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
 	}
-
 	selectedSeats.value = JSON.parse(savedSeats);
 
-	const savedShow = sessionStorage.getItem("currentShow");
-	if (savedShow) {
-		showInfo.value = JSON.parse(savedShow);
+	// Load show info
+	if (bookingStore.currentShow?.name) {
+		showInfo.value = {
+			name: bookingStore.currentShow.name,
+			service_fee_per_ticket:
+				bookingStore.currentShow.service_fee_per_ticket,
+		};
+	} else {
+		const savedShow = sessionStorage.getItem("currentShow");
+		if (savedShow) {
+			showInfo.value = JSON.parse(savedShow);
+		}
 	}
 
+	// Load and format performance
 	const savedPerformance = sessionStorage.getItem("selectedPerformance");
 	if (savedPerformance) {
-		performanceInfo.value = JSON.parse(savedPerformance);
+		const perfData = JSON.parse(savedPerformance);
+		const dt = new Date(perfData.datetime);
+
+		performanceInfo.value = {
+			...perfData,
+			date: dt.toLocaleDateString("vi-VN"),
+			time: dt.toLocaleTimeString("vi-VN", {
+				hour: "2-digit",
+				minute: "2-digit",
+			}),
+			datetime: perfData.datetime,
+		};
+
+		// Fallback: nếu showInfo chưa có name, lấy từ performance
+		if (!showInfo.value.name && perfData.show_name) {
+			showInfo.value.name = perfData.show_name;
+		}
 	}
 
+	// Validate có đủ thông tin không
+	if (!showInfo.value.name || !performanceInfo.value.date) {
+		console.error("Missing show/performance info");
+		toast.warning("Thiếu thông tin. Vui lòng chọn lại ghế.");
+		router.push(`/booking/${route.params.showId}/seats`);
+		return;
+	}
+
+	// Check service fee
 	if (!serviceFeePerTicket.value) {
-		console.error("❌ Service fee not found");
+		console.error("Service fee not found");
 		toast.warning("Thiếu thông tin phí dịch vụ. Vui lòng chọn lại ghế.");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
@@ -920,7 +961,7 @@ onMounted(() => {
 
 	const savedExpiry = sessionStorage.getItem("reservationExpiry");
 	if (!savedExpiry) {
-		console.error("❌ No reservation expiry");
+		console.error("No reservation expiry");
 		toast.warning("Phiên đã hết hạn. Vui lòng chọn lại ghế.");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
@@ -929,7 +970,7 @@ onMounted(() => {
 	const expiryDate = new Date(savedExpiry);
 	const now = new Date();
 	if (expiryDate <= now) {
-		console.error("❌ Reservation expired");
+		console.error("Reservation expired");
 		toast.warning("Hết thời gian giữ ghế. Vui lòng chọn lại.");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
@@ -940,6 +981,11 @@ onMounted(() => {
 
 	// Fetch available discounts
 	fetchDiscounts();
+
+	// Mark as initialized after first fetch
+	setTimeout(() => {
+		isInitialized.value = true;
+	}, 1000);
 });
 
 onUnmounted(() => {
@@ -949,11 +995,19 @@ onUnmounted(() => {
 	discountCodeInput.value = "";
 });
 
-// Watch seat changes to refetch discounts
+// Watch seat changes to refetch discounts - only after initialization
 watch(
 	() => selectedSeats.value.length,
-	() => {
-		fetchDiscounts();
+	(newLength, oldLength) => {
+		if (!isInitialized.value) {
+			console.log("Skipping watch during initialization");
+			return;
+		}
+
+		if (newLength !== oldLength) {
+			console.log(`Seats changed: ${oldLength} to ${newLength}`);
+			fetchDiscounts();
+		}
 	}
 );
 </script>

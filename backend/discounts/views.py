@@ -7,53 +7,39 @@ from .services import validate_and_calculate_discount, DiscountError
 from bookings.models import Booking, Discount, SeatReservation
 from django.utils import timezone
 from django.db.models import Q, F
+from logzero import logger
 
 
 @api_view(['POST'])
 def validate_discount_code(request):
-    """
-    Validate discount code WITHOUT creating a booking
-    Payload: {
-        "code": "SALE50",
-        "session_id": "session_xxx",
-        "customer_email": "user@example.com",
-        "customer_phone": "0912345678"
-    }
-    """
     code = request.data.get('code', '').strip()
     session_id = request.data.get('session_id')
     email = request.data.get('customer_email', '')
     phone = request.data.get('customer_phone', '')
 
+    logger.info(f"🔍 Validating discount: code={code}, session={session_id}")
+
     if not code:
-        return Response(
-            {'error': 'Vui lòng nhập mã giảm giá'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({'error': 'Vui lòng nhập mã giảm giá'}, status=status.HTTP_400_BAD_REQUEST)
 
     if not session_id:
-        return Response(
-            {'error': 'Session không hợp lệ'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({'error': 'Session không hợp lệ'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Get reserved seats for this session
     seat_reservations = SeatReservation.objects.filter(
         session_id=session_id,
         status='reserved',
         booking__isnull=True
     )
 
+    seat_count = seat_reservations.count()
+    logger.info(f"🔍 Found {seat_count} seats for session {session_id}")
+
     if not seat_reservations.exists():
-        return Response(
-            {'error': 'Không tìm thấy ghế đã chọn'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({'error': 'Không tìm thấy ghế đã chọn'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Calculate total
     total_amount = sum(sr.price for sr in seat_reservations)
+    logger.info(f"🔍 Total amount: {total_amount}")
 
-    # Create temporary booking object (NOT saved to DB)
     temp_booking = Booking(
         total_amount=total_amount,
         customer_email=email,
@@ -61,14 +47,17 @@ def validate_discount_code(request):
         session_id=session_id
     )
 
-    # Attach seat count for validation
-    temp_booking._temp_seat_count = seat_reservations.count()
+    temp_booking._temp_seat_count = seat_count
+
+    logger.info(f"🔍 Temp booking seat count: {temp_booking._temp_seat_count}")
 
     try:
         discount, discount_amount = validate_and_calculate_discount(
             booking=temp_booking,
             code=code
         )
+
+        logger.info(f"✅ Discount validated: {discount.code}, amount={discount_amount}")
 
         return Response({
             'valid': True,
@@ -79,6 +68,7 @@ def validate_discount_code(request):
         })
 
     except DiscountError as e:
+        logger.warning(f"❌ Discount error: {str(e)}")
         return Response(
             {'valid': False, 'error': str(e)},
             status=status.HTTP_400_BAD_REQUEST
