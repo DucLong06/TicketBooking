@@ -1,6 +1,7 @@
 <template>
 	<DefaultLayout>
 		<div class="container mx-auto px-4 py-8">
+			<!-- Breadcrumb -->
 			<nav class="mb-6">
 				<ol class="flex items-center space-x-2 text-sm">
 					<li>
@@ -36,7 +37,9 @@
 				</ol>
 			</nav>
 
+			<!-- Main Content -->
 			<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+				<!-- Form Section -->
 				<div class="lg:col-span-2">
 					<div
 						class="bg-white rounded-lg shadow-lg p-6 mb-28 lg:mb-0"
@@ -46,6 +49,7 @@
 						</h2>
 
 						<form @submit.prevent="handleSubmit">
+							<!-- Full Name -->
 							<div class="mb-4">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -68,6 +72,7 @@
 								</p>
 							</div>
 
+							<!-- Email -->
 							<div class="mb-4">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -80,6 +85,7 @@
 									required
 									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
 									placeholder="example@email.com"
+									@blur="fetchDiscounts"
 								/>
 								<p class="mt-1 text-xs text-gray-500">
 									{{ emailDescription }}
@@ -92,6 +98,7 @@
 								</p>
 							</div>
 
+							<!-- Phone -->
 							<div class="mb-4">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -105,6 +112,7 @@
 									required
 									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
 									placeholder="0912345678"
+									@blur="fetchDiscounts"
 								/>
 								<p
 									v-if="errors.phone"
@@ -114,6 +122,7 @@
 								</p>
 							</div>
 
+							<!-- Address -->
 							<div class="mb-4">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -138,6 +147,7 @@
 								</p>
 							</div>
 
+							<!-- Shipping Time -->
 							<div class="mb-6">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
@@ -151,7 +161,7 @@
 									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
 								>
 									<option value="business_hours">
-										Trong giờ hành chính
+										Trong giờ hành chính (8h-17h)
 									</option>
 									<option value="after_hours">
 										Ngoài giờ hành chính
@@ -159,69 +169,140 @@
 								</select>
 							</div>
 
+							<!-- Notes -->
 							<div class="mb-6">
 								<label
 									class="block text-sm font-medium text-gray-700 mb-2"
 								>
-									Ghi chú
+									Ghi chú (không bắt buộc)
 								</label>
 								<textarea
 									v-model="customerInfo.notes"
-									rows="3"
+									rows="2"
 									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-									placeholder="Yêu cầu đặc biệt (nếu có)..."
+									placeholder="Ghi chú thêm về đơn hàng..."
 								></textarea>
 							</div>
 
-							<div class="lg:hidden mb-6">
-								<h2 class="text-xl font-bold mb-4">
+							<!-- Discount Code Section -->
+							<div class="mb-4 pb-4 border-b">
+								<label
+									class="block text-sm font-medium text-gray-700 mb-2"
+								>
 									Mã giảm giá
-								</h2>
+								</label>
 								<div class="flex gap-2">
 									<input
 										v-model="discountCodeInput"
 										type="text"
-										class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+										class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 uppercase"
 										placeholder="Nhập mã giảm giá"
-										:disabled="
-											bookingStore.isDiscountSuccess
-										"
+										:disabled="isApplyingDiscount"
 									/>
 									<button
+										v-if="!bookingStore.isDiscountSuccess"
 										@click="applyDiscountCode"
 										:disabled="
-											bookingStore.isDiscountSuccess
+											isApplyingDiscount ||
+											!discountCodeInput.trim()
 										"
-										class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+										type="button"
+										class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition whitespace-nowrap"
 									>
-										Áp dụng
+										{{
+											isApplyingDiscount
+												? "Đang xử lý..."
+												: "Áp dụng"
+										}}
+									</button>
+									<button
+										v-else
+										@click="removeDiscount"
+										type="button"
+										class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition whitespace-nowrap"
+									>
+										Đổi mã
 									</button>
 								</div>
+
+								<!-- Available Discounts -->
 								<div
-									v-if="availableDiscounts.length > 0"
+									v-if="allDiscounts.length > 0"
 									class="mt-3 space-y-2"
 								>
 									<p
 										class="text-xs text-gray-600 font-medium"
 									>
-										Mã khuyến mãi dành cho bạn:
+										Mã khuyến mãi có sẵn:
 									</p>
-									<div class="flex gap-2 flex-wrap">
+									<div class="discount-grid">
 										<button
-											v-for="discount in availableDiscounts"
+											v-for="discount in allDiscounts"
 											:key="discount.code"
 											@click="
 												selectDiscount(discount.code)
 											"
-											class="px-3 py-1.5 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-300 rounded-lg text-xs font-semibold text-orange-700 hover:from-orange-100 hover:to-red-100 transition"
+											:disabled="
+												!discount.eligible ||
+												isApplyingDiscount
+											"
+											type="button"
+											:class="[
+												'discount-btn px-3 py-2 rounded-lg text-xs font-semibold transition border',
+												discount.eligible
+													? 'bg-gradient-to-r from-orange-50 to-red-50 border-orange-300 text-orange-700 hover:from-orange-100 hover:to-red-100 cursor-pointer'
+													: 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed opacity-60',
+											]"
+											:title="
+												discount.eligible
+													? discount.description
+													: discount.reason
+											"
 										>
-											{{ discount.code }}
+											<span class="block font-bold">{{
+												discount.code
+											}}</span>
+											<span
+												v-if="
+													discount.min_ticket_quantity
+												"
+												class="block text-[10px] mt-1"
+											>
+												{{
+													discount.eligible
+														? `✓ ${discount.min_ticket_quantity}+ vé`
+														: `Cần ${discount.min_ticket_quantity}+ vé`
+												}}
+											</span>
+											<span
+												v-if="discount.value"
+												class="block text-[10px] mt-0.5"
+											>
+												{{
+													discount.discount_type ===
+													"PERCENTAGE"
+														? `Giảm ${discount.value}%`
+														: `Giảm ${formatPrice(
+																discount.value
+														  )}`
+												}}
+											</span>
 										</button>
 									</div>
+									<p
+										v-if="unavailableDiscountsCount > 0"
+										class="text-[10px] text-gray-500 italic mt-2"
+									>
+										💡 Mua thêm vé để mở khóa
+										{{ unavailableDiscountsCount }} mã giảm
+										giá
+									</p>
 								</div>
+
+								<!-- Discount Message -->
 								<p
 									v-if="bookingStore.discountMessage"
-									class="mt-2 text-sm"
+									class="mt-2 text-sm font-medium"
 									:class="{
 										'text-green-600':
 											bookingStore.isDiscountSuccess,
@@ -233,6 +314,7 @@
 								</p>
 							</div>
 
+							<!-- Desktop Buttons -->
 							<div class="hidden lg:flex justify-between">
 								<button
 									type="button"
@@ -243,19 +325,26 @@
 								</button>
 								<button
 									type="submit"
-									class="px-8 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition"
+									:disabled="isSubmitting"
+									class="px-8 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 disabled:bg-gray-400 transition"
 								>
-									Tiếp tục thanh toán →
+									{{
+										isSubmitting
+											? "Đang xử lý..."
+											: "Tiếp tục thanh toán →"
+									}}
 								</button>
 							</div>
 						</form>
 					</div>
 				</div>
 
+				<!-- Order Summary - Desktop -->
 				<div class="hidden lg:block lg:col-span-1">
 					<div class="bg-white rounded-lg shadow-lg p-6 sticky top-4">
 						<h3 class="text-xl font-bold mb-4">Tóm tắt đơn hàng</h3>
 
+						<!-- Show Info -->
 						<div class="mb-4 pb-4 border-b">
 							<h4 class="font-semibold mb-2">
 								{{ showInfo.name }}
@@ -266,6 +355,7 @@
 							</p>
 						</div>
 
+						<!-- Selected Seats -->
 						<div class="mb-4 pb-4 border-b">
 							<h4 class="font-semibold mb-2">Ghế đã chọn</h4>
 							<div class="space-y-2">
@@ -284,72 +374,20 @@
 								</div>
 							</div>
 						</div>
-						<div class="mb-4 pb-4 border-b">
-							<label
-								class="block text-sm font-medium text-gray-700 mb-2"
-								>Mã giảm giá</label
-							>
-							<div class="flex gap-2">
-								<input
-									v-model="discountCodeInput"
-									type="text"
-									class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-									placeholder="Nhập mã giảm giá"
-									:disabled="bookingStore.isDiscountSuccess"
-								/>
-								<button
-									@click="applyDiscountCode"
-									:disabled="bookingStore.isDiscountSuccess"
-									class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-								>
-									Áp dụng
-								</button>
-							</div>
-							<div
-								v-if="availableDiscounts.length > 0"
-								class="mt-3 space-y-2"
-							>
-								<p class="text-xs text-gray-600 font-medium">
-									Mã khuyến mãi dành cho bạn:
-								</p>
-								<div class="flex gap-2 flex-wrap">
-									<button
-										v-for="discount in availableDiscounts"
-										:key="discount.code"
-										@click="selectDiscount(discount.code)"
-										class="px-3 py-1.5 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-300 rounded-lg text-xs font-semibold text-orange-700 hover:from-orange-100 hover:to-red-100 transition"
-									>
-										{{ discount.code }}
-									</button>
-								</div>
-							</div>
-							<p
-								v-if="bookingStore.discountMessage"
-								class="mt-2 text-sm"
-								:class="{
-									'text-green-600':
-										bookingStore.isDiscountSuccess,
-									'text-red-500':
-										!bookingStore.isDiscountSuccess,
-								}"
-							>
-								{{ bookingStore.discountMessage }}
-							</p>
-						</div>
 
+						<!-- Price Breakdown -->
 						<div class="space-y-2 mb-4 pb-4 border-b">
 							<div class="flex justify-between text-sm">
-								<span class="text-gray-600">Tổng tiền vé:</span>
+								<span class="text-gray-600">Tiền vé:</span>
 								<span class="font-semibold">{{
 									formatPrice(ticketAmount)
 								}}</span>
 							</div>
-
 							<div class="flex justify-between text-sm">
 								<span class="text-gray-600"
 									>Phí vận chuyển:</span
 								>
-								<span class="font-semibold text-primary-600">{{
+								<span class="font-semibold">{{
 									formatPrice(serviceFee)
 								}}</span>
 							</div>
@@ -358,53 +396,55 @@
 								class="flex justify-between text-sm"
 							>
 								<span class="text-gray-600">Giảm giá:</span>
-								<span class="font-semibold text-green-600"
-									>-{{
+								<span class="font-semibold text-green-600">
+									-{{
 										formatPrice(bookingStore.discountAmount)
-									}}</span
-								>
+									}}
+								</span>
 							</div>
 						</div>
 
-						<div
-							class="flex justify-between items-center text-lg font-bold mb-6"
-						>
-							<span>Tổng thanh toán:</span>
+						<!-- Total -->
+						<div class="flex justify-between text-lg font-bold">
+							<span>Tổng cộng:</span>
 							<span class="text-primary-600">{{
 								formatPrice(finalAmount)
 							}}</span>
 						</div>
 
-						<div class="mt-4 p-3 bg-yellow-50 rounded-lg">
-							<div class="text-sm text-yellow-800">
-								⏱️ Thời gian giữ vé:
-								<span class="font-bold">{{
-									formatTime(timeLeft)
-								}}</span>
-							</div>
+						<!-- Timer -->
+						<div
+							class="mt-4 p-3 bg-orange-50 rounded-lg text-center"
+						>
+							<p class="text-sm text-gray-600 mb-1">
+								Thời gian giữ ghế còn lại:
+							</p>
+							<p class="text-2xl font-bold text-orange-600">
+								{{ formatTime(timeLeft) }}
+							</p>
 						</div>
 					</div>
 				</div>
 			</div>
 
+			<!-- Mobile Fixed Bottom Bar -->
 			<div
-				class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50"
+				class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50"
 			>
-				<div class="px-4 py-3">
-					<div class="flex justify-between items-center mb-3">
-						<div>
-							<p class="text-xs text-gray-500">Tổng thanh toán</p>
-							<p class="text-lg font-bold text-primary-600">
-								{{ formatPrice(finalAmount) }}
-							</p>
-						</div>
-						<div class="text-right">
-							<p class="text-xs text-gray-500">
-								⏱️ {{ formatTime(timeLeft) }}
-							</p>
+				<div class="container mx-auto px-4 py-3">
+					<!-- Order Summary Toggle -->
+					<div class="mb-3">
+						<div class="flex items-center justify-between">
+							<div>
+								<p class="text-sm text-gray-600">Tổng cộng:</p>
+								<p class="text-lg font-bold text-primary-600">
+									{{ formatPrice(finalAmount) }}
+								</p>
+							</div>
 							<button
+								type="button"
 								@click="toggleOrderSummary"
-								class="text-xs text-primary-600 hover:text-primary-700 underline"
+								class="text-sm text-primary-600 font-medium"
 							>
 								{{
 									showOrderSummary
@@ -415,6 +455,7 @@
 						</div>
 					</div>
 
+					<!-- Collapsible Details -->
 					<div
 						v-show="showOrderSummary"
 						class="mb-3 p-3 bg-gray-50 rounded-lg text-sm max-h-48 overflow-y-auto"
@@ -439,11 +480,11 @@
 								class="flex justify-between"
 							>
 								<span class="text-gray-600">Giảm giá:</span>
-								<span class="font-semibold text-green-600"
-									>-{{
+								<span class="font-semibold text-green-600">
+									-{{
 										formatPrice(bookingStore.discountAmount)
-									}}</span
-								>
+									}}
+								</span>
 							</div>
 							<div class="border-t pt-2 mt-2">
 								<p class="text-xs text-gray-500 mb-1">
@@ -466,6 +507,7 @@
 						</div>
 					</div>
 
+					<!-- Action Buttons -->
 					<div class="flex gap-2">
 						<button
 							type="button"
@@ -476,9 +518,12 @@
 						</button>
 						<button
 							@click="handleSubmit"
-							class="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition"
+							:disabled="isSubmitting"
+							class="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 disabled:bg-gray-400 transition"
 						>
-							Thanh toán →
+							{{
+								isSubmitting ? "Đang xử lý..." : "Thanh toán →"
+							}}
 						</button>
 					</div>
 				</div>
@@ -488,21 +533,22 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { useBookingStore } from "../stores/booking";
+import { bookingAPI } from "../api/booking";
 import { useToast } from "vue-toastification";
 
 const toast = useToast();
 const bookingStore = useBookingStore();
 const router = useRouter();
 const route = useRoute();
-const availableDiscounts = ref([]);
-// Form data
+
+// State
 const showInfo = ref({
 	name: "",
-	service_fee_per_ticket: 0, // default
+	service_fee_per_ticket: 0,
 });
 
 const performanceInfo = ref({
@@ -514,14 +560,23 @@ const customerInfo = ref({
 	fullName: "",
 	email: "",
 	phone: "",
-	idNumber: "",
 	address: "",
 	notes: "",
 	shippingTime: "business_hours",
 });
 
-const agreedToTerms = ref(false);
 const errors = ref({});
+const selectedSeats = ref([]);
+const timeLeft = ref(600);
+const showOrderSummary = ref(false);
+const isSubmitting = ref(false);
+const isApplyingDiscount = ref(false);
+
+// Discount
+const discountCodeInput = ref("");
+const allDiscounts = ref([]);
+
+// Descriptions
 const addressDescription = ref(
 	"Địa chỉ nhận vé cứng. Nhà hát Hồ Gươm chỉ sử dụng vé cứng để vào cửa."
 );
@@ -529,19 +584,10 @@ const emailDescription = ref(
 	"Email để nhận xác nhận thanh toán hoặc xác nhận đặt vé"
 );
 
-const selectedSeats = ref([]);
-
-// Mobile order summary toggle
-const showOrderSummary = ref(false);
-
-const toggleOrderSummary = () => {
-	showOrderSummary.value = !showOrderSummary.value;
-};
-
-// Timer
-const timeLeft = ref(600);
 let timer = null;
+let toastId = null;
 
+// Computed
 const serviceFeePerTicket = computed(() => {
 	if (showInfo.value.service_fee_per_ticket) {
 		return showInfo.value.service_fee_per_ticket;
@@ -586,39 +632,29 @@ const finalAmount = computed(() => {
 	if (bookingStore.currentBooking?.final_amount) {
 		return bookingStore.currentBooking.final_amount;
 	}
-	return totalAmount.value;
+	return totalAmount.value - (bookingStore.discountAmount || 0);
 });
-// Discount
-const discountCodeInput = ref("");
 
-const applyDiscountCode = async () => {
-	if (!discountCodeInput.value.trim()) {
-		toast.warning("Vui lòng nhập mã giảm giá.");
-		return;
-	}
-	await bookingStore.applyDiscount(
-		discountCodeInput.value,
-		customerInfo.value
-	);
-};
-
-const selectDiscount = (code) => {
-	discountCodeInput.value = code;
-	applyDiscountCode();
-};
+const unavailableDiscountsCount = computed(
+	() => allDiscounts.value.filter((d) => !d.eligible).length
+);
 
 // Methods
 const formatPrice = (price) => {
 	return new Intl.NumberFormat("vi-VN", {
 		style: "currency",
 		currency: "VND",
-	}).format(price);
+	}).format(price || 0);
 };
 
 const formatTime = (seconds) => {
 	const mins = Math.floor(seconds / 60);
 	const secs = seconds % 60;
 	return `${mins}:${secs.toString().padStart(2, "0")}`;
+};
+
+const toggleOrderSummary = () => {
+	showOrderSummary.value = !showOrderSummary.value;
 };
 
 const validateForm = () => {
@@ -645,8 +681,99 @@ const validateForm = () => {
 	return Object.keys(errors.value).length === 0;
 };
 
+const fetchDiscounts = async () => {
+	if (selectedSeats.value.length === 0) return;
+
+	try {
+		// Fetch eligible discounts
+		const response = await bookingAPI.getAvailableDiscounts(
+			selectedSeats.value.length,
+			customerInfo.value.email,
+			customerInfo.value.phone
+		);
+
+		const eligibleDiscounts = response.data.discounts.map((d) => ({
+			...d,
+			eligible: true,
+		}));
+
+		// Fetch ALL discounts to show ineligible ones
+		const allResponse = await bookingAPI.getAvailableDiscounts(
+			999,
+			customerInfo.value.email,
+			customerInfo.value.phone
+		);
+
+		const ineligibleDiscounts = allResponse.data.discounts
+			.filter((d) => !eligibleDiscounts.some((ed) => ed.code === d.code))
+			.map((d) => ({
+				...d,
+				eligible: false,
+				reason: `Cần mua tối thiểu ${d.min_ticket_quantity} vé (đang có ${selectedSeats.value.length})`,
+			}));
+
+		allDiscounts.value = [...eligibleDiscounts, ...ineligibleDiscounts];
+	} catch (error) {
+		console.error("Failed to fetch discounts:", error);
+	}
+};
+
+const applyDiscountCode = async () => {
+	if (!discountCodeInput.value.trim()) {
+		if (toastId) toast.dismiss(toastId);
+		toastId = toast.warning("Vui lòng nhập mã giảm giá.");
+		return;
+	}
+
+	if (isApplyingDiscount.value) return;
+
+	isApplyingDiscount.value = true;
+
+	try {
+		await bookingStore.applyDiscount(
+			discountCodeInput.value.trim(),
+			customerInfo.value
+		);
+	} catch (error) {
+		console.error("Error applying discount:", error);
+	} finally {
+		isApplyingDiscount.value = false;
+	}
+};
+
+const removeDiscount = () => {
+	bookingStore.isDiscountSuccess = false;
+	bookingStore.discountMessage = "";
+	bookingStore.customerInfo.discount_code = "";
+	discountCodeInput.value = "";
+
+	if (bookingStore.currentBooking) {
+		bookingStore.currentBooking.discount_amount = 0;
+		bookingStore.currentBooking.final_amount =
+			bookingStore.currentBooking.total_amount +
+			bookingStore.currentBooking.service_fee;
+	}
+
+	toast.info("Đã xóa mã giảm giá. Vui lòng nhập mã mới.");
+};
+
+const selectDiscount = async (code) => {
+	if (isApplyingDiscount.value) return;
+
+	if (bookingStore.isDiscountSuccess) {
+		removeDiscount();
+		await nextTick();
+	}
+	discountCodeInput.value = code;
+	applyDiscountCode();
+};
+
 const handleSubmit = async () => {
 	if (!validateForm()) return;
+
+	if (isSubmitting.value) return;
+
+	isSubmitting.value = true;
 
 	try {
 		bookingStore.customerInfo = {
@@ -699,7 +826,6 @@ const handleSubmit = async () => {
 
 		sessionStorage.setItem("bookingData", JSON.stringify(bookingData));
 
-		// Redirect to payment
 		if (paymentData.payment_url) {
 			window.location.href = paymentData.payment_url;
 		} else {
@@ -715,6 +841,8 @@ const handleSubmit = async () => {
 				router.push(`/booking/${route.params.showId}`);
 			}, 1500);
 		}
+	} finally {
+		isSubmitting.value = false;
 	}
 };
 
@@ -726,16 +854,16 @@ const startTimer = () => {
 	const savedExpiry = sessionStorage.getItem("reservationExpiry");
 
 	if (!savedExpiry) {
-		alert("Không tìm thấy thông tin đặt vé. Vui lòng chọn lại.");
+		toast.error("Không tìm thấy thông tin đặt vé. Vui lòng chọn lại.");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
 	}
 
 	const expiryDate = new Date(savedExpiry);
-
 	const now = new Date();
+
 	if (expiryDate <= now) {
-		alert("Hết thời gian giữ ghế. Vui lòng đặt lại.");
+		toast.error("Hết thời gian giữ ghế. Vui lòng đặt lại.");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
 	}
@@ -747,118 +875,32 @@ const startTimer = () => {
 
 		if (timeLeft.value === 0) {
 			clearInterval(timer);
-			alert("Hết thời gian giữ ghế. Vui lòng đặt lại.");
-			router.push("/");
+			toast.error("Hết thời gian giữ ghế");
+			router.push(`/booking/${route.params.showId}/seats`);
 		}
 	}, 1000);
 };
-onMounted(async () => {
-	console.log("🚀 [CustomerInfo] Validating data...");
 
-	bookingStore.resetDiscount();
-	discountCodeInput.value = "";
-
-	const existingSessionId = sessionStorage.getItem("session_id");
-	if (existingSessionId) {
-		bookingStore.sessionId = existingSessionId;
-		console.log("✅ Session ID restored:", existingSessionId);
-	} else {
-		console.error("❌ No session ID found");
-		toast.warning("Phiên đã hết hạn. Vui lòng chọn lại ghế.");
+// Lifecycle
+onMounted(() => {
+	// Load data from store/session
+	const savedSeats = sessionStorage.getItem("selectedSeats");
+	if (!savedSeats) {
+		toast.error("Không tìm thấy ghế đã chọn. Vui lòng chọn lại.");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
 	}
 
-	let hasSeats = false;
+	selectedSeats.value = JSON.parse(savedSeats);
 
-	if (bookingStore.selectedSeats?.length > 0) {
-		selectedSeats.value = bookingStore.selectedSeats;
-		hasSeats = true;
-		console.log("✅ Seats from store:", selectedSeats.value.length);
-	} else {
-		const savedSeats = sessionStorage.getItem("selectedSeats");
-		if (savedSeats) {
-			try {
-				const parsedSeats = JSON.parse(savedSeats);
-				selectedSeats.value = parsedSeats;
-
-				bookingStore.selectedSeats = parsedSeats;
-
-				hasSeats = parsedSeats.length > 0;
-				console.log(
-					"✅ Seats from sessionStorage and restored to store:",
-					parsedSeats.length
-				);
-			} catch (e) {
-				console.error("Failed to parse savedSeats:", e);
-			}
-		}
-	}
-
-	if (!hasSeats) {
-		console.error("❌ No seats found");
-		toast.warning("Vui lòng chọn ghế trước");
-		router.push(`/booking/${route.params.showId}/seats`);
-		return;
+	const savedShow = sessionStorage.getItem("currentShow");
+	if (savedShow) {
+		showInfo.value = JSON.parse(savedShow);
 	}
 
 	const savedPerformance = sessionStorage.getItem("selectedPerformance");
 	if (savedPerformance) {
-		try {
-			const performance = JSON.parse(savedPerformance);
-
-			if (
-				!bookingStore.selectedPerformance ||
-				!bookingStore.selectedPerformance.id
-			) {
-				bookingStore.selectedPerformance = performance;
-				console.log(
-					"✅ Restored selectedPerformance to store:",
-					performance.id
-				);
-			}
-
-			showInfo.value = {
-				name:
-					performance.show_name ||
-					bookingStore.currentShow?.name ||
-					"",
-				service_fee_per_ticket:
-					performance.service_fee_per_ticket ||
-					bookingStore.currentShow?.service_fee_per_ticket,
-			};
-
-			if (performance.datetime) {
-				performanceInfo.value = {
-					date: new Date(performance.datetime).toLocaleDateString(
-						"vi-VN"
-					),
-					time: new Date(performance.datetime).toLocaleTimeString(
-						"vi-VN",
-						{
-							hour: "2-digit",
-							minute: "2-digit",
-						}
-					),
-				};
-			}
-		} catch (e) {
-			console.error("Failed to parse savedPerformance:", e);
-		}
-	} else if (bookingStore.currentShow) {
-		// Fallback to store
-		showInfo.value = {
-			name: bookingStore.currentShow.name,
-			service_fee_per_ticket:
-				bookingStore.currentShow.service_fee_per_ticket,
-		};
-	}
-
-	if (!showInfo.value.name || !performanceInfo.value.date) {
-		console.error("❌ Missing show or performance info");
-		toast.warning("Thiếu thông tin suất diễn. Vui lòng chọn lại.");
-		router.push(`/booking/${route.params.showId}/seats`);
-		return;
+		performanceInfo.value = JSON.parse(savedPerformance);
 	}
 
 	if (!serviceFeePerTicket.value) {
@@ -886,36 +928,150 @@ onMounted(async () => {
 	}
 
 	// Start timer
-	timer = setInterval(() => {
-		const now = new Date();
-		const diff = Math.floor((expiryDate - now) / 1000);
-		timeLeft.value = Math.max(0, diff);
-
-		if (timeLeft.value === 0) {
-			clearInterval(timer);
-			toast.error("Hết thời gian giữ ghế");
-			router.push(`/booking/${route.params.showId}/seats`);
-		}
-	}, 1000);
+	startTimer();
 
 	// Fetch available discounts
-	if (selectedSeats.value.length > 0) {
-		try {
-			const response = await bookingAPI.getAvailableDiscounts(
-				selectedSeats.value.length,
-				customerInfo.value.email,
-				customerInfo.value.phone
-			);
-			availableDiscounts.value = response.data.discounts;
-		} catch (error) {
-			console.error("Failed to fetch available discounts:", error);
-		}
-	}
+	fetchDiscounts();
 });
+
 onUnmounted(() => {
 	if (timer) {
 		clearInterval(timer);
 	}
 	discountCodeInput.value = "";
 });
+
+// Watch seat changes to refetch discounts
+watch(
+	() => selectedSeats.value.length,
+	() => {
+		fetchDiscounts();
+	}
+);
 </script>
+
+<style scoped>
+/* Discount Grid */
+.discount-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+	gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+	.discount-grid {
+		grid-template-columns: repeat(2, 1fr);
+		max-height: 200px;
+		overflow-y: auto;
+		padding: 0.5rem;
+		border: 1px solid #e5e7eb;
+		border-radius: 0.5rem;
+	}
+}
+
+/* Discount Button */
+.discount-btn {
+	min-height: 56px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+
+@media (min-width: 768px) {
+	.discount-btn {
+		min-height: 64px;
+	}
+}
+
+/* Touch-friendly on mobile */
+@media (max-width: 640px) {
+	.discount-btn {
+		min-height: 60px;
+		padding: 0.75rem;
+	}
+}
+
+/* Smooth transitions */
+.discount-btn:not(:disabled):hover {
+	transform: translateY(-1px);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.discount-btn:not(:disabled):active {
+	transform: translateY(0);
+}
+
+/* Disabled state */
+.discount-btn:disabled {
+	pointer-events: none;
+}
+
+/* Scrollbar styling for discount grid on mobile */
+@media (max-width: 640px) {
+	.discount-grid::-webkit-scrollbar {
+		width: 4px;
+	}
+
+	.discount-grid::-webkit-scrollbar-track {
+		background: #f1f1f1;
+		border-radius: 4px;
+	}
+
+	.discount-grid::-webkit-scrollbar-thumb {
+		background: #d1d5db;
+		border-radius: 4px;
+	}
+
+	.discount-grid::-webkit-scrollbar-thumb:hover {
+		background: #9ca3af;
+	}
+}
+
+/* Animation for messages */
+@keyframes slideIn {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.discount-btn,
+p[class*="text-green-600"],
+p[class*="text-red-500"] {
+	animation: slideIn 0.3s ease-out;
+}
+
+/* Loading state for apply button */
+button:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+/* Mobile bottom bar shadow */
+@media (max-width: 1024px) {
+	.fixed.bottom-0 {
+		box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1),
+			0 -2px 4px -1px rgba(0, 0, 0, 0.06);
+	}
+}
+
+/* Collapsible content animation */
+.order-summary-enter-active,
+.order-summary-leave-active {
+	transition: all 0.3s ease;
+	max-height: 200px;
+	overflow: hidden;
+}
+
+.order-summary-enter-from,
+.order-summary-leave-to {
+	max-height: 0;
+	opacity: 0;
+}
+</style>

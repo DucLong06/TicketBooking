@@ -49,9 +49,12 @@ def validate_and_calculate_discount(booking: Booking, code: str):
         if discount.max_usage is not None and (discount.usage_count + pending_usages) >= discount.max_usage:
             raise DiscountError('Mã giảm giá đã hết lượt sử dụng.')
 
-        # NEW: Check minimum ticket quantity
         if discount.min_ticket_quantity:
-            ticket_count = booking.seat_reservations.count() if booking.pk else 0
+            # Try to get count from temp booking first
+            ticket_count = getattr(booking, '_temp_seat_count', None)
+
+            if ticket_count is None:
+                ticket_count = booking.seat_reservations.count() if booking.pk else 0
 
             # For new bookings during creation, count from seat_ids
             if ticket_count == 0:

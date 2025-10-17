@@ -1,6 +1,7 @@
 from django.urls import path
-from . import views
+from .views import get_available_discounts, validate_discount_code
 
 urlpatterns = [
-    path('discounts/available/', views.get_available_discounts, name='available-discounts'),
+    path('discounts/available/', get_available_discounts, name='available-discounts'),
+    path('discounts/validate/', validate_discount_code, name='validate-discount'),
 ]

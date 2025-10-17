@@ -97,5 +97,14 @@ export const bookingAPI = {
         return api.get('/discounts/available/', {
             params: { ticket_count: ticketCount, email, phone }
         })
-    }
+    },
+
+    validateDiscountCode(code, sessionId, email = '', phone = '') {
+        return api.post('/discounts/validate/', {
+            code,
+            session_id: sessionId,
+            customer_email: email,
+            customer_phone: phone
+        });
+    },
 }
