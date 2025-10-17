@@ -685,7 +685,6 @@ const fetchDiscounts = async () => {
 	if (selectedSeats.value.length === 0) return;
 
 	try {
-		// Fetch eligible discounts
 		const response = await bookingAPI.getAvailableDiscounts(
 			selectedSeats.value.length,
 			customerInfo.value.email,
@@ -697,27 +696,36 @@ const fetchDiscounts = async () => {
 			eligible: true,
 		}));
 
-		// Fetch ALL discounts to show ineligible ones
 		const allResponse = await bookingAPI.getAvailableDiscounts(
 			999,
 			customerInfo.value.email,
-			customerInfo.value.phone
+			customerInfo.value.phone,
+			true
 		);
 
-		const ineligibleDiscounts = allResponse.data.discounts
+		const unavailableFromAPI = allResponse.data.unavailable_discounts || [];
+
+		const ineligibleDiscounts = unavailableFromAPI
 			.filter((d) => !eligibleDiscounts.some((ed) => ed.code === d.code))
 			.map((d) => ({
 				...d,
 				eligible: false,
-				reason: `Cần mua tối thiểu ${d.min_ticket_quantity} vé (đang có ${selectedSeats.value.length})`,
+				reason:
+					d.reason ||
+					`Cần mua tối thiểu ${d.min_ticket_quantity} vé (đang có ${selectedSeats.value.length})`,
 			}));
 
 		allDiscounts.value = [...eligibleDiscounts, ...ineligibleDiscounts];
+
+		console.log("✅ Loaded discounts:", {
+			eligible: eligibleDiscounts.length,
+			ineligible: ineligibleDiscounts.length,
+			total: allDiscounts.value.length,
+		});
 	} catch (error) {
 		console.error("Failed to fetch discounts:", error);
 	}
 };
-
 const applyDiscountCode = async () => {
 	if (!discountCodeInput.value.trim()) {
 		if (toastId) toast.dismiss(toastId);

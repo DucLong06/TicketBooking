@@ -87,27 +87,19 @@ def validate_discount_code(request):
 
 @api_view(['GET'])
 def get_available_discounts(request):
-    """
-    Get available discount codes based on ticket quantity
-    Query params:
-    - ticket_count: number of tickets
-    - email: customer email (optional)
-    - phone: customer phone (optional)
-    """
+
     ticket_count = int(request.GET.get('ticket_count', 0))
     email = request.GET.get('email', '')
     phone = request.GET.get('phone', '')
+    include_unavailable = request.GET.get('include_unavailable', 'false').lower() == 'true'
 
     now = timezone.now()
 
-    # Base queryset: active, not expired, has usage left
     discounts = Discount.objects.filter(
         is_active=True,
         valid_from__lte=now,
     ).filter(
         Q(valid_to__isnull=True) | Q(valid_to__gte=now)
-    ).filter(
-        Q(max_usage__isnull=True) | Q(usage_count__lt=F('max_usage'))
     )
 
     # Filter by ticket quantity
@@ -119,15 +111,42 @@ def get_available_discounts(request):
 
     # Filter by user eligibility
     eligible_discounts = []
+    unavailable_discounts = []
+
     for discount in discounts:
-        is_valid, _ = discount.is_valid(user_email=email, user_phone=phone)
-        if is_valid:
-            eligible_discounts.append({
-                'code': discount.code,
-                'description': str(discount),
-                'min_ticket_quantity': discount.min_ticket_quantity,
-                'discount_type': discount.discount_type,
-                'value': float(discount.value)
+        has_usage_left = (
+            discount.max_usage is None or
+            discount.usage_count < discount.max_usage
+        )
+
+        is_user_valid, message = discount.is_valid(
+            user_email=email,
+            user_phone=phone,
+            ticket_quantity=ticket_count
+        )
+
+        discount_data = {
+            'code': discount.code,
+            'description': str(discount),
+            'min_ticket_quantity': discount.min_ticket_quantity,
+            'discount_type': discount.discount_type,
+            'value': float(discount.value),
+            'max_usage': discount.max_usage,
+            'usage_count': discount.usage_count,
+        }
+
+        if is_user_valid and has_usage_left:
+            eligible_discounts.append({**discount_data, 'eligible': True})
+        elif include_unavailable:
+            reason = message if not has_usage_left else "Mã đã hết lượt sử dụng"
+            unavailable_discounts.append({
+                **discount_data,
+                'eligible': False,
+                'reason': reason
             })
 
-    return Response({'discounts': eligible_discounts})
+    response_data = {'discounts': eligible_discounts}
+    if include_unavailable:
+        response_data['unavailable_discounts'] = unavailable_discounts
+
+    return Response(response_data)
