@@ -6,31 +6,31 @@
 					<li>
 						<router-link
 							to="/"
-							class="text-gray-500 hover:text-primary-600"
+							class="text-[#d8a669] hover:text-[#b8884d] font-medium transition"
 						>
 							Trang chủ
 						</router-link>
 					</li>
-					<li class="text-gray-400">/</li>
+					<li class="text-[#a0866b]">/</li>
 					<li>
 						<router-link
 							:to="`/booking/${$route.params.showId}`"
-							class="text-gray-500 hover:text-primary-600"
+							class="text-[#d8a669] hover:text-[#b8884d] font-medium transition"
 						>
 							Chọn suất diễn
 						</router-link>
 					</li>
-					<li class="text-gray-400">/</li>
+					<li class="text-[#a0866b]">/</li>
 					<li>
 						<router-link
 							:to="`/booking/${$route.params.showId}/seats`"
-							class="text-gray-500 hover:text-primary-600"
+							class="text-[#d8a669] hover:text-[#b8884d] font-medium transition"
 						>
 							Chọn ghế
 						</router-link>
 					</li>
-					<li class="text-gray-400">/</li>
-					<li class="text-gray-700 font-medium">
+					<li class="text-[#a0866b]">/</li>
+					<li class="text-[#372e2d] font-semibold">
 						Thông tin khách hàng
 					</li>
 				</ol>
@@ -39,16 +39,16 @@
 			<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 				<div class="lg:col-span-2">
 					<div
-						class="bg-white rounded-lg shadow-lg p-6 mb-20 lg:mb-0"
+						class="bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-6 mb-20 lg:mb-0"
 					>
-						<h2 class="text-2xl font-bold mb-6">
+						<h2 class="text-2xl font-bold mb-6 text-[#372e2d]">
 							Thông tin người đặt vé
 						</h2>
 
 						<form @submit.prevent="handleSubmit">
 							<div class="mb-4">
 								<label
-									class="block text-sm font-medium text-gray-700 mb-2"
+									class="block text-sm font-medium text-[#372e2d] mb-2"
 								>
 									Họ và tên
 									<span class="text-red-500">*</span>
@@ -57,7 +57,7 @@
 									v-model="customerInfo.fullName"
 									type="text"
 									required
-									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+									class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
 									placeholder="Nguyễn Văn A"
 								/>
 								<p
@@ -70,7 +70,7 @@
 
 							<div class="mb-4">
 								<label
-									class="block text-sm font-medium text-gray-700 mb-2"
+									class="block text-sm font-medium text-[#372e2d] mb-2"
 								>
 									Email <span class="text-red-500">*</span>
 								</label>
@@ -78,10 +78,10 @@
 									v-model="customerInfo.email"
 									type="email"
 									required
-									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+									class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
 									placeholder="example@email.com"
 								/>
-								<p class="mt-1 text-xs text-gray-500">
+								<p class="mt-1 text-xs text-[#372e2d]/70">
 									{{ emailDescription }}
 								</p>
 								<p
@@ -94,7 +94,7 @@
 
 							<div class="mb-4">
 								<label
-									class="block text-sm font-medium text-gray-700 mb-2"
+									class="block text-sm font-medium text-[#372e2d] mb-2"
 								>
 									Số điện thoại
 									<span class="text-red-500">*</span>
@@ -103,7 +103,7 @@
 									v-model="customerInfo.phone"
 									type="tel"
 									required
-									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+									class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
 									placeholder="0912345678"
 								/>
 								<p
@@ -116,7 +116,7 @@
 
 							<div class="mb-4">
 								<label
-									class="block text-sm font-medium text-gray-700 mb-2"
+									class="block text-sm font-medium text-[#372e2d] mb-2"
 								>
 									Địa chỉ <span class="text-red-500">*</span>
 								</label>
@@ -124,10 +124,10 @@
 									v-model="customerInfo.address"
 									required
 									rows="3"
-									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+									class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
 									placeholder="Nhập địa chỉ nhận vé..."
 								></textarea>
-								<p class="mt-1 text-xs text-gray-500">
+								<p class="mt-1 text-xs text-[#372e2d]/70">
 									{{ addressDescription }}
 								</p>
 								<p
@@ -140,7 +140,7 @@
 
 							<div class="mb-6">
 								<label
-									class="block text-sm font-medium text-gray-700 mb-2"
+									class="block text-sm font-medium text-[#372e2d] mb-2"
 								>
 									Thời gian ship vé
 									<span class="text-red-500">*</span>
@@ -148,7 +148,7 @@
 								<select
 									v-model="customerInfo.shippingTime"
 									required
-									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+									class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
 								>
 									<option value="business_hours">
 										Trong giờ hành chính
@@ -161,14 +161,14 @@
 
 							<div class="mb-6">
 								<label
-									class="block text-sm font-medium text-gray-700 mb-2"
+									class="block text-sm font-medium text-[#372e2d] mb-2"
 								>
 									Ghi chú
 								</label>
 								<textarea
 									v-model="customerInfo.notes"
 									rows="3"
-									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+									class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
 									placeholder="Yêu cầu đặc biệt (nếu có)..."
 								></textarea>
 							</div>
@@ -177,13 +177,13 @@
 								<button
 									type="button"
 									@click="goBack"
-									class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+									class="px-6 py-3 border-2 border-[#d8a669] rounded-lg text-[#372e2d] font-semibold hover:bg-[#fdfcf0] transition"
 								>
 									← Quay lại
 								</button>
 								<button
 									type="submit"
-									class="px-8 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition"
+									class="px-8 py-3 bg-[#d8a669] text-white rounded-lg font-bold hover:bg-[#b8884d] hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all"
 								>
 									Tiếp tục thanh toán →
 								</button>
@@ -193,54 +193,61 @@
 				</div>
 
 				<div class="hidden lg:block lg:col-span-1">
-					<div class="bg-white rounded-lg shadow-lg p-6 sticky top-4">
-						<h3 class="text-xl font-bold mb-4">Tóm tắt đơn hàng</h3>
+					<div
+						class="bg-[#fdfcf0] border-2 border-[#d8a669] rounded-lg shadow-lg p-6 sticky top-4"
+					>
+						<h3 class="text-xl font-bold mb-4 text-[#372e2d]">
+							Tóm tắt đơn hàng
+						</h3>
 
-						<div class="mb-4 pb-4 border-b">
-							<h4 class="font-semibold mb-2">
+						<div class="mb-4 pb-4 border-b border-[#d8a669]/30">
+							<h4 class="font-semibold mb-2 text-[#372e2d]">
 								{{ showInfo.name }}
 							</h4>
-							<p class="text-sm text-gray-600">
+							<p class="text-sm text-[#372e2d]/70">
 								{{ performanceInfo.date }} -
 								{{ performanceInfo.time }}
 							</p>
 						</div>
 
-						<div class="mb-4 pb-4 border-b">
-							<h4 class="font-semibold mb-2">Ghế đã chọn</h4>
+						<div class="mb-4 pb-4 border-b border-[#d8a669]/30">
+							<h4 class="font-semibold mb-2 text-[#372e2d]">
+								Ghế đã chọn
+							</h4>
 							<div class="space-y-2">
 								<div
 									v-for="seat in selectedSeats"
 									:key="seat.id"
-									class="flex justify-between text-sm"
+									class="flex justify-between text-sm bg-white p-2 rounded-lg border border-[#d8a669]/30"
 								>
-									<span
+									<span class="text-[#372e2d]"
 										>{{ seat.full_label }} -
 										{{ seat.section_name }}</span
 									>
-									<span class="font-semibold">{{
-										formatPrice(seat.price)
-									}}</span>
+									<span
+										class="font-semibold text-[#d8a669]"
+										>{{ formatPrice(seat.price) }}</span
+									>
 								</div>
 							</div>
 						</div>
-						<div class="mb-4 pb-4 border-b">
+						<div class="mb-4 pb-4 border-b border-[#d8a669]/30">
 							<label
-								class="block text-sm font-medium text-gray-700 mb-2"
+								class="block text-sm font-medium text-[#372e2d] mb-2"
 								>Mã giảm giá</label
 							>
 							<div class="flex gap-2">
 								<input
 									v-model="discountCodeInput"
 									type="text"
-									class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+									class="w-full px-3 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] bg-white text-[#372e2d]"
 									placeholder="Nhập mã giảm giá"
 									:disabled="bookingStore.isDiscountSuccess"
 								/>
 								<button
 									@click="applyDiscountCode"
 									:disabled="bookingStore.isDiscountSuccess"
-									class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+									class="px-4 py-2 bg-[#d8a669] text-white rounded-lg font-semibold hover:bg-[#b8884d] disabled:bg-gray-400 disabled:cursor-not-allowed transition"
 								>
 									Áp dụng
 								</button>
@@ -259,24 +266,30 @@
 							</p>
 						</div>
 
-						<div class="space-y-2 mb-4 pb-4 border-b">
+						<div
+							class="space-y-2 mb-4 pb-4 border-b border-[#d8a669]/30"
+						>
 							<div class="flex justify-between text-sm">
-								<span class="text-gray-600">Tổng tiền vé:</span>
-								<span class="font-semibold">{{
+								<span class="text-[#372e2d]/70"
+									>Tổng tiền vé:</span
+								>
+								<span class="font-semibold text-[#372e2d]">{{
 									formatPrice(ticketAmount)
 								}}</span>
 							</div>
 							<div class="flex justify-between text-sm">
-								<span class="text-gray-600"
+								<span class="text-[#372e2d]/70"
 									>Phí vận chuyển:</span
 								>
-								<span class="font-semibold text-primary-600">
+								<span class="font-semibold text-[#d8a669]">
 									{{ formatPrice(shippingFee) }}
 								</span>
 							</div>
 							<div class="flex justify-between text-sm">
-								<span class="text-gray-600">Phí dịch vụ:</span>
-								<span class="font-semibold text-primary-600">{{
+								<span class="text-[#372e2d]/70"
+									>Phí dịch vụ:</span
+								>
+								<span class="font-semibold text-[#d8a669]">{{
 									formatPrice(serviceFee)
 								}}</span>
 							</div>
@@ -284,7 +297,7 @@
 								v-if="bookingStore.discountAmount > 0"
 								class="flex justify-between text-sm"
 							>
-								<span class="text-gray-600">Giảm giá:</span>
+								<span class="text-[#372e2d]/70">Giảm giá:</span>
 								<span class="font-semibold text-green-600"
 									>-{{
 										formatPrice(bookingStore.discountAmount)
@@ -296,13 +309,15 @@
 						<div
 							class="flex justify-between items-center text-lg font-bold mb-6"
 						>
-							<span>Tổng thanh toán:</span>
-							<span class="text-primary-600">{{
+							<span class="text-[#372e2d]">Tổng thanh toán:</span>
+							<span class="text-[#d8a669] text-2xl">{{
 								formatPrice(finalAmount)
 							}}</span>
 						</div>
 
-						<div class="mt-4 p-3 bg-yellow-50 rounded-lg">
+						<div
+							class="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-300"
+						>
 							<div class="text-sm text-yellow-800">
 								⏱️ Thời gian giữ vé:
 								<span class="font-bold">{{
@@ -315,23 +330,25 @@
 			</div>
 
 			<div
-				class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50"
+				class="lg:hidden fixed bottom-0 left-0 right-0 bg-[#fdfcf0] border-t-2 border-[#d8a669] shadow-lg z-50"
 			>
 				<div class="px-4 py-3">
 					<div class="flex justify-between items-center mb-3">
 						<div>
-							<p class="text-xs text-gray-500">Tổng thanh toán</p>
-							<p class="text-lg font-bold text-primary-600">
+							<p class="text-xs text-[#372e2d]/70">
+								Tổng thanh toán
+							</p>
+							<p class="text-lg font-bold text-[#d8a669]">
 								{{ formatPrice(finalAmount) }}
 							</p>
 						</div>
 						<div class="text-right">
-							<p class="text-xs text-gray-500">
+							<p class="text-xs text-[#372e2d]/70">
 								⏱️ {{ formatTime(timeLeft) }}
 							</p>
 							<button
 								@click="toggleOrderSummary"
-								class="text-xs text-primary-600 hover:text-primary-700 underline"
+								class="text-xs text-[#d8a669] hover:text-[#b8884d] underline font-medium"
 							>
 								{{
 									showOrderSummary
@@ -344,26 +361,28 @@
 
 					<div
 						v-show="showOrderSummary"
-						class="mb-3 p-3 bg-gray-50 rounded-lg text-sm max-h-48 overflow-y-auto"
+						class="mb-3 p-3 bg-white rounded-lg text-sm max-h-48 overflow-y-auto border border-[#d8a669]/30"
 					>
 						<div class="space-y-2">
 							<div class="flex justify-between">
-								<span class="text-gray-600">Tiền vé:</span>
-								<span class="font-semibold">{{
+								<span class="text-[#372e2d]/70">Tiền vé:</span>
+								<span class="font-semibold text-[#372e2d]">{{
 									formatPrice(ticketAmount)
 								}}</span>
 							</div>
 							<div class="flex justify-between">
-								<span class="text-gray-600">Phí dịch vụ:</span>
-								<span class="font-semibold">{{
+								<span class="text-[#372e2d]/70"
+									>Phí dịch vụ:</span
+								>
+								<span class="font-semibold text-[#372e2d]">{{
 									formatPrice(serviceFee)
 								}}</span>
 							</div>
 							<div class="flex justify-between">
-								<span class="text-gray-600"
+								<span class="text-[#372e2d]/70"
 									>Phí vận chuyển:</span
 								>
-								<span class="font-semibold">{{
+								<span class="font-semibold text-[#372e2d]">{{
 									formatPrice(shippingFee)
 								}}</span>
 							</div>
@@ -371,23 +390,23 @@
 								v-if="bookingStore.discountAmount > 0"
 								class="flex justify-between"
 							>
-								<span class="text-gray-600">Giảm giá:</span>
+								<span class="text-[#372e2d]/70">Giảm giá:</span>
 								<span class="font-semibold text-green-600"
 									>-{{
 										formatPrice(bookingStore.discountAmount)
 									}}</span
 								>
 							</div>
-							<div class="pt-2 border-t">
+							<div class="pt-2 border-t border-[#d8a669]/30">
 								<label
-									class="block text-xs font-medium text-gray-700 mb-1"
+									class="block text-xs font-medium text-[#372e2d] mb-1"
 									>Mã giảm giá</label
 								>
 								<div class="flex gap-2">
 									<input
 										v-model="discountCodeInput"
 										type="text"
-										class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-primary-500"
+										class="w-full px-2 py-1 text-sm border border-[#d8a669]/50 rounded-md focus:ring-1 focus:ring-[#d8a669] bg-white text-[#372e2d]"
 										placeholder="Nhập mã"
 										:disabled="
 											bookingStore.isDiscountSuccess
@@ -398,7 +417,7 @@
 										:disabled="
 											bookingStore.isDiscountSuccess
 										"
-										class="px-3 py-1 bg-primary-600 text-white rounded-md text-xs hover:bg-primary-700 disabled:bg-gray-400"
+										class="px-3 py-1 bg-[#d8a669] text-white rounded-md text-xs font-semibold hover:bg-[#b8884d] disabled:bg-gray-400"
 									>
 										Áp dụng
 									</button>
@@ -416,8 +435,8 @@
 									{{ bookingStore.discountMessage }}
 								</p>
 							</div>
-							<div class="border-t pt-2 mt-2">
-								<p class="text-xs text-gray-500 mb-1">
+							<div class="border-t border-[#d8a669]/30 pt-2 mt-2">
+								<p class="text-xs text-[#372e2d]/70 mb-1">
 									Ghế:
 									<span
 										v-for="(seat, index) in selectedSeats"
@@ -441,13 +460,13 @@
 						<button
 							type="button"
 							@click="goBack"
-							class="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium"
+							class="flex-1 px-4 py-3 border-2 border-[#d8a669] rounded-lg text-[#372e2d] hover:bg-white transition font-semibold"
 						>
 							← Quay lại
 						</button>
 						<button
 							@click="handleSubmit"
-							class="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition"
+							class="flex-1 px-4 py-3 bg-[#d8a669] text-white rounded-lg font-bold hover:bg-[#b8884d] transition"
 						>
 							Thanh toán →
 						</button>
@@ -457,7 +476,6 @@
 		</div>
 	</DefaultLayout>
 </template>
-
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter, useRoute } from "vue-router";

@@ -7,31 +7,33 @@
 					<li>
 						<router-link
 							to="/"
-							class="text-gray-500 hover:text-primary-600"
+							class="text-[#d8a669] hover:text-[#b8884d] font-medium transition"
 						>
 							Trang chủ
 						</router-link>
 					</li>
-					<li class="text-gray-400">/</li>
-					<li class="text-gray-700 font-medium">Chọn suất diễn</li>
+					<li class="text-[#a0866b]">/</li>
+					<li class="text-[#372e2d] font-semibold">Chọn suất diễn</li>
 				</ol>
 			</nav>
 
 			<!-- Loading -->
 			<div v-if="loading" class="flex justify-center py-12">
 				<div
-					class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"
+					class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#d8a669]"
 				></div>
 			</div>
 
 			<template v-else>
 				<!-- Show Info Section -->
-				<div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+				<div
+					class="bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-8 mb-8"
+				>
 					<div class="grid md:grid-cols-3 gap-8">
 						<!-- Poster -->
 						<div class="md:col-span-1">
 							<div
-								class="w-full h-80 bg-gray-300 rounded-lg overflow-hidden"
+								class="w-full h-80 bg-[#e8dcc8] rounded-lg overflow-hidden border-2 border-[#d8a669]/20"
 							>
 								<img
 									v-if="showInfo.poster"
@@ -44,19 +46,25 @@
 
 						<!-- Show Details -->
 						<div class="md:col-span-2">
-							<h1 class="text-3xl font-bold mb-4">
+							<h1 class="text-3xl font-bold mb-4 text-[#372e2d]">
 								{{ showInfo.name }}
 							</h1>
-							<div class="space-y-2 text-gray-600 mb-6">
-								<p>🎭 Thể loại: {{ showInfo.category }}</p>
-								<p>
+							<div
+								class="space-y-2 text-[#372e2d] mb-6 text-base"
+							>
+								<p class="font-medium">
+									🎭 Thể loại: {{ showInfo.category }}
+								</p>
+								<p class="font-medium">
 									⏱️ Thời lượng:
 									{{ showInfo.duration_minutes }} phút
 								</p>
-								<p>📍 Địa điểm: {{ showInfo.venue?.name }}</p>
+								<p class="font-medium">
+									📍 Địa điểm: {{ showInfo.venue?.name }}
+								</p>
 							</div>
 							<div class="prose max-w-none">
-								<p class="text-gray-700">
+								<p class="text-[#372e2d] leading-relaxed">
 									{{ showInfo.description }}
 								</p>
 							</div>
@@ -65,23 +73,29 @@
 				</div>
 
 				<!-- Performances Section -->
-				<div class="bg-white rounded-lg shadow-lg p-8">
-					<h2 class="text-2xl font-bold mb-6">Chọn suất diễn</h2>
+				<div
+					class="bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-8"
+				>
+					<h2 class="text-2xl font-bold mb-6 text-[#372e2d]">
+						Chọn suất diễn
+					</h2>
 
 					<div
 						v-if="performances.length === 0"
-						class="text-center text-gray-500 py-8"
+						class="text-center text-[#372e2d] py-8"
 					>
 						Không có suất diễn nào
 					</div>
 
-					<div v-else class="space-y-4">
+					<div v-else class="space-y-6">
 						<!-- Group performances by date -->
 						<div
 							v-for="(dateGroup, date) in groupedPerformances"
 							:key="date"
 						>
-							<h3 class="font-semibold text-lg mb-3">
+							<h3
+								class="font-semibold text-lg mb-4 text-[#372e2d] flex items-center"
+							>
 								{{ formatDate(date) }}
 							</h3>
 
@@ -93,15 +107,15 @@
 									:key="performance.id"
 									@click="selectPerformance(performance)"
 									:class="[
-										'border-2 rounded-lg p-4 text-center cursor-pointer transition',
+										'border-2 rounded-lg p-4 text-center cursor-pointer transition-all duration-200',
 										{
-											'border-gray-200 hover:border-primary-400':
+											'border-[#d8a669] bg-white hover:border-[#b8884d] hover:shadow-md':
 												selectedPerformance?.id !==
 												performance.id,
-											'border-primary-600 bg-primary-50':
+											'border-[#372e2d] bg-[#d8a669]/10 shadow-lg ring-2 ring-[#d8a669]':
 												selectedPerformance?.id ===
 												performance.id,
-											'opacity-50 cursor-not-allowed':
+											'opacity-50 cursor-not-allowed bg-gray-100':
 												performance.available_seats ===
 												0,
 										},
@@ -110,13 +124,15 @@
 										performance.available_seats === 0
 									"
 								>
-									<div class="text-lg font-semibold">
+									<div
+										class="text-lg font-bold text-[#372e2d]"
+									>
 										{{ formatTime(performance.datetime) }}
 									</div>
 									<div
-										class="text-sm mt-2"
+										class="text-sm mt-2 font-medium"
 										:class="{
-											'text-gray-600':
+											'text-[#372e2d]':
 												performance.available_seats > 0,
 											'text-red-600':
 												performance.available_seats ===
@@ -141,7 +157,7 @@
 					>
 						<button
 							@click="continueToSeatSelection"
-							class="bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary-700 transition"
+							class="bg-[#d8a669] text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg hover:bg-[#b8884d] hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200"
 						>
 							Tiếp tục chọn ghế →
 						</button>

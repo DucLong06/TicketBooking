@@ -1,45 +1,40 @@
 <template>
-	<header class="bg-white shadow-md top-0">
+	<header class="bg-[#372e2d] shadow-md top-0">
 		<div class="container mx-auto px-4">
 			<div class="flex items-center justify-between h-16">
 				<!-- Logo -->
 				<div class="flex items-center space-x-3">
 					<img
 						class="h-12 w-auto object-contain"
-						src="/LogoDC.png"
+						src="/logo_DCART.png"
 						alt="Dương Cầm ART Logo"
 					/>
-					<h1
-						class="text-xl md:text-2xl font-bold whitespace-nowrap bg-gradient-to-r from-pink-600 via-red-500 to-orange-500 bg-clip-text text-transparent"
-					>
-						Dương Cầm Art
-					</h1>
 				</div>
 
 				<!-- Desktop Navigation -->
 				<nav class="hidden md:flex items-center space-x-8">
 					<a
 						href="/"
-						class="text-gray-700 hover:text-primary-600 transition font-medium"
+						class="text-[#d8a669] hover:text-white transition font-medium"
 					>
 						Trang chủ
 					</a>
 					<a
 						href="/lookup"
-						class="text-gray-700 hover:text-primary-600 transition font-medium"
+						class="text-[#d8a669] hover:text-white transition font-medium"
 					>
 						Tra cứu vé
 					</a>
 					<a
-						href="/https://www.giacmochipheo.com.vn/"
-						class="text-gray-700 hover:text-primary-600 transition font-medium"
+						href="https://www.giacmochipheo.com.vn/"
+						class="text-[#d8a669] hover:text-white transition font-medium"
 					>
 						Về chúng tôi
 					</a>
 					<a
 						v-if="contactInfo?.hotline_display"
 						:href="`tel:${contactInfo.hotline}`"
-						class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition font-medium"
+						class="bg-[#d8a669] text-white px-4 py-2 rounded-lg hover:bg-white hover:text-[#372e2d] transition font-medium"
 					>
 						📞 {{ contactInfo.hotline_display }}
 					</a>
@@ -52,7 +47,7 @@
 					aria-label="Toggle menu"
 				>
 					<svg
-						class="w-6 h-6 text-gray-700"
+						class="w-6 h-6 text-[#d8a669]"
 						fill="none"
 						stroke="currentColor"
 						:class="{ hidden: isMenuOpen }"
@@ -65,7 +60,7 @@
 						/>
 					</svg>
 					<svg
-						class="w-6 h-6 text-gray-700"
+						class="w-6 h-6 text-[#d8a669]"
 						fill="none"
 						stroke="currentColor"
 						:class="{ hidden: !isMenuOpen }"
@@ -97,21 +92,21 @@
 						<a
 							href="/"
 							@click="closeMenu"
-							class="text-gray-700 hover:text-primary-600 hover:bg-gray-50 px-4 py-3 rounded-lg transition font-medium"
+							class="text-[#d8a669] hover:text-white hover:bg-gray-50 px-4 py-3 rounded-lg transition font-medium"
 						>
 							🏠 Trang chủ
 						</a>
 						<a
 							href="/lookup"
 							@click="closeMenu"
-							class="text-gray-700 hover:text-primary-600 hover:bg-gray-50 px-4 py-3 rounded-lg transition font-medium"
+							class="text-[#d8a669] hover:text-white hover:bg-gray-50 px-4 py-3 rounded-lg transition font-medium"
 						>
 							🔍 Tra cứu vé
 						</a>
 						<a
-							href="/https://www.giacmochipheo.com.vn/"
+							href="https://www.giacmochipheo.com.vn/"
 							@click="closeMenu"
-							class="text-gray-700 hover:text-primary-600 hover:bg-gray-50 px-4 py-3 rounded-lg transition font-medium"
+							class="text-[#d8a669] hover:text-white hover:bg-gray-50 px-4 py-3 rounded-lg transition font-medium"
 						>
 							ℹ️ Về chúng tôi
 						</a>
@@ -119,7 +114,7 @@
 							v-if="contactInfo?.hotline_display"
 							:href="`tel:${contactInfo.hotline}`"
 							@click="closeMenu"
-							class="bg-primary-600 text-white px-4 py-3 rounded-lg hover:bg-primary-700 transition font-medium text-center"
+							class="bg-[#d8a669] text-white px-4 py-3 rounded-lg hover:bg-white hover:text-[#372e2d] transition font-medium text-center"
 						>
 							📞 Hotline: {{ contactInfo.hotline_display }}
 						</a>
@@ -132,7 +127,7 @@
 								:href="contactInfo.facebook_url"
 								target="_blank"
 								rel="noopener noreferrer"
-								class="text-gray-600 hover:text-primary-600 transition"
+								class="text-[#d8a669] hover:text-white transition"
 								aria-label="Facebook"
 							>
 								<svg
@@ -150,7 +145,7 @@
 								:href="contactInfo.tiktok_url"
 								target="_blank"
 								rel="noopener noreferrer"
-								class="text-gray-600 hover:text-primary-600 transition"
+								class="text-[#d8a669] hover:text-white transition"
 								aria-label="TikTok"
 							>
 								<svg
@@ -168,7 +163,7 @@
 								:href="contactInfo.instagram_url"
 								target="_blank"
 								rel="noopener noreferrer"
-								class="text-gray-600 hover:text-primary-600 transition"
+								class="text-[#d8a669] hover:text-white transition"
 								aria-label="Instagram"
 							>
 								<svg

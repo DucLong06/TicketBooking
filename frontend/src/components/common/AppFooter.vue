@@ -1,17 +1,17 @@
 <template>
-	<footer class="bg-gray-800 text-white mt-auto">
+	<footer class="bg-[#372e2d] text-[#d8a669] mt-auto">
 		<div class="container mx-auto px-4 py-8">
-			<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+			<div class="grid grid-cols-1 md:grid-cols-4 gap-8">
 				<!-- Contact Info -->
 				<div>
 					<h3 class="text-lg font-semibold mb-4">Liên hệ</h3>
 					<p
-						class="text-gray-300"
+						class="text-[#d8a669]"
 						v-if="contactInfo?.hotline_display"
 					>
 						📞 {{ contactInfo.hotline_display }}
 					</p>
-					<p class="text-gray-300" v-if="contactInfo?.support_email">
+					<p class="text-[#d8a669]" v-if="contactInfo?.support_email">
 						✉️ {{ contactInfo.support_email }}
 					</p>
 				</div>
@@ -19,16 +19,16 @@
 				<!-- Quick Links -->
 				<div>
 					<h3 class="text-lg font-semibold mb-4">Liên kết nhanh</h3>
-					<ul class="space-y-2 text-gray-300">
+					<ul class="space-y-2 text-[#d8a669]">
 						<li>
-							<a href="/" class="hover:text-white transition">
+							<a href="/" class="hover:text-[#d8a669] transition">
 								Trang chủ
 							</a>
 						</li>
 						<li>
 							<a
 								href="/#shows"
-								class="hover:text-white transition"
+								class="hover:text-[#d8a669] transition"
 							>
 								Lịch diễn
 							</a>
@@ -36,11 +36,60 @@
 						<li>
 							<a
 								href="/https://www.giacmochipheo.com.vn/"
-								class="hover:text-white transition"
+								class="hover:text-[#d8a669] transition"
 							>
 								Giới thiệu
 							</a>
 						</li>
+					</ul>
+				</div>
+
+				<!-- Terms & Policies -->
+				<div>
+					<h3 class="text-lg font-semibold mb-4">
+						Điều khoản sử dụng
+					</h3>
+					<ul class="space-y-2 text-[#d8a669]">
+						<li>
+							<a
+								href="/terms/GeneralTerms.html"
+								class="hover:text-[#d8a669] transition"
+							>
+								Điều Khoản Chung
+							</a>
+						</li>
+						<li>
+							<a
+								href="/terms/GeneralTerms.html"
+								class="hover:text-[#d8a669] transition"
+							>
+								Điều Khoản Giao Dịch
+							</a>
+						</li>
+						<li>
+							<a
+								href="/terms/GeneralTerms.html"
+								class="hover:text-[#d8a669] transition"
+							>
+								Chính Sách Thanh Toán
+							</a>
+						</li>
+						<li>
+							<a
+								href="/terms/GeneralTerms.html"
+								class="hover:text-[#d8a669] transition"
+							>
+								Chính Sách Bảo Mật
+							</a>
+						</li>
+						<!-- <li>
+							<a
+								href="/terms/GeneralTerms.html"
+								class="hover:text-[#d8a669] transition"
+							>
+								Câu Hỏi Thường Gặp
+							</a>
+						</li> -->
 					</ul>
 				</div>
 
@@ -55,7 +104,7 @@
 							:href="contactInfo.facebook_url"
 							target="_blank"
 							rel="noopener noreferrer"
-							class="text-gray-300 hover:text-white transition"
+							class="text-[#d8a669] hover:text-[#d8a669] transition"
 						>
 							Facebook
 						</a>
@@ -64,7 +113,7 @@
 							:href="contactInfo.instagram_url"
 							target="_blank"
 							rel="noopener noreferrer"
-							class="text-gray-300 hover:text-white transition"
+							class="text-[#d8a669] hover:text-[#d8a669] transition"
 						>
 							Instagram
 						</a>
@@ -73,16 +122,15 @@
 							:href="contactInfo.tiktok_url"
 							target="_blank"
 							rel="noopener noreferrer"
-							class="text-gray-300 hover:text-white transition"
+							class="text-[#d8a669] hover:text-[#d8a669] transition"
 						>
 							TikTok
 						</a>
 					</div>
 				</div>
 			</div>
-
 			<div
-				class="border-t border-gray-700 mt-8 pt-4 text-center text-gray-400"
+				class="border-t border-[#4a3f3e] mt-8 pt-4 text-center text-gray-400"
 			>
 				<p>
 					&copy;
