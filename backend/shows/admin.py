@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from .models import Show, Performance, PerformancePrice, Poster
 from venues.models import PriceCategory
+from markdownx.admin import MarkdownxModelAdmin
 
 
 class QuickPerformanceInlineForm(forms.ModelForm):
@@ -40,7 +41,6 @@ class PerformanceInline(admin.TabularInline):
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
 
-        # Auto create prices với giá mặc định
         if not change:  # Only for new performances
             price_categories = PriceCategory.objects.all()
             for category in price_categories:
@@ -52,103 +52,33 @@ class PerformanceInline(admin.TabularInline):
 
 
 @admin.register(Show)
-class ShowAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'venue', 'duration_minutes',
-                    'service_fee_per_ticket', 'is_active', 'upcoming_performances']
-    list_filter = ['venue', 'category', 'is_active']
-    search_fields = ['name', 'description']
+class ShowAdmin(MarkdownxModelAdmin):
+    list_display = ['name', 'category', 'venue', 'duration_minutes', 'is_active', 'created_at']
+    list_filter = ['is_active', 'category', 'venue', 'created_at']
+    search_fields = ['name', 'category', 'description']
     prepopulated_fields = {'slug': ('name',)}
-    inlines = [PerformanceInline]
-    readonly_fields = ['created_at', 'updated_at']
 
     fieldsets = (
         ('Thông tin cơ bản', {
-            'fields': ('name', 'slug', 'category', 'venue', 'duration_minutes', 'description', 'poster')
+            'fields': ('name', 'slug', 'category', 'duration_minutes', 'venue', 'poster')
         }),
-        ('Cấu hình giá', {
-            'fields': ('service_fee_per_ticket',),
-            'description': 'Cấu hình phí dịch vụ cho vở diễn này'
+        ('Nội dung', {
+            'fields': ('description', 'description_markdown', 'trailer_url')
         }),
-        ('Trạng thái', {
-            'fields': ('is_active',)
-        }),
-        ('Thông tin khác', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
+        ('Cài đặt', {
+            'fields': ('service_fee_per_ticket', 'is_active')
         }),
     )
 
-    def get_fields(self, request, obj=None):
-        if request.user.is_superuser:
-            return super().get_fields(request, obj)
-        else:
-            return ['name', 'slug', 'category', 'duration_minutes', 'description',
-                    'poster', 'service_fee_per_ticket', 'is_active']
-
-    def get_readonly_fields(self, request, obj=None):
-        if request.user.is_superuser:
-            return self.readonly_fields
-        else:
-            return self.readonly_fields + ['venue']
-
-    def save_model(self, request, obj, form, change):
-        if not obj.venue_id:
-            from venues.models import Venue
-            default_venue = Venue.objects.first()
-            if default_venue:
-                obj.venue = default_venue
-
-        super().save_model(request, obj, form, change)
-
-    def upcoming_performances(self, obj):
-        count = obj.performances.filter(
-            datetime__gte=timezone.now(),
-            status='on_sale'
-        ).count()
-        return format_html('<span class="badge">{}</span>', count)
-    upcoming_performances.short_description = 'Suất sắp diễn'
-
-    actions = ['create_week_performances', 'activate_shows', 'deactivate_shows']
-
-    def create_week_performances(self, request, queryset):
-        """Quick action to create performances for next 7 days"""
-        for show in queryset:
-            start_date = timezone.now().replace(hour=19, minute=0, second=0, microsecond=0)
-
-            for day in range(7):
-                performance_date = start_date + timedelta(days=day)
-
-                # Create 2 performances per day (19:00 and 21:00)
-                for hour in [19, 21]:
-                    perf_datetime = performance_date.replace(hour=hour)
-
-                    perf = Performance.objects.create(
-                        show=show,
-                        datetime=perf_datetime,
-                        status='on_sale'
-                    )
-
-                    # Auto create prices
-                    for category in PriceCategory.objects.all():
-                        PerformancePrice.objects.create(
-                            performance=perf,
-                            price_category=category,
-                            price=category.base_price
-                        )
-
-        self.message_user(request, f"Đã tạo suất diễn cho {queryset.count()} show trong 7 ngày tới")
-    create_week_performances.short_description = "Tạo suất diễn 7 ngày tới"
-
-    def activate_shows(self, request, queryset):
-        queryset.update(is_active=True)
-    activate_shows.short_description = "Kích hoạt show"
-
-    def deactivate_shows(self, request, queryset):
-        queryset.update(is_active=False)
-    deactivate_shows.short_description = "Tắt show"
+    class Media:
+        css = {
+            'all': ('markdownx/admin/css/markdownx.min.css',)
+        }
+        js = (
+            'markdownx/js/markdownx.min.js',
+        )
 
 
-# Simplified Performance Admin
 @admin.register(Performance)
 class SimplePerformanceAdmin(admin.ModelAdmin):
     list_display = ['show', 'datetime', 'status', 'available_seats_count', 'quick_actions']

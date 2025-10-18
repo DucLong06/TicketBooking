@@ -76,6 +76,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'django_filters',
+    'markdownx',
 
     # Local apps
     'venues',
@@ -219,17 +220,33 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Ho_Chi_Minh'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
+MARKDOWNX_MARKDOWN_EXTENSIONS = [
+    'markdown.extensions.extra',
+    'markdown.extensions.nl2br',
+    'markdown.extensions.smarty',
+    'markdown.extensions.fenced_code',
+    'markdown.extensions.codehilite',
+    'markdown.extensions.tables',
+]
+
+MARKDOWNX_MARKDOWN_EXTENSION_CONFIGS = {}
+MARKDOWNX_UPLOAD_MAX_SIZE = 10 * 1024 * 1024  # 10MB
+MARKDOWNX_UPLOAD_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+MARKDOWNX_IMAGE_MAX_SIZE = {'size': (1920, 1080), 'quality': 90}
+
+# Editor settings
+MARKDOWNX_EDITOR_RESIZABLE = True
 # Jazzmin Admin Configuration
 JAZZMIN_SETTINGS = {
     # Title
-    "site_title": "Theater Booking Admin",
+    "site_title": "Booking Duong Cam Art Admin",
     "site_header": "Hệ thống quản lý đặt vé",
-    "site_brand": "Ticket Booking",
+    "site_brand": "Duong Cam Art",
     "site_logo": None,
     "welcome_sign": "Chào mừng đến với trang quản trị",
 
     # Copyright
-    "copyright": "Theater Booking System",
+    "copyright": "Duong Cam Art",
 
     "search_model": ["auth.User", "shows.Show", "bookings.Booking"],
 

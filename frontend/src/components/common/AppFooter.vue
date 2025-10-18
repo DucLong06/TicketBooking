@@ -130,11 +130,23 @@
 				</div>
 			</div>
 			<div
-				class="border-t border-[#4a3f3e] mt-8 pt-4 text-center text-gray-400"
+				class="border-t border-[#4a3f3e] mt-8 pt-4 text-gray-400"
 			>
 				<p>
-					&copy;
-					{{ contactInfo?.copyright_text || "Theater Booking" }}
+					© 2025 Công ty TNHH Phát triển nghệ thuật và giải trí Dương
+					Cầm 
+                    <p>
+GPĐKKD: 0106683236 do Phòng ĐKKD- Sở KH&ĐT TP Hà Nội cấp
+					ngày 04/11/2014.
+                    </p>
+                     Địa chỉ: Số nhà 11, Ngõ 86, phố Hào Nam,
+					Phường Ô Chợ Dừa, Thành phố Hà Nội, Việt Nam. 
+                    <p>
+ Đại diện pháp
+					luật: NGUYỄN THU QUỲNH.
+                    </p>
+                    Hotline: 0962.98.98.56 | Email:
+					support@duongcam.art
 				</p>
 			</div>
 		</div>

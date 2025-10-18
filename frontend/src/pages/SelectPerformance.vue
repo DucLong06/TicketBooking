@@ -27,56 +27,249 @@
 			<template v-else>
 				<!-- Show Info Section -->
 				<div
-					class="bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-8 mb-8"
+					class="bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-6 md:p-8 mb-8"
 				>
-					<div class="grid md:grid-cols-3 gap-8">
-						<!-- Poster -->
+					<div class="grid md:grid-cols-3 gap-6 md:gap-8">
+						<!-- Poster Column - Responsive aspect ratio -->
 						<div class="md:col-span-1">
 							<div
-								class="w-full h-80 bg-[#e8dcc8] rounded-lg overflow-hidden border-2 border-[#d8a669]/20"
+								class="relative w-full poster-container bg-[#e8dcc8] rounded-lg overflow-hidden border-2 border-[#d8a669]/20 group cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300 mx-auto"
+								@click="openTrailer"
 							>
 								<img
 									v-if="showInfo.poster"
 									:src="showInfo.poster"
 									:alt="showInfo.name"
-									class="w-full h-full object-cover"
+									class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
 								/>
+								<div
+									v-else
+									class="w-full h-full bg-gradient-to-br from-[#d8a669]/20 to-[#372e2d]/20 flex items-center justify-center"
+								>
+									<svg
+										class="w-16 md:w-24 h-16 md:h-24 text-[#d8a669]/30"
+										fill="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											d="M4 4h16v12H4V4m0 14h16v2H4v-2z"
+										/>
+									</svg>
+								</div>
+
+								<!-- Trailer Overlay -->
+								<div
+									v-if="showInfo.trailer_url"
+									class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center"
+								>
+									<div
+										class="text-center transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+									>
+										<div
+											class="w-16 h-16 md:w-20 md:h-20 bg-white/95 rounded-full flex items-center justify-center mb-2 md:mb-3 mx-auto shadow-2xl"
+										>
+											<svg
+												class="w-8 h-8 md:w-10 md:h-10 text-[#d8a669] ml-1"
+												fill="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path d="M8 5v14l11-7z" />
+											</svg>
+										</div>
+										<p
+											class="text-white font-bold text-base md:text-lg drop-shadow-lg"
+										>
+											Xem Trailer
+										</p>
+									</div>
+								</div>
 							</div>
 						</div>
 
-						<!-- Show Details -->
-						<div class="md:col-span-2">
-							<h1 class="text-3xl font-bold mb-4 text-[#372e2d]">
+						<!-- Show Details Column -->
+						<div class="md:col-span-2 space-y-4">
+							<h1
+								class="text-2xl md:text-3xl lg:text-4xl font-bold text-[#372e2d]"
+							>
 								{{ showInfo.name }}
 							</h1>
+
+							<!-- Action Buttons (Trailer + Đặt vé) -->
+							<div class="flex flex-wrap gap-3">
+								<button
+									v-if="showInfo.trailer_url"
+									@click="openTrailer"
+									class="flex items-center gap-2 bg-white border-2 border-[#d8a669] text-[#d8a669] px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-medium hover:bg-[#d8a669] hover:text-white transition-all duration-200 shadow-md hover:shadow-xl transform hover:scale-105 active:scale-95"
+								>
+									<svg
+										class="w-4 h-4 md:w-5 md:h-5"
+										fill="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path d="M8 5v14l11-7z" />
+									</svg>
+									<span class="text-sm md:text-base"
+										>Xem Trailer</span
+									>
+								</button>
+
+								<button
+									@click="scrollToPerformances"
+									class="flex items-center gap-2 bg-[#d8a669] text-white px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-bold hover:bg-[#b8884d] transition-all duration-200 shadow-md hover:shadow-xl transform hover:scale-105 active:scale-95"
+								>
+									<svg
+										class="w-4 h-4 md:w-5 md:h-5"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
+										/>
+									</svg>
+									<span class="text-sm md:text-base"
+										>Đặt vé ngay</span
+									>
+								</button>
+							</div>
+
+							<!-- Show Meta Information -->
 							<div
-								class="space-y-2 text-[#372e2d] mb-6 text-base"
+								class="space-y-2 text-[#372e2d] text-sm md:text-base"
 							>
-								<p class="font-medium">
-									🎭 Thể loại: {{ showInfo.category }}
+								<p class="font-medium flex items-center gap-2">
+									<span class="text-[#d8a669]">🎭</span>
+									<span class="text-gray-600">Thể loại:</span>
+									<span class="font-semibold">{{
+										showInfo.category
+									}}</span>
 								</p>
-								<p class="font-medium">
-									⏱️ Thời lượng:
-									{{ showInfo.duration_minutes }} phút
+								<p class="font-medium flex items-center gap-2">
+									<span class="text-[#d8a669]">⏱️</span>
+									<span class="text-gray-600"
+										>Thời lượng:</span
+									>
+									<span class="font-semibold"
+										>{{
+											showInfo.duration_minutes
+										}}
+										phút</span
+									>
 								</p>
-								<p class="font-medium">
-									📍 Địa điểm: {{ showInfo.venue?.name }}
+								<p class="font-medium flex items-center gap-2">
+									<span class="text-[#d8a669]">📍</span>
+									<span class="text-gray-600">Địa điểm:</span>
+									<span class="font-semibold">{{
+										showInfo.venue?.name
+									}}</span>
 								</p>
 							</div>
-							<div class="prose max-w-none">
-								<p class="text-[#372e2d] leading-relaxed">
-									{{ showInfo.description }}
-								</p>
+
+							<!-- Mô tả ngắn (collapse chỉ trên mobile) -->
+							<div class="relative">
+								<div
+									:class="[
+										'prose max-w-none text-sm md:text-base',
+										// Chỉ line-clamp trên mobile
+										!showFullDescription &&
+											'line-clamp-3 md:line-clamp-none',
+									]"
+								>
+									<p class="text-[#372e2d] leading-relaxed">
+										{{ showInfo.description }}
+									</p>
+								</div>
+
+								<!-- Gradient fade khi collapsed (chỉ mobile) -->
+								<div
+									v-if="
+										!showFullDescription &&
+										showInfo.description &&
+										showInfo.description.length > 150
+									"
+									class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#fdfcf0] to-transparent pointer-events-none md:hidden"
+								></div>
+
+								<!-- Button Xem thêm/Thu gọn (chỉ mobile) -->
+								<button
+									v-if="
+										showInfo.description &&
+										showInfo.description.length > 150
+									"
+									@click="
+										showFullDescription =
+											!showFullDescription
+									"
+									class="mt-2 text-[#d8a669] font-medium hover:text-[#b8884d] transition flex items-center gap-1 text-sm md:hidden"
+								>
+									{{
+										showFullDescription
+											? "Thu gọn"
+											: "Xem thêm"
+									}}
+									<svg
+										class="w-4 h-4 transition-transform duration-200"
+										:class="{
+											'rotate-180': showFullDescription,
+										}"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M19 9l-7 7-7-7"
+										/>
+									</svg>
+								</button>
 							</div>
 						</div>
 					</div>
 				</div>
 
-				<!-- Performances Section -->
+				<!-- Markdown Description Section (MỚI) -->
 				<div
-					class="bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-8"
+					v-if="showInfo.description_markdown"
+					class="bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-6 md:p-8 mb-8"
 				>
-					<h2 class="text-2xl font-bold mb-6 text-[#372e2d]">
+					<h2
+						class="text-xl md:text-2xl font-bold mb-4 text-[#372e2d] flex items-center gap-2"
+					>
+						<svg
+							class="w-5 h-5 md:w-6 md:h-6 text-[#d8a669]"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						</svg>
+						Thông tin chi tiết
+					</h2>
+
+					<MarkdownCollapse
+						:content="showInfo.description_markdown"
+						:initialLines="3"
+					/>
+				</div>
+
+				<!-- Performances Section (GIỮ NGUYÊN 100%) -->
+				<div
+					ref="performancesSection"
+					class="bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-6 md:p-8 scroll-mt-20"
+				>
+					<h2
+						class="text-xl md:text-2xl font-bold mb-6 text-[#372e2d]"
+					>
 						Chọn suất diễn
 					</h2>
 
@@ -94,20 +287,20 @@
 							:key="date"
 						>
 							<h3
-								class="font-semibold text-lg mb-4 text-[#372e2d] flex items-center"
+								class="font-semibold text-base md:text-lg mb-4 text-[#372e2d] flex items-center"
 							>
 								{{ formatDate(date) }}
 							</h3>
 
 							<div
-								class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+								class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4"
 							>
 								<div
 									v-for="performance in dateGroup"
 									:key="performance.id"
 									@click="selectPerformance(performance)"
 									:class="[
-										'border-2 rounded-lg p-4 text-center cursor-pointer transition-all duration-200',
+										'border-2 rounded-lg p-3 md:p-4 text-center cursor-pointer transition-all duration-200',
 										{
 											'border-[#d8a669] bg-white hover:border-[#b8884d] hover:shadow-md':
 												selectedPerformance?.id !==
@@ -125,12 +318,12 @@
 									"
 								>
 									<div
-										class="text-lg font-bold text-[#372e2d]"
+										class="text-base md:text-lg font-bold text-[#372e2d]"
 									>
 										{{ formatTime(performance.datetime) }}
 									</div>
 									<div
-										class="text-sm mt-2 font-medium"
+										class="text-xs md:text-sm mt-2 font-medium"
 										:class="{
 											'text-[#372e2d]':
 												performance.available_seats > 0,
@@ -153,11 +346,11 @@
 					<!-- Continue Button -->
 					<div
 						v-if="selectedPerformance"
-						class="mt-8 flex justify-end"
+						class="mt-6 md:mt-8 flex justify-end"
 					>
 						<button
 							@click="continueToSeatSelection"
-							class="bg-[#d8a669] text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg hover:bg-[#b8884d] hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200"
+							class="w-full md:w-auto bg-[#d8a669] text-white px-6 md:px-8 py-3 rounded-lg font-bold text-base md:text-lg shadow-lg hover:bg-[#b8884d] hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200"
 						>
 							Tiếp tục chọn ghế →
 						</button>
@@ -165,6 +358,13 @@
 				</div>
 			</template>
 		</div>
+
+		<!-- Trailer Popup -->
+		<TrailerPopup
+			:show="showTrailerPopup"
+			:trailerUrl="showInfo.trailer_url"
+			@close="closeTrailer"
+		/>
 	</DefaultLayout>
 </template>
 
@@ -172,6 +372,8 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
+import TrailerPopup from "../components/TrailerPopup.vue";
+import MarkdownCollapse from "../components/MarkdownCollapse.vue";
 import { useBookingStore } from "../stores/booking";
 
 const route = useRoute();
@@ -182,6 +384,15 @@ const showInfo = ref({});
 const performances = ref([]);
 const selectedPerformance = ref(null);
 const loading = ref(true);
+
+// Trailer popup state
+const showTrailerPopup = ref(false);
+
+// Description collapse state
+const showFullDescription = ref(false);
+
+// Ref to performances section
+const performancesSection = ref(null);
 
 // Group performances by date
 const groupedPerformances = computed(() => {
@@ -245,6 +456,28 @@ const continueToSeatSelection = () => {
 	}
 };
 
+const openTrailer = () => {
+	if (showInfo.value.trailer_url) {
+		showTrailerPopup.value = true;
+		document.body.style.overflow = "hidden";
+	}
+};
+
+const closeTrailer = () => {
+	showTrailerPopup.value = false;
+	document.body.style.overflow = "";
+};
+
+// Scroll to performances section
+const scrollToPerformances = () => {
+	if (performancesSection.value) {
+		performancesSection.value.scrollIntoView({
+			behavior: "smooth",
+			block: "start",
+		});
+	}
+};
+
 onMounted(async () => {
 	try {
 		// Initialize session
@@ -261,3 +494,40 @@ onMounted(async () => {
 	}
 });
 </script>
+
+<style scoped>
+/* Poster responsive sizing */
+.poster-container {
+	aspect-ratio: 2/3;
+	max-width: 280px; /* Mobile: smaller */
+}
+
+@media (min-width: 768px) {
+	.poster-container {
+		aspect-ratio: 2/3;
+		max-width: 100%; /* Desktop: full width of column */
+	}
+}
+
+/* Line clamp utility - chỉ mobile */
+.line-clamp-3 {
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+/* Desktop: no line clamp */
+@media (min-width: 768px) {
+	.md\:line-clamp-none {
+		display: block;
+		-webkit-line-clamp: unset;
+		-webkit-box-orient: unset;
+	}
+}
+
+/* Smooth scroll offset for fixed header */
+.scroll-mt-20 {
+	scroll-margin-top: 5rem;
+}
+</style>
