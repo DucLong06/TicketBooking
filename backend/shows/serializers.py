@@ -18,8 +18,9 @@ class ShowListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Show
         fields = [
-            'id', 'name', 'slug', 'category', 'duration_minutes',
-            'description', 'poster', 'venue_name', 'min_price', 'max_price', 'service_fee_per_ticket'
+            'id', 'name', 'slug', 'category', 'duration_minutes', 'description',
+            'poster', 'venue_name', 'min_price', 'max_price', 'service_fee_per_ticket',
+            'trailer_url', 'description_markdown'
         ]
 
     def get_min_price(self, obj):
@@ -71,7 +72,8 @@ class ShowDetailSerializer(serializers.ModelSerializer):
         model = Show
         fields = [
             'id', 'name', 'slug', 'category', 'duration_minutes',
-            'description', 'poster', 'venue', 'performances', 'service_fee_per_ticket'
+            'description', 'poster', 'venue', 'performances', 'service_fee_per_ticket',
+            'trailer_url', 'description_markdown'
         ]
 
     def get_performances(self, obj):

@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 from venues.models import Venue, PriceCategory
+from markdownx.models import MarkdownxField
 
 
 class Show(models.Model):
@@ -19,6 +20,19 @@ class Show(models.Model):
         null=True,
         verbose_name='Poster'
     )
+    trailer_url = models.URLField(
+        blank=True,
+        null=True,
+        verbose_name='Link YouTube Trailer',
+        help_text='Link YouTube trailer (vd: https://www.youtube.com/watch?v=xxxxx)'
+    )
+
+    description_markdown = MarkdownxField(
+        blank=True,
+        verbose_name='Mô tả chi tiết (Markdown)',
+        help_text='Sử dụng Markdown để định dạng văn bản. Hỗ trợ: **bold**, *italic*, [links](url), ![images](url), ### headings, etc.'
+    )
+
     venue = models.ForeignKey(Venue, on_delete=models.CASCADE, verbose_name='Nhà hát')
     is_active = models.BooleanField(default=True, verbose_name='Đang hoạt động')
 
