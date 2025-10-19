@@ -114,7 +114,6 @@ class SectionSerializer(serializers.ModelSerializer):
 
 
 class VenueSerializer(serializers.ModelSerializer):
-    sections = SectionSerializer(many=True, read_only=True)
     layout = VenueLayoutSerializer(read_only=True)
     total_seats = serializers.SerializerMethodField()
 
@@ -122,7 +121,7 @@ class VenueSerializer(serializers.ModelSerializer):
         model = Venue
         fields = [
             'id', 'name', 'venue_type', 'address', 'phone', 'email',
-            'description', 'rules', 'layout', 'total_seats', 'sections'
+            'description', 'rules', 'layout', 'total_seats'
         ]
 
     def get_total_seats(self, obj):

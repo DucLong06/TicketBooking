@@ -29,11 +29,12 @@
 					>
 						<!-- Background Image -->
 						<div class="absolute inset-0">
-							<img
+							<OptimizedImage
 								v-if="show.poster"
 								:src="show.poster"
 								:alt="show.name"
-								class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+								aspect-ratio="2/3"
+								imageClass="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
 							/>
 							<div
 								v-else
@@ -172,6 +173,7 @@ import DefaultLayout from "../layouts/DefaultLayout.vue";
 import PosterSlider from "../components/PosterSlider.vue";
 import TrailerPopup from "../components/TrailerPopup.vue";
 import { useBookingStore } from "../stores/booking";
+import OptimizedImage from "@/components/OptimizedImage.vue";
 
 const router = useRouter();
 const bookingStore = useBookingStore();

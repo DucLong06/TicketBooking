@@ -5,6 +5,8 @@ from django.conf import settings
 from datetime import timedelta
 from logzero import logger
 from venues.models import ContactInfo
+from django.utils import timezone
+import pytz
 
 
 def send_booking_confirmation(booking):
@@ -52,17 +54,19 @@ def send_booking_confirmation(booking):
             ticket_class = first_seat.seat.row.price_category.name
 
         # Calculate check-in time
+        vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
+        performance_datetime_vn = performance.datetime.astimezone(vietnam_tz)
         checkin_minutes = getattr(venue, 'checkin_minutes_before', 45)
-        checkin_time = performance.datetime - timedelta(minutes=checkin_minutes)
+        checkin_time = performance_datetime_vn - timedelta(minutes=checkin_minutes)
         checkin_time_str = f"{checkin_time.strftime('%H:%M')} ngày {checkin_time.strftime('%d/%m/%Y')}"
 
         # Format performance datetime for display and calendar
-        performance_datetime_display = f"{performance.datetime.strftime('%H')}h - {performance.datetime.strftime('%d/%m/%Y')}"
+        performance_datetime_display = f"{performance_datetime_vn.strftime('%H')}h - {performance_datetime_vn.strftime('%d/%m/%Y')}"
 
         # Calendar format for Google Calendar link
-        performance_datetime_cal = performance.datetime.strftime('%Y%m%dT%H%M00')
-        performance_end_cal = (performance.datetime + timedelta(minutes=show.duration_minutes)
-                               ).strftime('%Y%m%dT%H%M00')
+        performance_datetime_cal = performance_datetime_vn.strftime('%Y%m%dT%H%M00')
+        performance_end = performance_datetime_vn + timedelta(minutes=show.duration_minutes)
+        performance_end_cal = performance_end.strftime('%Y%m%dT%H%M00')
 
         # Determine payment status section
         payment_section = ""

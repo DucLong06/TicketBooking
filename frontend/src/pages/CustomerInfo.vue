@@ -177,15 +177,48 @@
 								<button
 									type="button"
 									@click="goBack"
-									class="px-6 py-3 border-2 border-[#d8a669] rounded-lg text-[#372e2d] font-semibold hover:bg-[#fdfcf0] transition"
+									:disabled="isSubmitting"
+									class="px-6 py-3 border-2 border-[#d8a669] rounded-lg text-[#372e2d] font-semibold hover:bg-[#fdfcf0] transition disabled:opacity-50 disabled:cursor-not-allowed"
 								>
 									← Quay lại
 								</button>
 								<button
 									type="submit"
-									class="px-8 py-3 bg-[#d8a669] text-white rounded-lg font-bold hover:bg-[#b8884d] hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all"
+									:disabled="isSubmitting"
+									class="relative px-8 py-3 bg-[#d8a669] text-white rounded-lg font-bold hover:bg-[#b8884d] hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
 								>
-									Tiếp tục thanh toán →
+									<span
+										v-if="!isSubmitting"
+										class="flex items-center gap-2"
+									>
+										Tiếp tục thanh toán →
+									</span>
+									<span
+										v-else
+										class="flex items-center gap-2"
+									>
+										<svg
+											class="animate-spin h-5 w-5"
+											xmlns="http://www.w3.org/2000/svg"
+											fill="none"
+											viewBox="0 0 24 24"
+										>
+											<circle
+												class="opacity-25"
+												cx="12"
+												cy="12"
+												r="10"
+												stroke="currentColor"
+												stroke-width="4"
+											></circle>
+											<path
+												class="opacity-75"
+												fill="currentColor"
+												d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+											></path>
+										</svg>
+										Đang xử lý...
+									</span>
 								</button>
 							</div>
 						</form>
@@ -242,19 +275,50 @@
 									type="text"
 									class="w-full px-3 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] bg-white text-[#372e2d]"
 									placeholder="Nhập mã giảm giá"
-									:disabled="bookingStore.isDiscountSuccess"
+									:disabled="
+										bookingStore.isDiscountSuccess ||
+										isApplyingDiscount
+									"
 								/>
 								<button
 									@click="applyDiscountCode"
-									:disabled="bookingStore.isDiscountSuccess"
-									class="px-4 py-2 bg-[#d8a669] text-white rounded-lg font-semibold hover:bg-[#b8884d] disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+									:disabled="
+										bookingStore.isDiscountSuccess ||
+										isApplyingDiscount
+									"
+									class="px-4 py-2 bg-[#d8a669] text-white rounded-lg font-semibold hover:bg-[#b8884d] disabled:bg-gray-400 disabled:cursor-not-allowed transition flex items-center gap-2 whitespace-nowrap"
 								>
-									Áp dụng
+									<svg
+										v-if="isApplyingDiscount"
+										class="animate-spin h-4 w-4"
+										xmlns="http://www.w3.org/2000/svg"
+										fill="none"
+										viewBox="0 0 24 24"
+									>
+										<circle
+											class="opacity-25"
+											cx="12"
+											cy="12"
+											r="10"
+											stroke="currentColor"
+											stroke-width="4"
+										></circle>
+										<path
+											class="opacity-75"
+											fill="currentColor"
+											d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+										></path>
+									</svg>
+									<span>{{
+										isApplyingDiscount
+											? "Đang áp dụng..."
+											: "Áp dụng"
+									}}</span>
 								</button>
 							</div>
 							<p
 								v-if="bookingStore.discountMessage"
-								class="mt-2 text-sm"
+								class="mt-2 text-sm break-words"
 								:class="{
 									'text-green-600':
 										bookingStore.isDiscountSuccess,
@@ -409,22 +473,49 @@
 										class="w-full px-2 py-1 text-sm border border-[#d8a669]/50 rounded-md focus:ring-1 focus:ring-[#d8a669] bg-white text-[#372e2d]"
 										placeholder="Nhập mã"
 										:disabled="
-											bookingStore.isDiscountSuccess
+											bookingStore.isDiscountSuccess ||
+											isApplyingDiscount
 										"
 									/>
 									<button
 										@click="applyDiscountCode"
 										:disabled="
-											bookingStore.isDiscountSuccess
+											bookingStore.isDiscountSuccess ||
+											isApplyingDiscount
 										"
-										class="px-3 py-1 bg-[#d8a669] text-white rounded-md text-xs font-semibold hover:bg-[#b8884d] disabled:bg-gray-400"
+										class="px-3 py-1 bg-[#d8a669] text-white rounded-md text-xs font-semibold hover:bg-[#b8884d] disabled:bg-gray-400 flex items-center gap-1"
 									>
-										Áp dụng
+										<svg
+											v-if="isApplyingDiscount"
+											class="animate-spin h-3 w-3"
+											xmlns="http://www.w3.org/2000/svg"
+											fill="none"
+											viewBox="0 0 24 24"
+										>
+											<circle
+												class="opacity-25"
+												cx="12"
+												cy="12"
+												r="10"
+												stroke="currentColor"
+												stroke-width="4"
+											></circle>
+											<path
+												class="opacity-75"
+												fill="currentColor"
+												d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+											></path>
+										</svg>
+										<span>{{
+											isApplyingDiscount
+												? "Đang..."
+												: "Áp dụng"
+										}}</span>
 									</button>
 								</div>
 								<p
 									v-if="bookingStore.discountMessage"
-									class="mt-1 text-xs"
+									class="mt-1 text-xs break-words"
 									:class="{
 										'text-green-600':
 											bookingStore.isDiscountSuccess,
@@ -460,15 +551,40 @@
 						<button
 							type="button"
 							@click="goBack"
-							class="flex-1 px-4 py-3 border-2 border-[#d8a669] rounded-lg text-[#372e2d] hover:bg-white transition font-semibold"
+							:disabled="isSubmitting"
+							class="flex-1 px-4 py-3 border-2 border-[#d8a669] rounded-lg text-[#372e2d] hover:bg-white transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
 						>
 							← Quay lại
 						</button>
 						<button
 							@click="handleSubmit"
-							class="flex-1 px-4 py-3 bg-[#d8a669] text-white rounded-lg font-bold hover:bg-[#b8884d] transition"
+							:disabled="isSubmitting"
+							class="flex-1 px-4 py-3 bg-[#d8a669] text-white rounded-lg font-bold hover:bg-[#b8884d] transition disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
 						>
-							Thanh toán →
+							<svg
+								v-if="isSubmitting"
+								class="animate-spin h-5 w-5"
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+							>
+								<circle
+									class="opacity-25"
+									cx="12"
+									cy="12"
+									r="10"
+									stroke="currentColor"
+									stroke-width="4"
+								></circle>
+								<path
+									class="opacity-75"
+									fill="currentColor"
+									d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+								></path>
+							</svg>
+							<span>{{
+								isSubmitting ? "Đang xử lý..." : "Thanh toán →"
+							}}</span>
 						</button>
 					</div>
 				</div>
@@ -488,10 +604,14 @@ const bookingStore = useBookingStore();
 const router = useRouter();
 const route = useRoute();
 
+// Loading states
+const isSubmitting = ref(false);
+const isApplyingDiscount = ref(false);
+
 // Form data
 const showInfo = ref({
 	name: "",
-	service_fee_per_ticket: 0, // default
+	service_fee_per_ticket: 0,
 });
 
 const performanceInfo = ref({
@@ -579,18 +699,26 @@ const finalAmount = computed(() => {
 	}
 	return totalAmount.value;
 });
+
 // Discount
 const discountCodeInput = ref("");
 
 const applyDiscountCode = async () => {
 	if (!discountCodeInput.value.trim()) {
-		toast.warning("Vui lòng nhập mã giảm giá.");
+		bookingStore.discountMessage = "Vui lòng nhập mã giảm giá";
+		bookingStore.isDiscountSuccess = false;
 		return;
 	}
-	await bookingStore.applyDiscount(
-		discountCodeInput.value,
-		customerInfo.value
-	);
+
+	isApplyingDiscount.value = true;
+	try {
+		await bookingStore.applyDiscount(
+			discountCodeInput.value,
+			customerInfo.value
+		);
+	} finally {
+		isApplyingDiscount.value = false;
+	}
 };
 
 // Methods
@@ -633,6 +761,9 @@ const validateForm = () => {
 
 const handleSubmit = async () => {
 	if (!validateForm()) return;
+	if (isSubmitting.value) return; // Prevent double submission
+
+	isSubmitting.value = true;
 
 	try {
 		bookingStore.customerInfo = {
@@ -652,7 +783,7 @@ const handleSubmit = async () => {
 			!booking.seat_reservations ||
 			booking.seat_reservations.length === 0
 		) {
-			toast.error("Lỗi: Không có ghế. Vui lòng chọn lại.");
+			toast.error("Không có ghế được đặt. Vui lòng chọn lại.");
 			bookingStore.clearBooking();
 			router.push(`/booking/${route.params.showId}`);
 			return;
@@ -689,18 +820,20 @@ const handleSubmit = async () => {
 		if (paymentData.payment_url) {
 			window.location.href = paymentData.payment_url;
 		} else {
-			throw new Error("Không nhận được URL thanh toán từ 9Pay");
+			throw new Error("Không nhận được URL thanh toán");
 		}
 	} catch (error) {
 		console.error("Error:", error);
 		bookingStore.clearBooking();
-		toast.error(error.message || "Có lỗi. Vui lòng chọn lại.");
+		toast.error(error.message || "Có lỗi xảy ra. Vui lòng thử lại.");
 
 		if (error.shouldRedirect) {
 			setTimeout(() => {
 				router.push(`/booking/${route.params.showId}`);
 			}, 1500);
 		}
+	} finally {
+		isSubmitting.value = false;
 	}
 };
 
@@ -712,16 +845,15 @@ const startTimer = () => {
 	const savedExpiry = sessionStorage.getItem("reservationExpiry");
 
 	if (!savedExpiry) {
-		alert("Không tìm thấy thông tin đặt vé. Vui lòng chọn lại.");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
 	}
 
 	const expiryDate = new Date(savedExpiry);
-
 	const now = new Date();
+
 	if (expiryDate <= now) {
-		alert("Hết thời gian giữ ghế. Vui lòng đặt lại.");
+		toast.error("Hết thời gian giữ ghế");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
 	}
@@ -733,11 +865,12 @@ const startTimer = () => {
 
 		if (timeLeft.value === 0) {
 			clearInterval(timer);
-			alert("Hết thời gian giữ ghế. Vui lòng đặt lại.");
-			router.push("/");
+			toast.error("Hết thời gian giữ ghế");
+			router.push(`/booking/${route.params.showId}/seats`);
 		}
 	}, 1000);
 };
+
 onMounted(() => {
 	bookingStore.resetDiscount();
 	discountCodeInput.value = "";
@@ -747,7 +880,6 @@ onMounted(() => {
 		bookingStore.sessionId = existingSessionId;
 	} else {
 		console.error("❌ No session ID found");
-		toast.warning("Phiên đã hết hạn. Vui lòng chọn lại ghế.");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
 	}
@@ -763,11 +895,8 @@ onMounted(() => {
 			try {
 				const parsedSeats = JSON.parse(savedSeats);
 				selectedSeats.value = parsedSeats;
-
 				bookingStore.selectedSeats = parsedSeats;
-
 				hasSeats = parsedSeats.length > 0;
-				
 			} catch (e) {
 				console.error("Failed to parse savedSeats:", e);
 			}
@@ -776,7 +905,6 @@ onMounted(() => {
 
 	if (!hasSeats) {
 		console.error("❌ No seats found");
-		toast.warning("Vui lòng chọn ghế trước");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
 	}
@@ -791,7 +919,6 @@ onMounted(() => {
 				!bookingStore.selectedPerformance.id
 			) {
 				bookingStore.selectedPerformance = performance;
-				
 			}
 
 			showInfo.value = {
@@ -822,7 +949,6 @@ onMounted(() => {
 			console.error("Failed to parse savedPerformance:", e);
 		}
 	} else if (bookingStore.currentShow) {
-		// Fallback to store
 		showInfo.value = {
 			name: bookingStore.currentShow.name,
 			service_fee_per_ticket:
@@ -832,14 +958,12 @@ onMounted(() => {
 
 	if (!showInfo.value.name || !performanceInfo.value.date) {
 		console.error("❌ Missing show or performance info");
-		toast.warning("Thiếu thông tin suất diễn. Vui lòng chọn lại.");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
 	}
 
 	if (!serviceFeePerTicket.value) {
 		console.error("❌ Service fee not found");
-		toast.warning("Thiếu thông tin phí dịch vụ. Vui lòng chọn lại ghế.");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
 	}
@@ -847,7 +971,6 @@ onMounted(() => {
 	const savedExpiry = sessionStorage.getItem("reservationExpiry");
 	if (!savedExpiry) {
 		console.error("❌ No reservation expiry");
-		toast.warning("Phiên đã hết hạn. Vui lòng chọn lại ghế.");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
 	}
@@ -856,7 +979,7 @@ onMounted(() => {
 	const now = new Date();
 	if (expiryDate <= now) {
 		console.error("❌ Reservation expired");
-		toast.warning("Hết thời gian giữ ghế. Vui lòng chọn lại.");
+		toast.error("Hết thời gian giữ ghế");
 		router.push(`/booking/${route.params.showId}/seats`);
 		return;
 	}

@@ -139,13 +139,13 @@ class Venue(models.Model):
 
     @property
     def total_seats(self):
-        """Tính tổng số ghế trong venue"""
-        total = 0
-        for section in self.sections.all():
-            total += section.rows.aggregate(
-                count=models.Count('seats')
-            )['count'] or 0
-        return total
+        if not hasattr(self, '_total_seats_cache'):
+            from venues.models import Seat
+            self._total_seats_cache = Seat.objects.filter(
+                row__section__venue=self,
+                status='active'
+            ).count()
+        return self._total_seats_cache
 
 
 class ContactInfo(models.Model):

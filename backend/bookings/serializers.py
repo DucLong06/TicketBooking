@@ -13,6 +13,8 @@ from .models import Booking, SeatReservation
 from venues.models import Seat
 from shows.models import Performance
 from django.db import transaction
+from django.utils import timezone
+import pytz
 
 
 class SeatReservationSerializer(serializers.ModelSerializer):
@@ -245,9 +247,12 @@ class BookingDetailSerializer(serializers.ModelSerializer):
         return {'name': obj.performance.show.name}
 
     def get_performance(self, obj):
+        vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
+        performance_datetime_vn = obj.performance.datetime.astimezone(vietnam_tz)
+
         return {
-            'date': obj.performance.datetime.strftime('%d/%m/%Y'),
-            'time': obj.performance.datetime.strftime('%H:%M')
+            'date': performance_datetime_vn.strftime('%d/%m/%Y'),
+            'time': performance_datetime_vn.strftime('%H:%M')
         }
 
     def get_customerInfo(self, obj):
