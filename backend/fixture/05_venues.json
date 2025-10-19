@@ -1,0 +1,31 @@
+[
+{
+  "model": "venues.venue",
+  "pk": 1,
+  "fields": {
+    "name": "Nhà hát Hồ Gươm",
+    "code": "nhhtoperahgm",
+    "address": "40 Hàng Bài, Hoàn Kiếm, Hà Nội",
+    "capacity": 0,
+    "layout_image": "venues/layouts/SƠ_ĐỒ.jpg",
+    "layout": 1,
+    "venue_type": "opera",
+    "is_active": true,
+    "description": "",
+    "phone": "0962 98 98 56",
+    "email": "duongcamart@gmail.com",
+    "hotline": "0962 98 98 56",
+    "support_email": "duongcamart@gmail.com",
+    "facebook_url": "http://facebook.com/nhackichgiacmochipheo",
+    "tiktok_url": "https://www.tiktok.com/@giacmo.chipheo",
+    "instagram_url": "",
+    "website_url": "http://www.giacmochipheo.com.vn",
+    "logo_url": "https://lh3.googleusercontent.com/pw/AP1GczOeY1ZKKsObbQ5Em5H14byD0GRz_-ydPBGZWzBOQbun4cB783CMb3NsYbucZAmrMlCE-YJ8r3Ll71Fthb-wyaMjuQbPTc1jAPLcf-3-NzjBqBuS_3NB2W6JzfAWZP3sRYBVzVxethfg4iJBam3EhoDp=w489-h",
+    "copyright_text": "2025 GMCP by duongcamart. All rights reserved.",
+    "checkin_minutes_before": 60,
+    "rules": "Nhà hát đóng cửa đúng giờ in trên vé. BTC không hỗ trợ giải quyết trường hợp đến muộn hoặc mất vé với tất cả lí do.\r\nVé của đêm diễn Nhạc kịch Giấc mơ Chí Phèo sẽ KHÔNG hỗ trợ hoàn/đổi/trả/bảo lưu.\r\nNhà hát không có chỗ đỗ xe dành cho khách nên khuyến khích khán giả di chuyển bằng xe taxi hoặc xe công nghệ\r\nThời gian bắt đầu check-in: 19h ngày 16/11/2025.\r\nQuý khách vui lòng mặc trang phục lịch sự khi vào nhà hát.(Nam mặc quần dài)\r\nQuý khách vui lòng có mặt trước giờ biểu diễn/sự kiện 30 phút để làm thủ tục và ổn định chỗ ngồi.\r\nVé không kèm trẻ em, chương trình không dành cho trẻ em dưới 6 tuổi;\r\nKhông quay phim, chụp ảnh, ghi âm, ghi hình trong quá trình xem chương trình biểu diễn.\r\nKhông hút thuốc lá, không mang quà bánh và kẹo cao su vào Nhà hát.\r\nChuyển điện thoại sang chế độ im lặng hoặc rung khi chương trình bắt đầu biểu diễn.\r\nYêu cầu giữ im lặng để đảm bảo không khí thưởng thức nghệ thuật",
+    "created_at": "2025-10-02T16:42:54.484Z",
+    "updated_at": "2025-10-13T07:42:13.006Z"
+  }
+}
+]

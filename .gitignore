@@ -10,6 +10,8 @@ static/
 *.so
 node_modules/
 media/
+.env.prod
+
 # Distribution / packaging
 .Python
 build/

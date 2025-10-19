@@ -1,0 +1,21 @@
+[
+{
+  "model": "shows.show",
+  "pk": 2,
+  "fields": {
+    "name": "Giấc Mơ Chí Phèo",
+    "slug": "gmcp",
+    "category": "Nhạc Kịch",
+    "duration_minutes": 90,
+    "description": "Lấy cảm hứng từ tác phẩm \"Chí Phèo\" của nhà văn Nam Cao, \"Giấc Mơ Chí Phèo\" là vở nhạc kịch mang đậm màu sắc Broadway quốc tế, đưa khán giả vào hành trình đấu tranh giữa Thiện và Ác, Con người và Quỷ dữ bên trong một kẻ bị xã hội ruồng bỏ. \r\nTrong 90 phút, Chí Phèo không chỉ là kẻ say khướt của làng Vũ Đại, mà còn hiện lên với giấc mơ về cuộc sống bình dị bên vợ hiền, con thơ - giấc mơ được là \"Người Bình Thường\".",
+    "poster": "shows/posters/cover_ttin_169_bo_ttcd_copy_9RiqHSZ.jpg",
+    "trailer_url": "https://www.youtube.com/watch?v=KzhS5r5l54g",
+    "description_markdown": "Lần đầu tiên một vở kịch musical cảm tác từ văn học nước nhà được vang lên làm thỏa mãn những khao khát của người Việt về giấc mơ __*\"Musical made in Vietnam\"*__.\r\n\r\n>*Giấc Mơ Chí Phèo* - một hành trình mới, một góc nhìn khác về số phận và khát vọng của những con người dưới đáy xã hội\r\n\r\n>Liệu rằng những nhân vật trong Truyện ngắn Chí Phèo của Nhà văn Nam Cao có cơ hội được trở thành __*NGƯỜI BÌNH THƯỜNG*__\r\n\r\n>Hãy cùng khám phá những cung bậc cảm xúc, âm nhạc, và câu chuyện đầy tính nhân văn trong Vở nhạc kịch __*Giấc Mơ Chí Phèo*__\r\n\r\n<img src=\"https://scontent.fhan18-1.fna.fbcdn.net/v/t39.30808-6/472180012_122131401554556298_8154322443736549707_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=a5f93a&_nc_eui2=AeE29YBchfvr0qhkZ4jgjHgkuw2ZG2wjvy27DZkbbCO_LdFIv9cHfiXMRYj7xAz0PreUkMMEMCn6n4qENNwHxUMk&_nc_ohc=JDc0kMRdU4gQ7kNvwGESXcN&_nc_oc=Adnb57ljwCNpoATCC8EJWluw9IyBwkKFTkndQB0FX8xnjfrvmC8f1ZiHmYaN5H15HIkVplRTq2yUeBWgExWOgG1s&_nc_zt=23&_nc_ht=scontent.fhan18-1.fna&_nc_gid=VAKtfDgXFVSHW7-pCQNCyQ&oh=00_AfcX2SnlGQ1JOYUXvWz4rtPS8mfLn3l1R9SOmDdXI0st-g&oe=68F9BC0A\" alt=\"Poster Giấc mơ Chí Phèo\" style=\"display: block; margin: 20px auto; width:70%; max-width:900px; height:auto; border-radius:8px;\">\r\n\r\n### <center>LƯU Ý</center>\r\n\r\n\r\n+ Nhà hát đóng cửa đúng giờ in trên vé. BTC __KHÔNG__ hỗ trợ giải quyết trường hợp đến muộn hoặc mất vé với tất cả lí do.\r\n+ Vé của đêm diễn Nhạc kịch Giấc mơ Chí Phèo sẽ __KHÔNG__ hỗ trợ hoàn/đổi/trả/bảo lưu.\r\n+ Nhà hát không có chỗ đỗ xe dành cho khách nên khuyến khích khán giả di chuyển bằng xe taxi hoặc xe công nghệ.\r\n+ __Vé không kèm trẻ em, chương trình không dành cho trẻ em dưới 6 tuổi;__\r\n+ Thời gian bắt đầu check-in: __19h00__\r\n+ Quý khách vui lòng mặc trang phục lịch sự khi vào nhà hát.(Nam mặc quần dài)\r\n+ Quý khách vui lòng có mặt trước giờ biểu diễn/sự kiện __30 phút__ để làm thủ tục và ổn định chỗ ngồi.\r\n+ Không quay phim, chụp ảnh, ghi âm, ghi hình trong quá trình xem chương trình biểu diễn.\r\n+ Không hút thuốc lá, không mang quà bánh và kẹo cao su vào Nhà hát.\r\n+ Chuyển điện thoại sang chế độ im lặng hoặc rung khi chương trình bắt đầu biểu diễn.\r\n+ Yêu cầu giữ im lặng để đảm bảo không khí thưởng thức nghệ thuật.\r\n##### <center>*Chúc các bạn có một trải nghiệm tuyệt vời cùng* </center>\r\n#### <center> __Nhạc Kịch Giấc Mơ Chí Phèo__ </center>",
+    "venue": 1,
+    "is_active": true,
+    "service_fee_per_ticket": "0",
+    "created_at": "2025-10-06T16:14:13.431Z",
+    "updated_at": "2025-10-18T18:52:57.161Z"
+  }
+}
+]

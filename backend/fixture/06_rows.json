@@ -1,0 +1,563 @@
+[
+{
+  "model": "venues.row",
+  "pk": 5,
+  "fields": {
+    "section": 1,
+    "label": "A",
+    "seat_count": 21,
+    "position_y": 0,
+    "spacing_after": 0,
+    "price_category": 4,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 6,
+  "fields": {
+    "section": 1,
+    "label": "B",
+    "seat_count": 28,
+    "position_y": 1,
+    "spacing_after": 0,
+    "price_category": 4,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 7,
+  "fields": {
+    "section": 1,
+    "label": "C",
+    "seat_count": 29,
+    "position_y": 2,
+    "spacing_after": 0,
+    "price_category": 5,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": true,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 8,
+  "fields": {
+    "section": 3,
+    "label": "AA",
+    "seat_count": 10,
+    "position_y": 19,
+    "spacing_after": 0,
+    "price_category": 8,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 9,
+  "fields": {
+    "section": 1,
+    "label": "D",
+    "seat_count": 30,
+    "position_y": 3,
+    "spacing_after": 0,
+    "price_category": 5,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 10,
+  "fields": {
+    "section": 1,
+    "label": "E",
+    "seat_count": 31,
+    "position_y": 4,
+    "spacing_after": 0,
+    "price_category": 5,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 11,
+  "fields": {
+    "section": 1,
+    "label": "F",
+    "seat_count": 30,
+    "position_y": 5,
+    "spacing_after": 0,
+    "price_category": 5,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 12,
+  "fields": {
+    "section": 1,
+    "label": "G",
+    "seat_count": 31,
+    "position_y": 6,
+    "spacing_after": 100,
+    "price_category": 5,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 13,
+  "fields": {
+    "section": 1,
+    "label": "H",
+    "seat_count": 28,
+    "position_y": 7,
+    "spacing_after": 0,
+    "price_category": 5,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": true,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 14,
+  "fields": {
+    "section": 1,
+    "label": "I",
+    "seat_count": 27,
+    "position_y": 8,
+    "spacing_after": 0,
+    "price_category": 5,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 15,
+  "fields": {
+    "section": 1,
+    "label": "K",
+    "seat_count": 28,
+    "position_y": 9,
+    "spacing_after": 0,
+    "price_category": 5,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 16,
+  "fields": {
+    "section": 1,
+    "label": "L",
+    "seat_count": 27,
+    "position_y": 10,
+    "spacing_after": 0,
+    "price_category": 5,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 17,
+  "fields": {
+    "section": 1,
+    "label": "M",
+    "seat_count": 28,
+    "position_y": 11,
+    "spacing_after": 0,
+    "price_category": 6,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 18,
+  "fields": {
+    "section": 1,
+    "label": "N",
+    "seat_count": 27,
+    "position_y": 12,
+    "spacing_after": 0,
+    "price_category": 6,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 19,
+  "fields": {
+    "section": 1,
+    "label": "P",
+    "seat_count": 28,
+    "position_y": 13,
+    "spacing_after": 0,
+    "price_category": 6,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 20,
+  "fields": {
+    "section": 1,
+    "label": "Q",
+    "seat_count": 27,
+    "position_y": 14,
+    "spacing_after": 0,
+    "price_category": 6,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 21,
+  "fields": {
+    "section": 1,
+    "label": "R",
+    "seat_count": 22,
+    "position_y": 15,
+    "spacing_after": 0,
+    "price_category": 6,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 22,
+  "fields": {
+    "section": 1,
+    "label": "S",
+    "seat_count": 22,
+    "position_y": 16,
+    "spacing_after": 0,
+    "price_category": 6,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 23,
+  "fields": {
+    "section": 1,
+    "label": "T",
+    "seat_count": 20,
+    "position_y": 17,
+    "spacing_after": 0,
+    "price_category": 6,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": true,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 24,
+  "fields": {
+    "section": 1,
+    "label": "U",
+    "seat_count": 8,
+    "position_y": 18,
+    "spacing_after": 0,
+    "price_category": 7,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 25,
+  "fields": {
+    "section": 3,
+    "label": "BB",
+    "seat_count": 12,
+    "position_y": 20,
+    "spacing_after": 0,
+    "price_category": 8,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 26,
+  "fields": {
+    "section": 3,
+    "label": "CC",
+    "seat_count": 12,
+    "position_y": 21,
+    "spacing_after": 0,
+    "price_category": 8,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 27,
+  "fields": {
+    "section": 3,
+    "label": "A",
+    "seat_count": 32,
+    "position_y": 22,
+    "spacing_after": 0,
+    "price_category": 7,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 28,
+  "fields": {
+    "section": 3,
+    "label": "B",
+    "seat_count": 33,
+    "position_y": 23,
+    "spacing_after": 0,
+    "price_category": 7,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": true,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 29,
+  "fields": {
+    "section": 3,
+    "label": "C",
+    "seat_count": 32,
+    "position_y": 24,
+    "spacing_after": 0,
+    "price_category": 7,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 30,
+  "fields": {
+    "section": 3,
+    "label": "D",
+    "seat_count": 31,
+    "position_y": 25,
+    "spacing_after": 0,
+    "price_category": 7,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 31,
+  "fields": {
+    "section": 3,
+    "label": "E",
+    "seat_count": 32,
+    "position_y": 26,
+    "spacing_after": 0,
+    "price_category": 8,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 32,
+  "fields": {
+    "section": 3,
+    "label": "F",
+    "seat_count": 31,
+    "position_y": 27,
+    "spacing_after": 0,
+    "price_category": 8,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 33,
+  "fields": {
+    "section": 3,
+    "label": "G",
+    "seat_count": 12,
+    "position_y": 28,
+    "spacing_after": 0,
+    "price_category": 9,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 34,
+  "fields": {
+    "section": 3,
+    "label": "H",
+    "seat_count": 10,
+    "position_y": 29,
+    "spacing_after": 0,
+    "price_category": 9,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 35,
+  "fields": {
+    "section": 3,
+    "label": "I",
+    "seat_count": 6,
+    "position_y": 30,
+    "spacing_after": 0,
+    "price_category": 9,
+    "numbering_style": "left_to_right",
+    "center_x": 400,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 37,
+  "fields": {
+    "section": 5,
+    "label": "LG",
+    "seat_count": 5,
+    "position_y": 390,
+    "spacing_after": 0,
+    "price_category": 9,
+    "numbering_style": "vertical",
+    "center_x": 400,
+    "aisle_width": 60,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+},
+{
+  "model": "venues.row",
+  "pk": 38,
+  "fields": {
+    "section": 4,
+    "label": "LG",
+    "seat_count": 5,
+    "position_y": 390,
+    "spacing_after": 0,
+    "price_category": 9,
+    "numbering_style": "vertical",
+    "center_x": 100,
+    "aisle_width": 0,
+    "has_center_aisle": false,
+    "gaps": []
+  }
+}
+]

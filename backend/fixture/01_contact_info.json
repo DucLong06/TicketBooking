@@ -1,0 +1,19 @@
+[
+{
+  "model": "venues.contactinfo",
+  "pk": 1,
+  "fields": {
+    "name": "Nhạc Kịch Giấc Mơ Chí Phèo",
+    "hotline": "0962989856",
+    "support_email": "support@duongcam.art",
+    "facebook_url": "https://www.facebook.com/nhackichgiacmochipheo",
+    "tiktok_url": "https://www.tiktok.com/@nhackich.giacmochipheo",
+    "instagram_url": "",
+    "website_url": "http://www.giacmochipheo.com.vn",
+    "logo_url": "https://lh3.googleusercontent.com/pw/AP1GczOeY1ZKKsObbQ5Em5H14byD0GRz_-ydPBGZWzBOQbun4cB783CMb3NsYbucZAmrMlCE-YJ8r3Ll71Fthb-wyaMjuQbPTc1jAPLcf-3-NzjBqBuS_3NB2W6JzfAWZP3sRYBVzVxethfg4iJBam3EhoDp=w489-h301-s-no-gm",
+    "copyright_text": "Giấy Chứng nhận đăng ký doanh nghiệp: 0303675393 đăng ký lần đầu ngày 31/7/2008, được cấp bởi Sở Kế",
+    "created_at": "2025-10-02T17:19:33.786Z",
+    "updated_at": "2025-10-17T08:17:44.532Z"
+  }
+}
+]

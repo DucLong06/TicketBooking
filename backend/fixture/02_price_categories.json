@@ -1,0 +1,62 @@
+[
+{
+  "model": "venues.pricecategory",
+  "pk": 4,
+  "fields": {
+    "name": "Giấc Mơ Chí Phèo",
+    "code": "gmcpseat",
+    "base_price": "3000000",
+    "color": "#5e4a64"
+  }
+},
+{
+  "model": "venues.pricecategory",
+  "pk": 5,
+  "fields": {
+    "name": "Mộng Gió Trăng",
+    "code": "mgtseat",
+    "base_price": "2500000",
+    "color": "#773d45"
+  }
+},
+{
+  "model": "venues.pricecategory",
+  "pk": 6,
+  "fields": {
+    "name": "Trăng Vàng Lấp Lánh",
+    "code": "tvllseat",
+    "base_price": "2000000",
+    "color": "#caa255"
+  }
+},
+{
+  "model": "venues.pricecategory",
+  "pk": 7,
+  "fields": {
+    "name": "Mơ Ngẩn Mơ Ngơ",
+    "code": "mnmnseat",
+    "base_price": "1500000",
+    "color": "#af6a75"
+  }
+},
+{
+  "model": "venues.pricecategory",
+  "pk": 8,
+  "fields": {
+    "name": "Ru Giấc Mộng Lành",
+    "code": "rgmlseat",
+    "base_price": "1000000",
+    "color": "#74a190"
+  }
+},
+{
+  "model": "venues.pricecategory",
+  "pk": 9,
+  "fields": {
+    "name": "Trời Ngả Đất Nghiêng",
+    "code": "tndnseat",
+    "base_price": "700000",
+    "color": "#5b7494"
+  }
+}
+]
