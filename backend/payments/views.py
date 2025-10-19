@@ -19,7 +19,9 @@ def create_payment(request, booking_code):
     """Create payment for booking with 9Pay"""
     with transaction.atomic():
         booking = get_object_or_404(
-            Booking.objects.select_for_update(),
+            Booking.objects.select_for_update().select_related(
+                'performance__show'
+            ),
             booking_code=booking_code
         )
 

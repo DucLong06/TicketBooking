@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'silk',
 
     # Third party apps
     'rest_framework',
@@ -94,6 +95,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'silk.middleware.SilkyMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -242,6 +244,7 @@ MARKDOWNX_IMAGE_MAX_SIZE = {'size': (1920, 1080), 'quality': 90}
 
 # Editor settings
 MARKDOWNX_EDITOR_RESIZABLE = True
+
 # Jazzmin Admin Configuration
 JAZZMIN_SETTINGS = {
     # Title

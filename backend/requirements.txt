@@ -16,3 +16,4 @@ django-celery-beat==2.8.0
 django-redis==5.4.0
 celery==5.5.2
 django-markdownx==4.0.9
+django-silk 
