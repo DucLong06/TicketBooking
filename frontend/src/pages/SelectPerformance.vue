@@ -36,11 +36,13 @@
 								class="relative w-full poster-container bg-[#e8dcc8] rounded-lg overflow-hidden border-2 border-[#d8a669]/20 group cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300 mx-auto"
 								@click="openTrailer"
 							>
-								<img
+								<OptimizedImage
 									v-if="showInfo.poster"
 									:src="showInfo.poster"
 									:alt="showInfo.name"
-									class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+									aspect-ratio="2/3"
+									wrapperClass="w-full h-full"
+									imageClass="w-full h-full object-cover"
 								/>
 								<div
 									v-else

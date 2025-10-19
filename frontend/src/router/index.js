@@ -1,11 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { sessionManager } from '@/utils/sessionManager'
+import HomePage from '../pages/HomePage.vue'
 
 const routes = [
     {
         path: '/',
         name: 'Home',
-        component: () => import('../pages/HomePage.vue')
+        component: HomePage
     },
     {
         path: '/lookup',
@@ -50,6 +51,11 @@ const routes = [
         name: 'PaymentError',
         component: () => import('../pages/PaymentError.vue')
     },
+    {
+        path: '/:pathMatch(.*)*',
+        name: 'NotFound',
+        component: () => import('../pages/NotFound.vue')
+    }
 ]
 
 const router = createRouter({

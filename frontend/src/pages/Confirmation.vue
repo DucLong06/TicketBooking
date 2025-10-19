@@ -203,8 +203,6 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import QRCode from "qrcode";
-import jsPDF from "jspdf";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { bookingAPI } from "../api/booking";
 import { useToast } from "vue-toastification";
@@ -219,7 +217,6 @@ const isResendingEmail = ref(false);
 // Data
 const bookingCode = ref("");
 const bookingData = ref({});
-const qrcodeCanvas = ref(null);
 
 const seatsList = computed(() => {
 	if (!bookingData.value?.seat_reservations) return "";
@@ -245,74 +242,6 @@ const formatPrice = (price) => {
 		style: "currency",
 		currency: "VND",
 	}).format(price || 0);
-};
-
-const generateQRCode = async () => {
-	if (!qrcodeCanvas.value) return;
-
-	const qrData = {
-		bookingCode: bookingCode.value,
-		amount: bookingData.value.amount,
-		seats: seatsList.value,
-	};
-
-	try {
-		await QRCode.toCanvas(qrcodeCanvas.value, JSON.stringify(qrData), {
-			width: 200,
-			margin: 2,
-			color: {
-				dark: "#000000",
-				light: "#FFFFFF",
-			},
-		});
-	} catch (error) {
-		console.error("Failed to generate QR code:", error);
-	}
-};
-
-const downloadTicket = () => {
-	const pdf = new jsPDF();
-
-	// Header
-	pdf.setFontSize(20);
-	pdf.text("VÉ XEM PHIM", 105, 20, { align: "center" });
-
-	// Booking code
-	pdf.setFontSize(12);
-	pdf.text(`Mã đặt vé: ${bookingCode.value}`, 20, 40);
-
-	// Show info
-	pdf.text(`Vở diễn: ${bookingData.value.showInfo?.name}`, 20, 50);
-	pdf.text(`Ngày: ${bookingData.value.performance?.date}`, 20, 60);
-	pdf.text(`Suất: ${bookingData.value.performance?.time}`, 20, 70);
-	pdf.text(`Ghế: ${seatsList.value}`, 20, 80);
-
-	// Customer info
-	pdf.text(
-		`Khách hàng: ${bookingData.value.customerInfo?.fullName}`,
-		20,
-		100
-	);
-	pdf.text(`Email: ${bookingData.value.customerInfo?.email}`, 20, 110);
-	pdf.text(`SĐT: ${bookingData.value.customerInfo?.phone}`, 20, 120);
-
-	// Total
-	pdf.setFontSize(14);
-	pdf.text(`Tổng: ${formatPrice(bookingData.value.amount)}`, 20, 140);
-
-	// QR Code
-	if (qrcodeCanvas.value) {
-		const qrImage = qrcodeCanvas.value.toDataURL("image/png");
-		pdf.addImage(qrImage, "PNG", 150, 40, 40, 40);
-	}
-
-	// Footer
-	pdf.setFontSize(10);
-	pdf.text("Hồ Gươm Opera", 105, 280, { align: "center" });
-	pdf.text("40 Hàng Bài, Hà Nội", 105, 285, { align: "center" });
-
-	// Save
-	pdf.save(`ticket-${bookingCode.value}.pdf`);
 };
 
 const sendEmail = async () => {

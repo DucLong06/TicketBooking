@@ -77,7 +77,7 @@ export const useBookingStore = defineStore('booking', () => {
 
     const applyDiscount = async (code, currentCustomerInfo) => {
         if (!selectedPerformance.value || selectedSeats.value.length === 0) {
-            toast.error("Vui lòng chọn ghế trước khi áp dụng mã.");
+            // toast.error("Vui lòng chọn ghế trước khi áp dụng mã.");
             return;
         }
 
@@ -101,7 +101,7 @@ export const useBookingStore = defineStore('booking', () => {
 
             isDiscountSuccess.value = true;
             discountMessage.value = `Áp dụng thành công! Bạn được giảm ${formatPrice(response.data.discount_amount)}.`;
-            toast.success(discountMessage.value);
+            // toast.success(discountMessage.value);
 
         } catch (error) {
             const errorMessage = error.response?.data?.discount_code?.[0] || "Mã giảm giá không hợp lệ hoặc có lỗi xảy ra.";
@@ -114,7 +114,7 @@ export const useBookingStore = defineStore('booking', () => {
                 currentBooking.value.final_amount = currentBooking.value.total_amount + currentBooking.value.service_fee;
             }
 
-            toast.error(errorMessage);
+            // toast.error(errorMessage);
         }
     }
 

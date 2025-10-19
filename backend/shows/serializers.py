@@ -8,7 +8,6 @@ class ShowListSerializer(serializers.ModelSerializer):
     venue_name = serializers.CharField(source='venue.name', read_only=True)
     min_price = serializers.SerializerMethodField()
     max_price = serializers.SerializerMethodField()
-
     service_fee_per_ticket = serializers.DecimalField(
         max_digits=10,
         decimal_places=0,
@@ -24,18 +23,19 @@ class ShowListSerializer(serializers.ModelSerializer):
         ]
 
     def get_min_price(self, obj):
-        prices = PerformancePrice.objects.filter(
-            performance__show=obj,
-            performance__datetime__gte=timezone.now()
-        ).values_list('price', flat=True)
-        return min(prices) if prices else 0
+        """✅ Optimize: Dùng 1 query cho cả min và max"""
+        if not hasattr(obj, '_price_range'):
+            prices = PerformancePrice.objects.filter(
+                performance__show=obj,
+                performance__datetime__gte=timezone.now()
+            ).values_list('price', flat=True)
+            obj._price_range = (min(prices) if prices else 0, max(prices) if prices else 0)
+        return obj._price_range[0]
 
     def get_max_price(self, obj):
-        prices = PerformancePrice.objects.filter(
-            performance__show=obj,
-            performance__datetime__gte=timezone.now()
-        ).values_list('price', flat=True)
-        return max(prices) if prices else 0
+        if not hasattr(obj, '_price_range'):
+            self.get_min_price(obj)  # Calculate both at once
+        return obj._price_range[1]
 
 
 class PerformancePriceSerializer(serializers.ModelSerializer):
@@ -72,16 +72,12 @@ class ShowDetailSerializer(serializers.ModelSerializer):
         model = Show
         fields = [
             'id', 'name', 'slug', 'category', 'duration_minutes',
-            'description', 'poster', 'venue', 'performances', 'service_fee_per_ticket',
-            'trailer_url', 'description_markdown'
+            'description', 'poster', 'venue', 'performances',
+            'service_fee_per_ticket', 'trailer_url', 'description_markdown'
         ]
 
     def get_performances(self, obj):
-        # Only get future performances
-        performances = obj.performances.filter(
-            datetime__gte=timezone.now(),
-            status='on_sale'
-        ).order_by('datetime')
+        performances = obj.performances.all()
         return PerformanceSerializer(performances, many=True).data
 
 

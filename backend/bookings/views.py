@@ -25,7 +25,6 @@ from datetime import timedelta
 def get_performance_seat_map(performance):
     """Get complete seat map for a performance - OPTIMIZED"""
     venue = performance.show.venue
-
     seats = Seat.objects.filter(
         row__section__venue=venue,
         status='active'
@@ -485,7 +484,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             booking = serializer.save()
 
-        optimized_booking = self.get_queryset().get(pk=booking.pk)       
+        optimized_booking = self.get_queryset().get(pk=booking.pk)
         detail_serializer = BookingDetailSerializer(optimized_booking)
         response_data = detail_serializer.data
 

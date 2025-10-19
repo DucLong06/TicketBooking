@@ -33,10 +33,12 @@
 					>
 						<!-- Image with overlay gradient -->
 						<div class="relative w-full h-full overflow-hidden">
-							<img
+							<OptimizedImage
 								:src="poster.image"
 								:alt="poster.title"
-								class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+								aspect-ratio="16/9"
+								class="w-full h-auto object-cover rounded-lg"
+								loading="eager"
 							/>
 							<!-- Gradient overlay -->
 							<div
@@ -152,6 +154,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { posterAPI } from "../api/poster";
 import { useToast } from "vue-toastification";
+import OptimizedImage from "@/components/OptimizedImage.vue";
 
 const toast = useToast();
 const router = useRouter();

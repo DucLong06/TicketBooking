@@ -65,8 +65,53 @@ else:
             'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'theater_pass'),
             'HOST': os.getenv('POSTGRES_HOST', 'db'),
             'PORT': os.getenv('POSTGRES_PORT', '5432'),
+            'CONN_MAX_AGE': 600,
+            'OPTIONS': {
+                'connect_timeout': 10,
+                # Set statement timeout in milliseconds (30 seconds)
+                'options': '-c statement_timeout=30000'
+            }
         }
     }
+    # Log
+    LOG_DIR = os.path.join(BASE_DIR, 'logs')
+    os.makedirs(LOG_DIR, exist_ok=True)
+
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+                'style': '{',
+            },
+        },
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose',
+            },
+            'file': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': os.path.join(LOG_DIR, 'django.log'),
+                'maxBytes': 10485760,  # 10MB
+                'backupCount': 5,
+                'formatter': 'verbose',
+            },
+        },
+        'root': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+        },
+        'loggers': {
+            'django.db.backends': {
+                'handlers': ['console'],
+                'level': 'WARNING',
+                'propagate': False,
+            },
+        },
+    }
+
 
 # Application definition
 INSTALLED_APPS = [
@@ -113,13 +158,19 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
+        # 'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+            ],
+            'loaders': [
+                ('django.template.loaders.cached.Loader', [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                ]),
             ],
         },
     },
@@ -222,6 +273,27 @@ else:
     CELERY_BROKER_URL = REDIS_URL
     CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', REDIS_URL)
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': REDIS_URL,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_CLASS_KWARGS': {
+                'max_connections': 50,
+                'retry_on_timeout': True,
+            },
+            'SOCKET_CONNECT_TIMEOUT': 5,
+            'SOCKET_TIMEOUT': 5,
+            'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
+            'IGNORE_EXCEPTIONS': True,
+        },
+        'KEY_PREFIX': 'booking',
+        'TIMEOUT': 300,
+    }
+}
+
+
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -244,6 +316,7 @@ MARKDOWNX_IMAGE_MAX_SIZE = {'size': (1920, 1080), 'quality': 90}
 
 # Editor settings
 MARKDOWNX_EDITOR_RESIZABLE = True
+
 
 # Jazzmin Admin Configuration
 JAZZMIN_SETTINGS = {

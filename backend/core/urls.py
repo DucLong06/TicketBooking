@@ -18,10 +18,11 @@ urlpatterns = [
     path('markdownx/markdownify/',
          MarkdownifyView.as_view(),
          name='markdownx_markdownify'),
-    path('silk/', include('silk.urls', namespace='silk'))  # <-- Thêm dòng này
+    path('silk/', include('silk.urls', namespace='silk'))
 ]
 
 if settings.DEBUG:
+
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 

@@ -984,10 +984,11 @@
 						v-if="tooltipData.seat_image_url"
 						class="w-full h-36 overflow-hidden"
 					>
-						<img
+						<OptimizedImage
 							:src="tooltipData.seat_image_url"
 							alt="Seat View"
-							class="w-full h-full object-cover"
+							aspect-ratio="16/9"
+							imageClass="w-full h-full object-cover"
 						/>
 					</div>
 
@@ -1044,6 +1045,7 @@ import { useBookingStore } from "../stores/booking";
 import { bookingAPI } from "../api/booking";
 import { useToast } from "vue-toastification";
 import { useBookingCleanup } from "@/composables/useBookingCleanup";
+import OptimizedImage from "@/components/OptimizedImage.vue";
 
 const { cleanup } = useBookingCleanup({
 	shouldRelease: true,
@@ -1477,6 +1479,7 @@ const isSelected = (seat) => {
 
 // Tooltip functions
 const showSeatTooltip = (seat, event) => {
+	console.log("Dữ liệu ghế khi hover:", seat);
 	if (tooltipTimer) {
 		clearTimeout(tooltipTimer);
 		tooltipTimer = null;
