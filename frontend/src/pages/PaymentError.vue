@@ -85,9 +85,9 @@
 				<div class="mt-6 text-sm text-gray-600">
 					<p>
 						Hotline:
-						<a class="font-medium text-red-600 hover:underline">{{
-							contactInfo.hotline_display
-						}}</a>
+						<a class="font-medium text-red-600 hover:underline"
+							>0962.98.98.56</a
+						>
 					</p>
 				</div>
 			</div>

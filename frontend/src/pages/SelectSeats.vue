@@ -1525,8 +1525,6 @@ const loadSessionReservations = async () => {
 		);
 
 		if (response.data.seats && response.data.seats.length > 0) {
-			console.log("✅ Restored", response.data.seats.length, "seats");
-
 			selectedSeats.value = response.data.seats;
 			bookingStore.selectedSeats = response.data.seats;
 
@@ -1549,7 +1547,7 @@ const loadSessionReservations = async () => {
 			return true;
 		} else {
 			// No reservations - clean up
-			console.log("No reservations found");
+
 			selectedSeats.value = [];
 			reservationExpiry.value = null;
 			sessionStorage.removeItem("selectedSeats");
@@ -1658,14 +1656,11 @@ const continueToCustomerInfo = () => {
 		return;
 	}
 
-	console.log("🚀 [SelectSeats] Continue to CustomerInfo");
-
 	bookingStore.selectedSeats = selectedSeats.value;
 	sessionStorage.setItem(
 		"selectedSeats",
 		JSON.stringify(selectedSeats.value)
 	);
-	console.log("✅ Saved seats:", selectedSeats.value.length);
 
 	if (reservationExpiry.value) {
 		const expiryISO = reservationExpiry.value.toISOString
@@ -1674,7 +1669,6 @@ const continueToCustomerInfo = () => {
 
 		sessionStorage.setItem("reservationExpiry", expiryISO);
 		bookingStore.reservationExpiry = expiryISO;
-		console.log("✅ Saved expiry:", expiryISO);
 	}
 
 	const performanceToSave = {
@@ -1876,7 +1870,6 @@ onMounted(async () => {
 
 		await loadSeatMap();
 
-		console.log("Checking for existing reservations...");
 		await loadSessionReservations();
 	} catch (error) {
 		console.error("SelectSeats onMounted error:", error);

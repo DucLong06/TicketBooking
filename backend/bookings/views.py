@@ -9,7 +9,7 @@ from .serializers import (
     BookingCreateSerializer,
     ReserveSeatSerializer,
 )
-from .models import Booking, SeatReservation
+from .models import Booking, SeatReservation, BookingHistory
 from django.conf import settings
 from django.db.models import Prefetch, Q
 from rest_framework import viewsets, status
@@ -349,6 +349,22 @@ def reserve_seats(request):
                 'price': float(seat_price)
             })
 
+        BookingHistory.log_action(
+            booking=None,
+            action='reserve_seat',
+            request=request,
+            seats=SeatReservation.objects.filter(
+                performance=performance,
+                seat_id__in=seat_ids,
+                session_id=session_id
+            ),
+            session_id=session_id,
+            extra_data={
+                'performance_id': performance_id,
+                'seat_count': len(seat_ids)
+            }
+        )
+
     return Response({
         'seats': reserved_seats,
         'expires_at': expires_at.isoformat(),
@@ -388,7 +404,17 @@ def release_seats(request):
     )
 
     if count > 0:
-        logger.info(f"Released {count} seats for session {session_id}")
+        BookingHistory.log_action(
+            booking=None,
+            action='seat_released',
+            request=request,
+            seats=None,  # đã release rồi
+            session_id=session_id,
+            extra_data={
+                'released_count': count,
+                'seat_ids': seat_ids
+            }
+        )
 
     return Response({'released': count})
 
@@ -464,6 +490,8 @@ class BookingViewSet(viewsets.ModelViewSet):
             )
 
         with transaction.atomic():
+            seats_to_log = list(booking.seat_reservations.all())
+
             booking.status = 'cancelled'
             booking.save()
 
@@ -473,6 +501,14 @@ class BookingViewSet(viewsets.ModelViewSet):
                 session_id='',
                 expires_at=None,
                 booking=None
+            )
+
+            BookingHistory.log_action(
+                booking=booking,
+                action='booking_cancelled',
+                request=request,
+                seats=seats_to_log,
+                extra_data={'cancelled_by': 'user'}
             )
 
         return Response({'status': 'cancelled'})

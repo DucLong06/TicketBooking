@@ -206,7 +206,7 @@
 								Hotline:
 								<a
 									class="font-medium text-red-600 hover:underline"
-									>{{ contactInfo.hotline_display }}</a
+									>0962.98.98.56</a
 								>
 							</p>
 						</div>
