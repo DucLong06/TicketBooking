@@ -1,0 +1,50 @@
+[
+{
+  "model": "venues.section",
+  "pk": 1,
+  "fields": {
+    "venue": 1,
+    "name": "Khán Phòng 1",
+    "code": "hall1",
+    "position_x": 0,
+    "position_y": 0,
+    "order": 1
+  }
+},
+{
+  "model": "venues.section",
+  "pk": 3,
+  "fields": {
+    "venue": 1,
+    "name": "Khán phòng 2",
+    "code": "hall2",
+    "position_x": 0,
+    "position_y": 3,
+    "order": 2
+  }
+},
+{
+  "model": "venues.section",
+  "pk": 4,
+  "fields": {
+    "venue": 1,
+    "name": "LG Phải",
+    "code": "loge_right",
+    "position_x": 0,
+    "position_y": 0,
+    "order": 0
+  }
+},
+{
+  "model": "venues.section",
+  "pk": 5,
+  "fields": {
+    "venue": 1,
+    "name": "LG Trái",
+    "code": "loge_left",
+    "position_x": 0,
+    "position_y": 0,
+    "order": 0
+  }
+}
+]

@@ -1,0 +1,28 @@
+[
+{
+  "model": "shows.performance",
+  "pk": 2,
+  "fields": {
+    "show": 2,
+    "datetime": "2025-11-15T13:00:00Z",
+    "status": "on_sale",
+    "notes": "",
+    "created_at": "2025-10-06T16:14:13.436Z",
+    "updated_at": "2025-10-14T11:42:42.446Z",
+    "shipping_fee": "0"
+  }
+},
+{
+  "model": "shows.performance",
+  "pk": 4,
+  "fields": {
+    "show": 2,
+    "datetime": "2025-11-16T13:00:00Z",
+    "status": "on_sale",
+    "notes": "",
+    "created_at": "2025-10-10T08:00:54.616Z",
+    "updated_at": "2025-10-14T11:42:42.447Z",
+    "shipping_fee": "0"
+  }
+}
+]

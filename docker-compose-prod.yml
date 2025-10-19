@@ -1,0 +1,77 @@
+services:
+    frontend_builder:
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile
+        container_name: booking_frontend_builder
+        volumes:
+            - frontend_build:/app/dist
+        command: echo "Frontend built successfully"
+        networks:
+            - booking_network_prod
+
+    backend:
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+        container_name: booking_backend_prod
+        restart: always
+        command: >
+            sh -c "python manage.py migrate &&
+                   python manage.py collectstatic --noinput &&
+                   gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120"
+        volumes:
+            - frontend_build:/app/frontend_build
+            - static_volume_prod:/app/staticfiles
+            - media_volume_prod:/app/media
+            - logs_volume_prod:/app/logs
+        ports:
+            - "8000:8000"
+        env_file:
+            - .env
+
+        networks:
+            - booking_network_prod
+        depends_on:
+            - frontend_builder
+
+    celery_worker:
+        build:
+            context: ./backend
+        container_name: booking_celery_worker_prod
+        restart: always
+        command: celery -A core worker -l info --concurrency=1
+        volumes:
+            - logs_volume_prod:/app/logs
+        env_file:
+            - .env
+        depends_on:
+            - backend
+        networks:
+            - booking_network_prod
+
+    celery_beat:
+        build:
+            context: ./backend
+        container_name: booking_celery_beat_prod
+        restart: always
+        command: celery -A core beat -l info
+        volumes:
+            - logs_volume_prod:/app/logs
+        env_file:
+            - .env
+
+        depends_on:
+            - backend
+        networks:
+            - booking_network_prod
+
+volumes:
+    frontend_build:
+    static_volume_prod:
+    media_volume_prod:
+    logs_volume_prod:
+
+networks:
+    booking_network_prod:
+        external: true

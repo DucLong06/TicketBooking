@@ -1,0 +1,452 @@
+[
+{
+  "model": "venues.venuelayout",
+  "pk": 1,
+  "fields": {
+    "name": "Hồ Gươm Opera - Realistic Layout",
+    "venue_type": "Opera",
+    "description": "Opera test",
+    "config": {
+      "name": "Hồ Gươm Opera - Realistic Layout",
+      "type": "Opera",
+      "floors": [
+        {
+          "id": "khan_phong_1",
+          "name": "KHÁN PHÒNG 1",
+          "sections": [
+            {
+              "id": "main_floor_1",
+              "name": "Tầng 1 chính",
+              "rows": [
+                {
+                  "gaps": [],
+                  "label": "A",
+                  "seats": 20,
+                  "category": "vip",
+                  "numbering": "center_out",
+                  "position_y": 150
+                },
+                {
+                  "gaps": [],
+                  "label": "B",
+                  "seats": 22,
+                  "category": "vip",
+                  "numbering": "center_out",
+                  "position_y": 175
+                },
+                {
+                  "gaps": [],
+                  "label": "C",
+                  "seats": 24,
+                  "category": "vip",
+                  "numbering": "center_out",
+                  "position_y": 200
+                },
+                {
+                  "gaps": [],
+                  "label": "D",
+                  "seats": 26,
+                  "category": "vip",
+                  "numbering": "center_out",
+                  "position_y": 225
+                },
+                {
+                  "gaps": [],
+                  "label": "E",
+                  "seats": 28,
+                  "category": "vip",
+                  "numbering": "center_out",
+                  "position_y": 250
+                },
+                {
+                  "gaps": [],
+                  "label": "F",
+                  "seats": 30,
+                  "category": "vip",
+                  "numbering": "center_out",
+                  "position_y": 275
+                },
+                {
+                  "gaps": [],
+                  "label": "G",
+                  "seats": 32,
+                  "category": "vip",
+                  "numbering": "center_out",
+                  "position_y": 300
+                },
+                {
+                  "gaps": [
+                    6,
+                    7,
+                    30,
+                    31
+                  ],
+                  "label": "H",
+                  "seats": 36,
+                  "category": "standard",
+                  "numbering": "center_out",
+                  "position_y": 325
+                },
+                {
+                  "gaps": [
+                    6,
+                    7,
+                    32,
+                    33
+                  ],
+                  "label": "I",
+                  "seats": 38,
+                  "category": "standard",
+                  "numbering": "center_out",
+                  "position_y": 350
+                },
+                {
+                  "gaps": [
+                    6,
+                    7,
+                    34,
+                    35
+                  ],
+                  "label": "K",
+                  "seats": 40,
+                  "category": "standard",
+                  "numbering": "center_out",
+                  "position_y": 375
+                },
+                {
+                  "gaps": [
+                    6,
+                    7,
+                    36,
+                    37
+                  ],
+                  "label": "L",
+                  "seats": 42,
+                  "category": "standard",
+                  "numbering": "center_out",
+                  "position_y": 400
+                },
+                {
+                  "gaps": [
+                    5,
+                    6,
+                    7,
+                    37,
+                    38,
+                    39
+                  ],
+                  "label": "M",
+                  "seats": 44,
+                  "category": "standard",
+                  "numbering": "center_out",
+                  "position_y": 425
+                },
+                {
+                  "gaps": [
+                    5,
+                    6,
+                    7,
+                    39,
+                    40,
+                    41
+                  ],
+                  "label": "N",
+                  "seats": 46,
+                  "category": "standard",
+                  "numbering": "center_out",
+                  "position_y": 450
+                },
+                {
+                  "gaps": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    41,
+                    42,
+                    43,
+                    44
+                  ],
+                  "label": "O",
+                  "seats": 48,
+                  "category": "standard",
+                  "numbering": "center_out",
+                  "position_y": 475
+                },
+                {
+                  "gaps": [
+                    4,
+                    5,
+                    6,
+                    7,
+                    43,
+                    44,
+                    45,
+                    46
+                  ],
+                  "label": "P",
+                  "seats": 50,
+                  "category": "economy",
+                  "numbering": "center_out",
+                  "position_y": 500
+                },
+                {
+                  "gaps": [
+                    4,
+                    5,
+                    6,
+                    41,
+                    42,
+                    43
+                  ],
+                  "label": "Q",
+                  "seats": 48,
+                  "category": "economy",
+                  "numbering": "center_out",
+                  "position_y": 525
+                },
+                {
+                  "gaps": [
+                    4,
+                    5,
+                    39,
+                    40,
+                    41
+                  ],
+                  "label": "R",
+                  "seats": 46,
+                  "category": "economy",
+                  "numbering": "center_out",
+                  "position_y": 550
+                },
+                {
+                  "gaps": [
+                    4,
+                    37,
+                    38,
+                    39
+                  ],
+                  "label": "S",
+                  "seats": 44,
+                  "category": "economy",
+                  "numbering": "center_out",
+                  "position_y": 575
+                },
+                {
+                  "gaps": [
+                    3,
+                    35,
+                    36,
+                    37
+                  ],
+                  "label": "T",
+                  "seats": 42,
+                  "category": "economy",
+                  "numbering": "center_out",
+                  "position_y": 600
+                },
+                {
+                  "gaps": [
+                    3,
+                    33,
+                    34,
+                    35
+                  ],
+                  "label": "U",
+                  "seats": 40,
+                  "category": "economy",
+                  "numbering": "center_out",
+                  "position_y": 625
+                }
+              ]
+            },
+            {
+              "id": "loge_left",
+              "name": "Loge Trái",
+              "rows": [
+                {
+                  "label": "LG",
+                  "seats": 8,
+                  "layout": "vertical_left",
+                  "category": "loge",
+                  "numbering": "vertical",
+                  "position_y": 300
+                }
+              ]
+            },
+            {
+              "id": "loge_right",
+              "name": "Loge Phải",
+              "rows": [
+                {
+                  "label": "LG",
+                  "seats": 8,
+                  "layout": "vertical_right",
+                  "category": "loge",
+                  "numbering": "vertical",
+                  "position_y": 300
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "khan_phong_2",
+          "name": "KHÁN PHÒNG 2",
+          "sections": [
+            {
+              "id": "upper_level",
+              "name": "Tầng trên",
+              "rows": [
+                {
+                  "gaps": [],
+                  "label": "AA",
+                  "seats": 16,
+                  "category": "upper",
+                  "numbering": "center_out",
+                  "position_y": 720
+                },
+                {
+                  "gaps": [],
+                  "label": "BB",
+                  "seats": 18,
+                  "category": "upper",
+                  "numbering": "center_out",
+                  "position_y": 745
+                },
+                {
+                  "gaps": [],
+                  "label": "CC",
+                  "seats": 20,
+                  "category": "upper",
+                  "numbering": "center_out",
+                  "position_y": 770
+                },
+                {
+                  "gaps": [
+                    4,
+                    5,
+                    19,
+                    20
+                  ],
+                  "label": "A",
+                  "seats": 24,
+                  "category": "balcony",
+                  "numbering": "center_out",
+                  "position_y": 795
+                },
+                {
+                  "gaps": [
+                    4,
+                    5,
+                    21,
+                    22
+                  ],
+                  "label": "B",
+                  "seats": 26,
+                  "category": "balcony",
+                  "numbering": "center_out",
+                  "position_y": 820
+                },
+                {
+                  "gaps": [
+                    4,
+                    5,
+                    23,
+                    24
+                  ],
+                  "label": "C",
+                  "seats": 28,
+                  "category": "balcony",
+                  "numbering": "center_out",
+                  "position_y": 845
+                },
+                {
+                  "gaps": [
+                    4,
+                    5,
+                    25,
+                    26
+                  ],
+                  "label": "D",
+                  "seats": 30,
+                  "category": "balcony",
+                  "numbering": "center_out",
+                  "position_y": 870
+                },
+                {
+                  "gaps": [
+                    4,
+                    5,
+                    27,
+                    28
+                  ],
+                  "label": "E",
+                  "seats": 32,
+                  "category": "balcony",
+                  "numbering": "center_out",
+                  "position_y": 895
+                },
+                {
+                  "gaps": [
+                    4,
+                    5,
+                    29,
+                    30
+                  ],
+                  "label": "F",
+                  "seats": 34,
+                  "category": "balcony",
+                  "numbering": "center_out",
+                  "position_y": 920
+                },
+                {
+                  "gaps": [
+                    3,
+                    4,
+                    26,
+                    27
+                  ],
+                  "label": "G",
+                  "seats": 30,
+                  "category": "balcony",
+                  "numbering": "center_out",
+                  "position_y": 945
+                },
+                {
+                  "gaps": [
+                    2,
+                    3,
+                    17,
+                    18
+                  ],
+                  "label": "H",
+                  "seats": 20,
+                  "category": "balcony",
+                  "numbering": "center_out",
+                  "position_y": 970
+                },
+                {
+                  "gaps": [
+                    1,
+                    9
+                  ],
+                  "label": "I",
+                  "seats": 10,
+                  "category": "balcony",
+                  "numbering": "center_out",
+                  "position_y": 995
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "description": "Opera test"
+    },
+    "is_template": true,
+    "created_at": "2025-10-02T16:42:54.475Z",
+    "updated_at": "2025-10-02T16:42:54.475Z"
+  }
+}
+]

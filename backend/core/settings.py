@@ -46,19 +46,25 @@ else:
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@example.com')
     logger.info(f"Using email host: {EMAIL_HOST} with user: {EMAIL_HOST_USER}")
 
-    # SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True'
-    # SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False') == 'True'
-    # CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False') == 'True'
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME', 'theater_booking'),
-            'USER': os.getenv('DB_USER', 'theater_user'),
-            'PASSWORD': os.getenv('DB_PASSWORD', 'theater_pass'),
-            'HOST': os.getenv('DB_HOST', 'db'),
-            'PORT': os.getenv('DB_PORT', '5432'),
+            'NAME': os.getenv('POSTGRES_DB', 'theater_booking'),
+            'USER': os.getenv('POSTGRES_USER', 'theater_user'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'theater_pass'),
+            'HOST': os.getenv('POSTGRES_HOST', 'db'),
+            'PORT': os.getenv('POSTGRES_PORT', '5432'),
         }
     }
 
