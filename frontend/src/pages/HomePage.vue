@@ -29,12 +29,18 @@
 					>
 						<!-- Background Image -->
 						<div class="absolute inset-0">
-							<OptimizedImage
+							<!-- <OptimizedImage
 								v-if="show.poster"
 								:src="show.poster"
 								:alt="show.name"
 								aspect-ratio="2/3"
 								imageClass="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+							/> -->
+							<img
+								v-if="show.poster"
+								:src="show.poster"
+								:alt="show.name"
+								class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
 							/>
 							<div
 								v-else

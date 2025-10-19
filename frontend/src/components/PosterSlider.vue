@@ -33,12 +33,17 @@
 					>
 						<!-- Image with overlay gradient -->
 						<div class="relative w-full h-full overflow-hidden">
-							<OptimizedImage
+							<!-- <OptimizedImage
 								:src="poster.image"
 								:alt="poster.title"
 								aspect-ratio="16/9"
 								class="w-full h-auto object-cover rounded-lg"
 								loading="eager"
+							/> -->
+							<img
+								:src="poster.image"
+								:alt="poster.title"
+								class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
 							/>
 							<!-- Gradient overlay -->
 							<div

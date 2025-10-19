@@ -984,11 +984,16 @@
 						v-if="tooltipData.seat_image_url"
 						class="w-full h-36 overflow-hidden"
 					>
-						<OptimizedImage
+						<!-- <OptimizedImage
 							:src="tooltipData.seat_image_url"
 							alt="Seat View"
 							aspect-ratio="16/9"
 							imageClass="w-full h-full object-cover"
+						/> -->
+						<img
+							:src="tooltipData.seat_image_url"
+							alt="Seat View"
+							class="w-full h-full object-cover"
 						/>
 					</div>
 
