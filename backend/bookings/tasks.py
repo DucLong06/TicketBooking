@@ -5,7 +5,7 @@ from django.conf import settings
 from datetime import timedelta
 import logging
 
-from .models import SeatReservation, Booking
+from .models import SeatReservation, Booking, BookingHistory
 from discounts.models import DiscountUsage
 from payments.models import Payment
 from payments.ninepay import NinePay
@@ -27,6 +27,19 @@ def cleanup_expired_seat_reservations():
 
     for reservation in expired_reservations:
         if not reservation.booking:
+
+            BookingHistory.log_action(
+                booking=None,
+                action='seat_released',
+                request=None,
+                seats=[reservation],
+                session_id=reservation.session_id,
+                extra_data={
+                    'reason': 'expired_reservation',
+                    'task': 'celery_cleanup'
+                }
+            )
+
             reservation.status = 'available'
             reservation.session_id = ''
             reservation.expires_at = None
@@ -36,6 +49,18 @@ def cleanup_expired_seat_reservations():
             count += 1
 
         elif reservation.booking.status in ['cancelled', 'expired']:
+
+            BookingHistory.log_action(
+                booking=reservation.booking,
+                action='seat_released',
+                request=None,
+                seats=[reservation],
+                extra_data={
+                    'reason': 'booking_cancelled_or_expired',
+                    'task': 'celery_cleanup'
+                }
+            )
+
             reservation.status = 'available'
             reservation.session_id = ''
             reservation.expires_at = None
@@ -97,6 +122,7 @@ def expire_old_pending_bookings():
                 continue
 
             with transaction.atomic():
+                seats_snapshot = list(booking.seat_reservations.all())
                 booking.status = 'expired'
                 booking.save()
 
@@ -106,6 +132,18 @@ def expire_old_pending_bookings():
                     session_id='',
                     expires_at=None,
                     booking=None
+                )
+
+                BookingHistory.log_action(
+                    booking=booking,
+                    action='booking_expired',
+                    request=None,
+                    seats=seats_snapshot,
+                    extra_data={
+                        'reason': 'timeout',
+                        'task': 'celery_expire_bookings',
+                        'booking_age_minutes': (now - booking.created_at).total_seconds() / 60
+                    }
                 )
 
                 # Cancel discount
@@ -296,6 +334,20 @@ def update_payment_success(payment, gateway_response):
             updated_seats = booking.seat_reservations.update(status='sold')
             logger.info(f"✅ [Celery] Updated {updated_seats} seats to 'sold'")
 
+            BookingHistory.log_action(
+                booking=booking,
+                action='payment_success',
+                request=None,
+                seats=booking.seat_reservations.all(),
+                payment_amount=booking.final_amount,
+                payment_status='success',
+                gateway_response=gateway_response,
+                extra_data={
+                    'task': 'celery_sync_9pay',
+                    'transaction_id': payment.transaction_id
+                }
+            )
+
             # ✅ Confirm discount
             try:
                 usage = DiscountUsage.objects.get(booking=booking, status='PENDING')
@@ -345,12 +397,28 @@ def update_payment_failed(payment, gateway_response):
             booking.status = 'cancelled'
             booking.save()
 
+            seats_snapshot = list(booking.seat_reservations.all())
+
             # Release seats
             booking.seat_reservations.update(
                 status='available',
                 session_id='',
                 expires_at=None,
                 booking=None
+            )
+
+            BookingHistory.log_action(
+                booking=booking,
+                action='payment_failed',
+                request=None,
+                seats=seats_snapshot,
+                payment_amount=booking.final_amount,
+                payment_status='failed',
+                gateway_response=gateway_response,
+                extra_data={
+                    'task': 'celery_sync_9pay',
+                    'transaction_id': payment.transaction_id
+                }
             )
 
             # Cancel discount

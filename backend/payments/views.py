@@ -10,11 +10,10 @@ from logzero import logger
 
 from .models import Payment
 from .ninepay import NinePay
-from bookings.models import Booking, SeatReservation
+from bookings.models import Booking, SeatReservation, BookingHistory
 from discounts.models import DiscountUsage
 
 
-# backend/payments/views.py
 @api_view(['POST'])
 def create_payment(request, booking_code):
     """Create payment for booking with 9Pay"""
@@ -122,6 +121,20 @@ def create_payment(request, booking_code):
 
     if payment_url:
         logger.info(f"9Pay payment URL created successfully")
+
+        BookingHistory.log_action(
+            booking=booking,
+            action='payment_initiated',
+            request=request,
+            seats=seat_reservations,
+            payment_amount=booking.final_amount,
+            payment_status='pending',
+            gateway_response=payment_url,
+            extra_data={
+                'transaction_id': payment.transaction_id,
+                'payment_method': payment.payment_method
+            }
+        )
         return Response({
             'payment_url': payment_url,
             'transaction_id': transaction_id,
@@ -130,6 +143,14 @@ def create_payment(request, booking_code):
         })
     else:
         logger.error("Failed to create 9Pay payment URL")
+        BookingHistory.log_action(
+            booking=booking,
+            action='payment_failed',
+            request=request,
+            seats=seat_reservations,
+            error=payment_url,
+            gateway_response=payment_url
+        )
         return Response(
             {'error': 'Không thể tạo yêu cầu thanh toán với 9Pay'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -235,6 +256,16 @@ def ninepay_return(request):
                 except Exception as e:
                     logger.error(f"Failed to send confirmation email: {e}")
 
+                BookingHistory.log_action(
+                    booking=booking,
+                    action='payment_success',
+                    request=request,
+                    seats=booking.seat_reservations.all(),
+                    payment_amount=booking.final_amount,
+                    payment_status='success',
+                    gateway_response=payment_data
+                )
+
                 return redirect(f'{settings.FRONTEND_URL}/booking/confirmation/{booking.booking_code}')
 
             else:
@@ -261,6 +292,18 @@ def ninepay_return(request):
 
                 failure_reason = payment_data.get('failure_reason', 'Giao dịch thất bại')
                 failure_url = f'{settings.FRONTEND_URL}/payment/failed?code={error_code}&message={failure_reason}'
+
+                BookingHistory.log_action(
+                    booking=booking,
+                    action='payment_failed',
+                    request=request,
+                    seats=booking.seat_reservations.all(),
+                    payment_amount=booking.final_amount,
+                    payment_status='failed',
+                    gateway_response=payment_data,
+                    error=f"Payment failed with status {status}, error_code {error_code}"
+                )
+
                 return redirect(failure_url)
 
     except Payment.DoesNotExist:

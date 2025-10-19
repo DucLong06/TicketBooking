@@ -6,50 +6,71 @@
 		<!-- Shows Section -->
 		<section class="py-16 bg-[#fdfcf0]">
 			<div class="container mx-auto px-4">
-				<h2 class="text-3xl font-bold text-center mb-12">
+				<h2 class="text-3xl font-bold text-center mb-12 text-[#372e2d]">
 					Chương trình đang diễn
 				</h2>
 
 				<!-- Loading -->
 				<div v-if="loading" class="text-center">
 					<div
-						class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"
+						class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#d8a669]"
 					></div>
 				</div>
 
 				<!-- Shows Grid -->
 				<div
 					v-else-if="shows.length > 0"
-					class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+					class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
 				>
 					<div
 						v-for="show in shows"
 						:key="show.id"
-						class="bg-[#fdfcf0] rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition cursor-pointer"
-						@click="goToBooking(show.id)"
+						class="group relative rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer aspect-[2/3]"
 					>
-						<div
-							class="relative h-64 bg-gray-300 overflow-hidden group"
-						>
+						<!-- Background Image -->
+						<div class="absolute inset-0">
 							<img
 								v-if="show.poster"
 								:src="show.poster"
 								:alt="show.name"
-								class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+								class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
 							/>
 							<div
-								class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
-							></div>
+								v-else
+								class="w-full h-full bg-gradient-to-br from-[#d8a669]/20 to-[#372e2d]/20 flex items-center justify-center"
+							>
+								<svg
+									class="w-16 h-16 text-[#d8a669]/30"
+									fill="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path d="M4 4h16v12H4V4m0 14h16v2H4v-2z" />
+								</svg>
+							</div>
 						</div>
-						<div class="p-6 bg-[#372e2d]">
+
+						<!-- Gradient Overlay - Hidden by default, show on hover -->
+						<div
+							class="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+						></div>
+
+						<!-- Content - Only show on hover -->
+						<div
+							class="absolute inset-0 flex flex-col items-center justify-center p-4 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20"
+						>
+							<!-- Show Title -->
 							<h3
-								class="text-xl text-[#d8a669] font-semibold mb-2"
+								class="text-white font-bold text-base md:text-lg lg:text-xl mb-3 text-center line-clamp-2 drop-shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
 							>
 								{{ show.name }}
 							</h3>
-							<!-- <p class="text-[#372e2d]mb-4 flex items-center">
+
+							<!-- Venue Info -->
+							<div
+								class="flex items-center gap-2 text-white/90 text-sm md:text-base mb-6 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75"
+							>
 								<svg
-									class="w-5 h-5 mr-2"
+									class="w-4 h-4 md:w-5 md:h-5 flex-shrink-0"
 									fill="none"
 									stroke="currentColor"
 									viewBox="0 0 24 24"
@@ -58,17 +79,57 @@
 										stroke-linecap="round"
 										stroke-linejoin="round"
 										stroke-width="2"
-										d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+										d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+									/>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
 									/>
 								</svg>
-								{{ show.category }}
-							</p> -->
-							<div class="flex justify-between items-center">
+								<span class="line-clamp-1">{{
+									show.venue_name
+								}}</span>
+							</div>
+
+							<!-- Action Buttons -->
+							<div
+								class="flex flex-col gap-3 w-full max-w-[200px] transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-100"
+							>
 								<button
 									@click.stop="goToBooking(show.id)"
-									class="bg-[#d8a669] text-white px-6 py-3 rounded-lg font-bold shadow-lg hover:bg-[#b8884d] hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200"
+									class="w-full bg-[#d8a669] text-white px-4 py-3 rounded-lg font-bold text-sm md:text-base shadow-xl hover:bg-[#b8884d] transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
 								>
+									<svg
+										class="w-5 h-5"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
+										/>
+									</svg>
 									Đặt vé ngay
+								</button>
+
+								<button
+									v-if="show.trailer_url"
+									@click.stop="openTrailer(show.trailer_url)"
+									class="w-full bg-white/90 backdrop-blur-sm text-[#372e2d] px-4 py-3 rounded-lg font-bold text-sm md:text-base shadow-xl hover:bg-white transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
+								>
+									<svg
+										class="w-5 h-5"
+										fill="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path d="M8 5v14l11-7z" />
+									</svg>
+									Xem Trailer
 								</button>
 							</div>
 						</div>
@@ -94,6 +155,13 @@
 				</div>
 			</div>
 		</section>
+
+		<!-- Trailer Popup -->
+		<TrailerPopup
+			:show="showTrailerPopup"
+			:trailerUrl="currentTrailerUrl"
+			@close="closeTrailer"
+		/>
 	</DefaultLayout>
 </template>
 
@@ -102,6 +170,7 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import PosterSlider from "../components/PosterSlider.vue";
+import TrailerPopup from "../components/TrailerPopup.vue";
 import { useBookingStore } from "../stores/booking";
 
 const router = useRouter();
@@ -109,8 +178,37 @@ const bookingStore = useBookingStore();
 const shows = ref([]);
 const loading = ref(true);
 
+// Trailer popup state
+const showTrailerPopup = ref(false);
+const currentTrailerUrl = ref("");
+
 const goToBooking = (showId) => {
 	router.push(`/booking/${showId}`);
+};
+
+const openTrailer = (url) => {
+	if (url) {
+		currentTrailerUrl.value = url;
+		showTrailerPopup.value = true;
+		// Prevent body scroll when popup is open
+		document.body.style.overflow = "hidden";
+	}
+};
+
+const closeTrailer = () => {
+	showTrailerPopup.value = false;
+	currentTrailerUrl.value = "";
+	// Restore body scroll
+	document.body.style.overflow = "";
+};
+
+const formatPrice = (price) => {
+	if (!price) return "0đ";
+	return new Intl.NumberFormat("vi-VN", {
+		style: "currency",
+		currency: "VND",
+		minimumFractionDigits: 0,
+	}).format(price);
 };
 
 onMounted(async () => {
@@ -124,3 +222,25 @@ onMounted(async () => {
 	}
 });
 </script>
+
+<style scoped>
+/* Line clamp utility */
+.line-clamp-1 {
+	display: -webkit-box;
+	-webkit-line-clamp: 1;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.line-clamp-2 {
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+/* Ensure proper aspect ratio on all screen sizes */
+.aspect-\[2\/3\] {
+	aspect-ratio: 2/3;
+}
+</style>

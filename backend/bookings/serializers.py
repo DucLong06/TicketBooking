@@ -187,6 +187,19 @@ class BookingCreateSerializer(serializers.ModelSerializer):
 
             seat_reservations.update(expires_at=booking.expires_at)
 
+            from .models import BookingHistory
+            BookingHistory.log_action(
+                booking=booking,
+                action='create_booking',
+                request=self.context.get('request'),
+                seats=seat_reservations,
+                extra_data={
+                    'total_amount': float(total_amount),
+                    'service_fee': float(service_fee),
+                    'has_discount': bool(discount_instance)
+                }
+            )
+
             if update_count != len(seat_ids):
                 logger.error(f"🚨 Update mismatch: expected {len(seat_ids)}, got {update_count}")
                 raise Exception("CRITICAL: Seat update mismatch")

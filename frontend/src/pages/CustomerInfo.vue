@@ -739,15 +739,12 @@ const startTimer = () => {
 	}, 1000);
 };
 onMounted(() => {
-	console.log("🚀 [CustomerInfo] Validating data...");
-
 	bookingStore.resetDiscount();
 	discountCodeInput.value = "";
 
 	const existingSessionId = sessionStorage.getItem("session_id");
 	if (existingSessionId) {
 		bookingStore.sessionId = existingSessionId;
-		console.log("✅ Session ID restored:", existingSessionId);
 	} else {
 		console.error("❌ No session ID found");
 		toast.warning("Phiên đã hết hạn. Vui lòng chọn lại ghế.");
@@ -760,7 +757,6 @@ onMounted(() => {
 	if (bookingStore.selectedSeats?.length > 0) {
 		selectedSeats.value = bookingStore.selectedSeats;
 		hasSeats = true;
-		console.log("✅ Seats from store:", selectedSeats.value.length);
 	} else {
 		const savedSeats = sessionStorage.getItem("selectedSeats");
 		if (savedSeats) {
@@ -771,10 +767,7 @@ onMounted(() => {
 				bookingStore.selectedSeats = parsedSeats;
 
 				hasSeats = parsedSeats.length > 0;
-				console.log(
-					"✅ Seats from sessionStorage and restored to store:",
-					parsedSeats.length
-				);
+				
 			} catch (e) {
 				console.error("Failed to parse savedSeats:", e);
 			}
@@ -798,10 +791,7 @@ onMounted(() => {
 				!bookingStore.selectedPerformance.id
 			) {
 				bookingStore.selectedPerformance = performance;
-				console.log(
-					"✅ Restored selectedPerformance to store:",
-					performance.id
-				);
+				
 			}
 
 			showInfo.value = {
