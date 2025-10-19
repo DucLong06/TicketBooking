@@ -23,10 +23,9 @@ from datetime import timedelta
 
 
 def get_performance_seat_map(performance):
-    """Get complete seat map for a performance"""
+    """Get complete seat map for a performance - OPTIMIZED"""
     venue = performance.show.venue
 
-    # Get all seats
     seats = Seat.objects.filter(
         row__section__venue=venue,
         status='active'
@@ -41,19 +40,11 @@ def get_performance_seat_map(performance):
             queryset=SeatReservation.objects.filter(
                 performance=performance,
                 status__in=['reserved', 'sold', 'blocked']
-            ),
+            ).only('seat_id', 'status'),
             to_attr='active_reservations'
         )
     )
 
-    # Get reservations
-    reservations = SeatReservation.objects.filter(
-        performance=performance,
-        status__in=['reserved', 'sold', 'blocked']
-    ).values('seat_id', 'status')
-    reservation_map = {r['seat_id']: r['status'] for r in reservations}
-
-    # Get performance prices
     performance_prices = PerformancePrice.objects.filter(
         performance=performance
     ).values('price_category_id', 'price')
@@ -62,14 +53,12 @@ def get_performance_seat_map(performance):
     utc_plus_7 = dt_timezone(timedelta(hours=7))
     datetime_in_utc7 = performance.datetime.astimezone(utc_plus_7)
 
-    # Build seat map data
     seat_map_data = {
         'venue': {
             'name': venue.name,
             'address': venue.address,
             'phone': venue.phone,
             'hotline': venue.hotline_display,
-
             'layout_image_url': venue.layout_image.url if venue.layout_image else None,
             'checkin_minutes_before': venue.checkin_minutes_before,
             'width': 800,
@@ -119,8 +108,12 @@ def get_performance_seat_map(performance):
             }
         rows_dict[row.id]['seats'].append(seat)
 
-        # Determine seat status
-        seat_status = reservation_map.get(seat.id, 'available')
+        # ✅ Determine seat status from prefetched data (NO extra query)
+        seat_status = (
+            seat.active_reservations[0].status
+            if seat.active_reservations
+            else 'available'
+        )
 
         # Get price per seat
         effective_pc = seat.effective_price_category
@@ -166,9 +159,7 @@ def get_performance_seat_map(performance):
             'price_category_color': effective_pc.color if effective_pc else '#10B981',
             'effective_price_category_name': effective_pc.name if effective_pc else 'Standard',
 
-
             'seat_image_url': seat.seat_image.url if seat.seat_image else None,
-
             'is_accessible': seat.is_accessible,
             'numbering_style': safe_getattr(seat.row, 'numbering_style', 'left_to_right'),
             'is_odd': is_odd_number,
@@ -178,7 +169,6 @@ def get_performance_seat_map(performance):
 
         seat_map_data['seats'].append(seat_data)
 
-    # Add numbering info per row
     for row_id, row_data in rows_dict.items():
         row = row_data['row']
         row_key = f"{row.section.code}-{row.label}"
@@ -191,15 +181,14 @@ def get_performance_seat_map(performance):
             'gaps': safe_getattr(row, 'gaps', []),
             'total_seats': row.seat_count,
             'actual_seats': len(row_data['seats']),
-            'actual_seat_numbers': [s.number for s in row.seats.all()],
+            'actual_seat_numbers': [s.number for s in row_data['seats']],
         }
 
-    # Add price categories
     from venues.models import PriceCategory
-    all_categories = PriceCategory.objects.all()
-    sorted_categories = all_categories.order_by('base_price')
+    all_categories = PriceCategory.objects.all().order_by('base_price')
+
     seat_map_data['price_categories'] = {}
-    for pc in sorted_categories:
+    for pc in all_categories:
         performance_price = price_map.get(pc.id, pc.base_price)
         seat_map_data['price_categories'][pc.code] = {
             'name': pc.name,
@@ -291,6 +280,14 @@ def reserve_seats(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        seats = Seat.objects.filter(id__in=seat_ids).select_related(
+            'row', 'row__section', 'row__price_category', 'price_category'
+        )
+        seat_dict = {seat.id: seat for seat in seats}
+
+        if len(seat_dict) != len(set(seat_ids)):
+            return Response({'error': 'Một hoặc nhiều ghế không hợp lệ.'}, status=status.HTTP_400_BAD_REQUEST)
+
         # Get performance prices
         performance_prices = PerformancePrice.objects.filter(
             performance=performance
@@ -312,12 +309,7 @@ def reserve_seats(request):
             expires_at = timezone.now() + timedelta(minutes=timeout_minutes)
 
         for seat_id in seat_ids:
-            seat = Seat.objects.select_related(
-                'row',
-                'row__price_category',
-                'price_category'
-            ).get(id=seat_id)
-
+            seat = seat_dict[seat_id]
             effective_pc = seat.effective_price_category
             price_category_id = effective_pc.id if effective_pc else None
             seat_price = price_map.get(
@@ -325,8 +317,6 @@ def reserve_seats(request):
                 effective_pc.base_price if effective_pc else 0
             )
 
-            # Use update_or_create but be careful, this can "steal" reservations.
-            # The check above should prevent this from happening for 'sold' or other 'reserved' seats.
             reservation, created = SeatReservation.objects.update_or_create(
                 performance=performance,
                 seat_id=seat_id,
@@ -336,7 +326,7 @@ def reserve_seats(request):
                     'price': seat_price,
                     'expires_at': expires_at,
                     'client_ip': client_ip,
-                    'booking': None  # Ensure it's not linked to a booking yet
+                    'booking': None
                 }
             )
 
@@ -438,6 +428,17 @@ def search_bookings(request):
         Q(booking_code__iexact=search_query) | Q(customer_phone__exact=search_query),
         status='paid',
         performance__datetime__date__gte=cutoff_date
+    ).select_related(
+        'performance',
+        'performance__show',
+        'performance__show__venue'
+    ).prefetch_related(
+        Prefetch(
+            'seat_reservations',
+            queryset=SeatReservation.objects.select_related(
+                'seat', 'seat__row', 'seat__row__section'
+            )
+        )
     ).order_by('-performance__datetime')
 
     if not bookings.exists():
@@ -454,6 +455,23 @@ class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingDetailSerializer
     lookup_field = 'booking_code'
 
+    def get_queryset(self):
+        """
+        Override to apply select_related and prefetch_related to all lookups.
+        """
+        return Booking.objects.all().select_related(
+            'performance',
+            'performance__show',
+            'performance__show__venue'
+        ).prefetch_related(
+            Prefetch(
+                'seat_reservations',
+                queryset=SeatReservation.objects.select_related(
+                    'seat', 'seat__row', 'seat__row__section'
+                )
+            )
+        )
+
     def get_serializer_class(self):
         if self.action == 'create':
             return BookingCreateSerializer
@@ -467,11 +485,12 @@ class BookingViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             booking = serializer.save()
 
-        detail_serializer = BookingDetailSerializer(booking)
+        optimized_booking = self.get_queryset().get(pk=booking.pk)       
+        detail_serializer = BookingDetailSerializer(optimized_booking)
         response_data = detail_serializer.data
 
-        response_data['expires_at'] = booking.expires_at.isoformat()
-        response_data['timeout_seconds'] = int((booking.expires_at - timezone.now()).total_seconds())
+        response_data['expires_at'] = optimized_booking.expires_at.isoformat()
+        response_data['timeout_seconds'] = int((optimized_booking.expires_at - timezone.now()).total_seconds())
 
         return Response(
             response_data,
