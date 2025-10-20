@@ -1,23 +1,23 @@
 <template>
 	<div class="optimized-image-wrapper" :class="wrapperClass">
 		<img
-			v-if="loaded"
 			:src="currentSrc"
 			:alt="alt"
-			:class="imageClass"
+			:class="[
+				imageClass,
+				{ 'opacity-0': !loaded, 'opacity-100': loaded },
+			]"
 			:loading="loading"
 			:decoding="decoding"
 			@load="onLoad"
 			@error="onError"
 		/>
-
-		<!-- Loading skeleton -->
+		<!-- Loading skeleton - hiện khi chưa load xong -->
 		<div
 			v-if="!loaded && !error"
 			class="skeleton-loader"
 			:style="skeletonStyle"
 		/>
-
 		<!-- Error fallback -->
 		<div v-if="error" class="error-placeholder" :style="skeletonStyle">
 			<svg
@@ -53,11 +53,11 @@ const props = defineProps({
 	},
 	aspectRatio: {
 		type: String,
-		default: "2/3", // Common for posters
+		default: "2/3",
 	},
 	loading: {
 		type: String,
-		default: "lazy", // 'lazy' | 'eager'
+		default: "lazy",
 		validator: (value) => ["lazy", "eager"].includes(value),
 	},
 	decoding: {
@@ -78,25 +78,17 @@ const props = defineProps({
 const loaded = ref(false);
 const error = ref(false);
 
-// Generate optimized image URL
-// In production, you should use a CDN with image transformation
 const currentSrc = computed(() => {
 	if (!props.src) return "";
-
-	// If using cloudinary/imgix, add transformation parameters
-	// Example: https://res.cloudinary.com/demo/image/upload/w_400,f_auto,q_auto/sample.jpg
-
 	return props.src;
 });
 
 const skeletonStyle = computed(() => {
 	const style = {};
-
 	if (props.width) {
 		style.width =
 			typeof props.width === "number" ? `${props.width}px` : props.width;
 	}
-
 	if (props.height) {
 		style.height =
 			typeof props.height === "number"
@@ -105,7 +97,6 @@ const skeletonStyle = computed(() => {
 	} else if (props.aspectRatio) {
 		style.aspectRatio = props.aspectRatio;
 	}
-
 	return style;
 });
 
@@ -118,7 +109,6 @@ const onError = () => {
 	loaded.value = true;
 };
 
-// Prefetch on mount if eager loading
 onMounted(() => {
 	if (props.loading === "eager") {
 		const img = new Image();
@@ -135,7 +125,11 @@ onMounted(() => {
 }
 
 .skeleton-loader {
+	position: absolute;
+	top: 0;
+	left: 0;
 	width: 100%;
+	height: 100%;
 	background: linear-gradient(90deg, #e8dcc8 25%, #d8a669 50%, #e8dcc8 75%);
 	background-size: 200% 100%;
 	animation: shimmer 1.5s infinite;
@@ -151,6 +145,11 @@ onMounted(() => {
 }
 
 .error-placeholder {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -163,5 +162,13 @@ onMounted(() => {
 
 img {
 	transition: opacity 0.3s ease-in-out;
+}
+
+.opacity-0 {
+	opacity: 0;
+}
+
+.opacity-100 {
+	opacity: 1;
 }
 </style>

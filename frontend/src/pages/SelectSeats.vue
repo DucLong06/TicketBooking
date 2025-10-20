@@ -12,7 +12,7 @@
 			</div>
 		</div>
 
-		<div v-else class="container mx-auto px-4 py-8">
+		<div v-else class="bg-[#fdfcf0] container mx-auto px-4 py-8">
 			<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 				<!-- Left Column: Seat Map (2/3 width) -->
 				<div class="lg:col-span-2">
@@ -31,14 +31,16 @@
 											backgroundColor: category.color,
 										}"
 									></div>
-									<div class="text-xs flex-1 min-w-0">
+									<div
+										class="uppercase text-xs flex-1 min-w-0"
+									>
 										<div
-											class="font-semibold text-[#372e2d] truncate"
+											class="uppercase font-semibold text-[#372e2d] truncate"
 										>
 											{{ category.name }}
 										</div>
 										<div
-											class="text-[#d8a669] text-xs font-medium"
+											class="uppercase text-[#d8a669] text-xs font-medium"
 										>
 											{{ formatPrice(category.price) }}
 										</div>
@@ -50,7 +52,7 @@
 						<!-- Seat Map Container with Zoom -->
 
 						<div
-							class="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-[#d8a669]/20"
+							class="relative overflow-hidde rounded-xl"
 							:style="{
 								minHeight: isMobile ? '400px' : '600px',
 								maxHeight: isMobile
@@ -293,7 +295,7 @@
 														}"
 													>
 														<span
-															class="w-12 text-right mr-6 font-bold text-gray-600 text-base"
+															class="uppercase w-12 text-right mr-6 font-bold text-gray-600 text-base"
 														>
 															{{ row.label }}
 														</span>
@@ -329,7 +331,7 @@
 																		)
 																	"
 																	:class="[
-																		'w-10 h-10 text-sm font-bold rounded-lg border-2 transition-all duration-200',
+																		'uppercase w-10 h-10 text-sm font-bold rounded-lg border-2 transition-all duration-200',
 																		getSeatClass(
 																			seat
 																		),
@@ -394,7 +396,7 @@
 																		)
 																	"
 																	:class="[
-																		'w-10 h-10 text-sm font-bold rounded-lg border-2 transition-all duration-200',
+																		'uppercase w-10 h-10 text-sm font-bold rounded-lg border-2 transition-all duration-200',
 																		getSeatClass(
 																			seat
 																		),
@@ -456,7 +458,7 @@
 																		)
 																	"
 																	:class="[
-																		'w-10 h-10 text-sm font-bold rounded-lg border-2 transition-all duration-200',
+																		'uppercase w-10 h-10 text-sm font-bold rounded-lg border-2 transition-all duration-200',
 																		getSeatClass(
 																			seat
 																		),
@@ -488,7 +490,7 @@
 																	{{
 																		seat.status ===
 																		"sold"
-																			? "✕"
+																			? "X"
 																			: seat.display_number
 																	}}
 																</button>
@@ -584,7 +586,7 @@
 					<div
 						class="mb-6 bg-[#fdfcf0] rounded-2xl shadow-xl p-5 border-2 border-[#d8a669]"
 					>
-						<div class="text-center relative z-10">
+						<div class="uppercase text-center relative z-10">
 							<h2
 								class="text-xl lg:text-2xl font-bold text-[#372e2d] mb-3 lg:mb-4 flex items-center justify-center gap-2 lg:gap-3"
 							>
@@ -688,7 +690,7 @@
 								</div>
 							</div>
 						</div>
-						<div class="space-y-3 mt-4">
+						<div class="uppercase space-y-3 mt-4">
 							<div
 								v-for="(category, code) in priceCategories"
 								:key="code"
@@ -719,15 +721,14 @@
 					>
 						<div class="mb-4 pb-4 border-b-2 border-[#d8a669]/30">
 							<h4
-								class="font-bold mb-3 text-[#372e2d] flex items-center gap-2 text-lg"
+								class="font-bold mb-3 uppercase text-[#372e2d] flex items-center gap-2 text-lg"
 							>
-								<span class="text-lg">🎫</span>
 								<span>Ghế đã chọn</span>
 							</h4>
 
 							<div
 								v-if="selectedSeats.length !== 0"
-								class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"
+								class="uppercase space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"
 							>
 								<div
 									v-for="seat in selectedSeats"
@@ -746,7 +747,7 @@
 							</div>
 						</div>
 
-						<div class="mb-4">
+						<div class="uppercase mb-4">
 							<div
 								v-if="selectedSeats.length !== 0"
 								class="flex justify-between items-center bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl shadow-md border-2 border-green-300"
@@ -763,7 +764,7 @@
 
 						<div
 							v-if="timeLeft > 0"
-							class="mb-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border-2 border-yellow-300 shadow-md"
+							class="uppercase mb-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border-2 border-yellow-300 shadow-md"
 						>
 							<div class="text-sm text-yellow-800 text-center">
 								<div
@@ -784,10 +785,10 @@
 							@click="continueToCustomerInfo"
 							:disabled="selectedSeats.length === 0"
 							:class="[
-								'w-full py-4 px-4 rounded-xl font-bold text-lg transition-all shadow-lg',
+								'uppercase w-full py-4 px-4 rounded-xl font-bold text-lg transition-all shadow-lg',
 								selectedSeats.length > 0
-									? 'bg-[#d8a669] text-white hover:bg-[#b8884d] hover:shadow-2xl transform hover:scale-105 active:scale-95'
-									: 'bg-gray-300 text-gray-500 cursor-not-allowed',
+									? 'uppercase bg-[#d8a669] text-white hover:bg-[#b8884d] hover:shadow-2xl transform hover:scale-105 active:scale-95'
+									: 'uppercase bg-gray-300 text-gray-500 cursor-not-allowed',
 							]"
 						>
 							{{
@@ -826,15 +827,17 @@
 				<div v-if="bottomSheetState === 'minimized'" class="px-4 pb-4">
 					<div class="flex items-center justify-between gap-3">
 						<div
-							class="flex-1 cursor-pointer flex items-center gap-3"
+							class="uppercase flex-1 cursor-pointer flex items-center gap-3"
 							@click="bottomSheetState = 'expanded'"
 						>
 							<span class="text-[#d8a669] text-xl">🎫</span>
 							<div>
-								<div class="font-bold text-[#372e2d]">
+								<div class="font-bold uppercase text-[#372e2d]">
 									{{ selectedSeats.length }} ghế đã chọn
 								</div>
-								<div class="text-sm text-[#372e2d]/70">
+								<div
+									class="text-sm uppercase text-[#372e2d]/70"
+								>
 									{{ formatPrice(totalAmount) }}
 								</div>
 							</div>
@@ -850,7 +853,7 @@
 
 						<button
 							@click.stop="continueToCustomerInfo"
-							class="bg-[#d8a669] text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg hover:shadow-xl hover:bg-[#b8884d] transform active:scale-95 transition-all flex-shrink-0"
+							class="uppercase bg-[#d8a669] text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg hover:shadow-xl hover:bg-[#b8884d] transform active:scale-95 transition-all flex-shrink-0"
 						>
 							Tiếp tục
 						</button>
@@ -984,17 +987,17 @@
 						v-if="tooltipData.seat_image_url"
 						class="w-full h-36 overflow-hidden"
 					>
-						<!-- <OptimizedImage
+						<OptimizedImage
 							:src="tooltipData.seat_image_url"
 							alt="Seat View"
 							aspect-ratio="16/9"
 							imageClass="w-full h-full object-cover"
-						/> -->
-						<img
+						/>
+						<!-- <img
 							:src="tooltipData.seat_image_url"
 							alt="Seat View"
 							class="w-full h-full object-cover"
-						/>
+						/> -->
 					</div>
 
 					<div class="p-4">

@@ -3,17 +3,19 @@
 		<div class="container mx-auto px-4 py-8">
 			<!-- Breadcrumb -->
 			<nav class="mb-8">
-				<ol class="flex items-center space-x-2 text-sm">
+				<ol class="flex items-center space-x-2 uppercase text-sm">
 					<li>
 						<router-link
 							to="/"
-							class="text-[#d8a669] hover:text-[#b8884d] font-medium transition"
+							class="uppercase text-[#d8a669] hover:text-[#b8884d] font-medium transition"
 						>
 							Trang chủ
 						</router-link>
 					</li>
-					<li class="text-[#a0866b]">/</li>
-					<li class="text-[#372e2d] font-semibold">Chọn suất diễn</li>
+					<li class="uppercase text-[#a0866b]">/</li>
+					<li class="uppercase text-[#372e2d] font-semibold">
+						Chọn suất diễn
+					</li>
 				</ol>
 			</nav>
 
@@ -36,26 +38,26 @@
 								class="relative w-full poster-container bg-[#e8dcc8] rounded-lg overflow-hidden border-2 border-[#d8a669]/20 group cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300 mx-auto"
 								@click="openTrailer"
 							>
-								<!-- <OptimizedImage
+								<OptimizedImage
 									v-if="showInfo.poster"
 									:src="showInfo.poster"
 									:alt="showInfo.name"
 									aspect-ratio="2/3"
 									wrapperClass="w-full h-full"
 									imageClass="w-full h-full object-cover"
-								/> -->
-                                <img
+								/>
+								<!-- <img
 									v-if="showInfo.poster"
 									:src="showInfo.poster"
 									:alt="showInfo.name"
 									class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-								/>
+								/> -->
 								<div
 									v-else
 									class="w-full h-full bg-gradient-to-br from-[#d8a669]/20 to-[#372e2d]/20 flex items-center justify-center"
 								>
 									<svg
-										class="w-16 md:w-24 h-16 md:h-24 text-[#d8a669]/30"
+										class="w-16 md:w-24 h-16 md:h-24 uppercase text-[#d8a669]/30"
 										fill="currentColor"
 										viewBox="0 0 24 24"
 									>
@@ -71,13 +73,13 @@
 									class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center"
 								>
 									<div
-										class="text-center transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+										class="uppercase text-center transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
 									>
 										<div
 											class="w-16 h-16 md:w-20 md:h-20 bg-white/95 rounded-full flex items-center justify-center mb-2 md:mb-3 mx-auto shadow-2xl"
 										>
 											<svg
-												class="w-8 h-8 md:w-10 md:h-10 text-[#d8a669] ml-1"
+												class="w-8 h-8 md:w-10 md:h-10 uppercase text-[#d8a669] ml-1"
 												fill="currentColor"
 												viewBox="0 0 24 24"
 											>
@@ -97,7 +99,7 @@
 						<!-- Show Details Column -->
 						<div class="md:col-span-2 space-y-4">
 							<h1
-								class="text-2xl md:text-3xl lg:text-4xl font-bold text-[#372e2d]"
+								class="uppercase text-2xl md:text-3xl lg:text-4xl font-bold text-[#372e2d]"
 							>
 								{{ showInfo.name }}
 							</h1>
@@ -107,7 +109,7 @@
 								<button
 									v-if="showInfo.trailer_url"
 									@click="openTrailer"
-									class="flex items-center gap-2 bg-white border-2 border-[#d8a669] text-[#d8a669] px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-medium hover:bg-[#d8a669] hover:text-white transition-all duration-200 shadow-md hover:shadow-xl transform hover:scale-105 active:scale-95"
+									class="flex items-center gap-2 bg-white border-2 border-[#d8a669] uppercase text-[#d8a669] px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-medium hover:bg-[#d8a669] hover:text-white transition-all duration-200 shadow-md hover:shadow-xl transform hover:scale-105 active:scale-95"
 								>
 									<svg
 										class="w-4 h-4 md:w-5 md:h-5"
@@ -116,14 +118,14 @@
 									>
 										<path d="M8 5v14l11-7z" />
 									</svg>
-									<span class="text-sm md:text-base"
+									<span class="uppercase text-sm md:text-base"
 										>Xem Trailer</span
 									>
 								</button>
 
 								<button
 									@click="scrollToPerformances"
-									class="flex items-center gap-2 bg-[#d8a669] text-white px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-bold hover:bg-[#b8884d] transition-all duration-200 shadow-md hover:shadow-xl transform hover:scale-105 active:scale-95"
+									class="flex items-center gap-2 bg-[#d8a669] uppercase text-white px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-bold hover:bg-[#b8884d] transition-all duration-200 shadow-md hover:shadow-xl transform hover:scale-105 active:scale-95"
 								>
 									<svg
 										class="w-4 h-4 md:w-5 md:h-5"
@@ -138,7 +140,7 @@
 											d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
 										/>
 									</svg>
-									<span class="text-sm md:text-base"
+									<span class="uppercase text-sm md:text-base"
 										>Đặt vé ngay</span
 									>
 								</button>
@@ -149,18 +151,24 @@
 								class="space-y-2 text-[#372e2d] text-sm md:text-base"
 							>
 								<p class="font-medium flex items-center gap-2">
-									<span class="text-[#d8a669]">🎭</span>
-									<span class="text-gray-600">Thể loại:</span>
-									<span class="font-semibold">{{
+									<span class="uppercase text-[#d8a669]"
+										>🎭</span
+									>
+									<span class="uppercase text-gray-600"
+										>Thể loại:</span
+									>
+									<span class="uppercase font-semibold">{{
 										showInfo.category
 									}}</span>
 								</p>
 								<p class="font-medium flex items-center gap-2">
-									<span class="text-[#d8a669]">⏱️</span>
-									<span class="text-gray-600"
+									<span class="uppercase text-[#d8a669]"
+										>⏱️</span
+									>
+									<span class="uppercase text-gray-600"
 										>Thời lượng:</span
 									>
-									<span class="font-semibold"
+									<span class="uppercase font-semibold"
 										>{{
 											showInfo.duration_minutes
 										}}
@@ -168,20 +176,22 @@
 									>
 								</p>
 								<p class="font-medium flex items-center gap-2">
-									<span class="text-[#d8a669]">📍</span>
-									<span class="text-gray-600">Địa điểm:</span>
-									<span class="font-semibold">{{
+									<span class="uppercase text-[#d8a669]"
+										>📍</span
+									>
+									<span class="uppercase text-gray-600"
+										>Địa điểm:</span
+									>
+									<span class="uppercase font-semibold">{{
 										showInfo.venue?.name
 									}}</span>
 								</p>
 							</div>
 
-							<!-- Mô tả ngắn (collapse chỉ trên mobile) -->
 							<div class="relative">
 								<div
 									:class="[
 										'prose max-w-none text-sm md:text-base',
-										// Chỉ line-clamp trên mobile
 										!showFullDescription &&
 											'line-clamp-3 md:line-clamp-none',
 									]"
@@ -191,7 +201,6 @@
 									</p>
 								</div>
 
-								<!-- Gradient fade khi collapsed (chỉ mobile) -->
 								<div
 									v-if="
 										!showFullDescription &&
@@ -201,7 +210,6 @@
 									class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#fdfcf0] to-transparent pointer-events-none md:hidden"
 								></div>
 
-								<!-- Button Xem thêm/Thu gọn (chỉ mobile) -->
 								<button
 									v-if="
 										showInfo.description &&
@@ -246,10 +254,10 @@
 					class="bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-6 md:p-8 mb-8"
 				>
 					<h2
-						class="text-xl md:text-2xl font-bold mb-4 text-[#372e2d] flex items-center gap-2"
+						class="uppercase text-xl md:text-2xl font-bold mb-4 text-[#372e2d] flex items-center gap-2"
 					>
 						<svg
-							class="w-5 h-5 md:w-6 md:h-6 text-[#d8a669]"
+							class="w-5 h-5 md:w-6 md:h-6 uppercase text-[#d8a669]"
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
@@ -270,20 +278,19 @@
 					/>
 				</div>
 
-				<!-- Performances Section (GIỮ NGUYÊN 100%) -->
 				<div
 					ref="performancesSection"
 					class="bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-6 md:p-8 scroll-mt-20"
 				>
 					<h2
-						class="text-xl md:text-2xl font-bold mb-6 text-[#372e2d]"
+						class="uppercase text-xl md:text-2xl font-bold mb-6 text-[#372e2d]"
 					>
 						Chọn suất diễn
 					</h2>
 
 					<div
 						v-if="performances.length === 0"
-						class="text-center text-[#372e2d] py-8"
+						class="uppercase text-center text-[#372e2d] py-8"
 					>
 						Không có suất diễn nào
 					</div>
@@ -295,7 +302,7 @@
 							:key="date"
 						>
 							<h3
-								class="font-semibold text-base md:text-lg mb-4 text-[#372e2d] flex items-center"
+								class="font-semibold uppercase text-base md:text-lg mb-4 text-[#372e2d] flex items-center"
 							>
 								{{ formatDate(date) }}
 							</h3>
@@ -308,12 +315,13 @@
 									:key="performance.id"
 									@click="selectPerformance(performance)"
 									:class="[
-										'border-2 rounded-lg p-3 md:p-4 text-center cursor-pointer transition-all duration-200',
+										'relative border-2 rounded-xl p-3 md:p-4 uppercase text-center cursor-pointer transition-all duration-300',
 										{
-											'border-[#d8a669] bg-white hover:border-[#b8884d] hover:shadow-md':
+											'border-[#d8a669] bg-white hover:border-[#b8884d] hover:shadow-lg hover:bg-[#fdfcf0]':
 												selectedPerformance?.id !==
-												performance.id,
-											'border-[#372e2d] bg-[#d8a669]/10 shadow-lg ring-2 ring-[#d8a669]':
+													performance.id &&
+												performance.available_seats > 0,
+											'border-[#d8a669] bg-gradient-to-br from-[#d8a669] to-[#b8884d] shadow-2xl ring-4 ring-[#d8a669]/50 scale-105 -translate-y-1':
 												selectedPerformance?.id ===
 												performance.id,
 											'opacity-50 cursor-not-allowed bg-gray-100':
@@ -325,20 +333,63 @@
 										performance.available_seats === 0
 									"
 								>
+									<!-- Selected Badge -->
 									<div
-										class="text-base md:text-lg font-bold text-[#372e2d]"
+										v-if="
+											selectedPerformance?.id ===
+											performance.id
+										"
+										class="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-[#d8a669] z-10"
+									>
+										<svg
+											class="w-5 h-5 text-[#d8a669]"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="3"
+												d="M5 13l4 4L19 7"
+											/>
+										</svg>
+									</div>
+
+									<div
+										:class="[
+											'uppercase text-base md:text-lg font-bold transition-colors duration-300',
+											{
+												'text-[#372e2d]':
+													selectedPerformance?.id !==
+													performance.id,
+												'text-white':
+													selectedPerformance?.id ===
+													performance.id,
+											},
+										]"
 									>
 										{{ formatTime(performance.datetime) }}
 									</div>
 									<div
-										class="text-xs md:text-sm mt-2 font-medium"
-										:class="{
-											'text-[#372e2d]':
-												performance.available_seats > 0,
-											'text-red-600':
-												performance.available_seats ===
-												0,
-										}"
+										:class="[
+											'uppercase text-xs md:text-sm mt-2 font-medium transition-colors duration-300',
+											{
+												'uppercase text-[#372e2d]':
+													performance.available_seats >
+														0 &&
+													selectedPerformance?.id !==
+														performance.id,
+												'text-white/90':
+													performance.available_seats >
+														0 &&
+													selectedPerformance?.id ===
+														performance.id,
+												'uppercase text-red-600':
+													performance.available_seats ===
+													0,
+											},
+										]"
 									>
 										{{
 											performance.available_seats > 0
@@ -358,7 +409,7 @@
 					>
 						<button
 							@click="continueToSeatSelection"
-							class="w-full md:w-auto bg-[#d8a669] text-white px-6 md:px-8 py-3 rounded-lg font-bold text-base md:text-lg shadow-lg hover:bg-[#b8884d] hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200"
+							class="w-full md:w-auto bg-[#d8a669] uppercase text-white px-6 md:px-8 py-3 rounded-lg font-bold text-base md:text-lg shadow-lg hover:bg-[#b8884d] hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200"
 						>
 							Tiếp tục chọn ghế →
 						</button>

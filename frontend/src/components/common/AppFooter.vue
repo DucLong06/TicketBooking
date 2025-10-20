@@ -25,17 +25,10 @@
 								Trang chủ
 							</a>
 						</li>
+
 						<li>
 							<a
-								href="/#shows"
-								class="hover:text-[#d8a669] transition"
-							>
-								Lịch diễn
-							</a>
-						</li>
-						<li>
-							<a
-								href="/https://www.giacmochipheo.com.vn/"
+								href="https://duongcam.art/"
 								class="hover:text-[#d8a669] transition"
 							>
 								Giới thiệu
@@ -55,7 +48,7 @@
 								href="/terms/GeneralTerms.html"
 								class="hover:text-[#d8a669] transition"
 							>
-								Điều Khoản Chung
+								Điều Kiện Giao Dịch Chung
 							</a>
 						</li>
 						<li>
@@ -63,7 +56,7 @@
 								href="/terms/GeneralTerms.html"
 								class="hover:text-[#d8a669] transition"
 							>
-								Điều Khoản Giao Dịch
+								Chính Sách Bảo Mật Thông Tin
 							</a>
 						</li>
 						<li>
@@ -71,7 +64,7 @@
 								href="/terms/GeneralTerms.html"
 								class="hover:text-[#d8a669] transition"
 							>
-								Chính Sách Thanh Toán
+								Chính Sách Giao Nhận
 							</a>
 						</li>
 						<li>
@@ -79,7 +72,7 @@
 								href="/terms/GeneralTerms.html"
 								class="hover:text-[#d8a669] transition"
 							>
-								Chính Sách Bảo Mật
+								Chính Sách Đặt Chỗ Và Thanh Toán
 							</a>
 						</li>
 						<!-- <li>
@@ -144,7 +137,6 @@
 							Địa chỉ: Số nhà 11, Ngõ 86, phố Hào Nam, Phường Ô
 							Chợ Dừa, Thành phố Hà Nội, Việt Nam.
 						</p>
-						<p>Đại diện pháp luật: NGUYỄN THU QUỲNH.</p>
 						<p>
 							Hotline: 0962.98.98.56 | Email: support@duongcam.art
 						</p>
