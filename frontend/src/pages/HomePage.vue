@@ -13,10 +13,11 @@
 				</h2>
 
 				<!-- Loading -->
-				<div v-if="loading" class="text-center">
-					<div
-						class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#d8a669]"
-					></div>
+				<div v-if="loading" class="text-center py-12">
+					<DuongCamLoading
+						size="lg"
+						message="Đang tải chương trình..."
+					/>
 				</div>
 
 				<!-- Shows Grid -->
@@ -182,6 +183,7 @@ import PosterSlider from "../components/PosterSlider.vue";
 import TrailerPopup from "../components/TrailerPopup.vue";
 import { useBookingStore } from "../stores/booking";
 import OptimizedImage from "@/components/OptimizedImage.vue";
+import DuongCamLoading from "@/components/common/DuongCamLoading.vue";
 
 const router = useRouter();
 const bookingStore = useBookingStore();

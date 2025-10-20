@@ -1,15 +1,11 @@
 <template>
 	<DefaultLayout>
+		<
 		<div
 			v-if="loading"
-			class="flex items-center justify-center min-h-screen"
+			class="flex justify-center items-center min-h-[400px]"
 		>
-			<div class="text-center">
-				<div
-					class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#d8a669] mx-auto"
-				></div>
-				<p class="mt-4 text-[#372e2d] font-medium">Đang tải...</p>
-			</div>
+			<DuongCamLoading size="xl" message="Đang tải sơ đồ ghế..." />
 		</div>
 
 		<div v-else class="bg-[#fdfcf0] container mx-auto px-4 py-8">
@@ -1054,6 +1050,7 @@ import { bookingAPI } from "../api/booking";
 import { useToast } from "vue-toastification";
 import { useBookingCleanup } from "@/composables/useBookingCleanup";
 import OptimizedImage from "@/components/OptimizedImage.vue";
+import DuongCamLoading from "@/components/common/DuongCamLoading.vue";
 
 const { cleanup } = useBookingCleanup({
 	shouldRelease: true,

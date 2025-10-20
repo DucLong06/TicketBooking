@@ -21,9 +21,7 @@
 
 			<!-- Loading -->
 			<div v-if="loading" class="flex justify-center py-12">
-				<div
-					class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#d8a669]"
-				></div>
+				<DuongCamLoading size="lg" message="Đang tải suất diễn..." />
 			</div>
 
 			<template v-else>
@@ -434,6 +432,7 @@ import DefaultLayout from "../layouts/DefaultLayout.vue";
 import TrailerPopup from "../components/TrailerPopup.vue";
 import MarkdownCollapse from "../components/MarkdownCollapse.vue";
 import { useBookingStore } from "../stores/booking";
+import DuongCamLoading from "@/components/common/DuongCamLoading.vue";
 
 const route = useRoute();
 const router = useRouter();
