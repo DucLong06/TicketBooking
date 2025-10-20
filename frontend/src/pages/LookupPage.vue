@@ -33,11 +33,8 @@
 			</div>
 
 			<!-- Loading State -->
-			<div v-if="isLoading" class="text-center">
-				<div
-					class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#d8a669] mx-auto"
-				></div>
-				<p class="mt-2 text-[#372e2d]/70">Đang tải thông tin...</p>
+			<div v-if="isLoading" class="text-center py-8">
+				<DuongCamLoading size="lg" message="Đang tải thông tin..." />
 			</div>
 
 			<!-- Error Message -->
@@ -191,6 +188,7 @@ import { ref } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { bookingAPI } from "../api/booking";
 import { useToast } from "vue-toastification";
+import DuongCamLoading from "@/components/common/DuongCamLoading.vue";
 
 const toast = useToast();
 const searchQuery = ref("");

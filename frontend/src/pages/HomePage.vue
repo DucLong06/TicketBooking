@@ -6,15 +6,18 @@
 		<!-- Shows Section -->
 		<section class="py-16 bg-[#fdfcf0]">
 			<div class="container mx-auto px-4">
-				<h2 class="text-3xl font-bold text-center mb-12 text-[#372e2d]">
+				<h2
+					class="uppercase text-3xl font-bold text-center mb-12 text-[#372e2d]"
+				>
 					Chương trình đang diễn
 				</h2>
 
 				<!-- Loading -->
-				<div v-if="loading" class="text-center">
-					<div
-						class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#d8a669]"
-					></div>
+				<div v-if="loading" class="text-center py-12">
+					<DuongCamLoading
+						size="lg"
+						message="Đang tải chương trình..."
+					/>
 				</div>
 
 				<!-- Shows Grid -->
@@ -29,19 +32,19 @@
 					>
 						<!-- Background Image -->
 						<div class="absolute inset-0">
-							<!-- <OptimizedImage
+							<OptimizedImage
 								v-if="show.poster"
 								:src="show.poster"
 								:alt="show.name"
 								aspect-ratio="2/3"
 								imageClass="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-							/> -->
-							<img
+							/>
+							<!-- <img
 								v-if="show.poster"
 								:src="show.poster"
 								:alt="show.name"
 								class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-							/>
+							/> -->
 							<div
 								v-else
 								class="w-full h-full bg-gradient-to-br from-[#d8a669]/20 to-[#372e2d]/20 flex items-center justify-center"
@@ -74,7 +77,7 @@
 
 							<!-- Venue Info -->
 							<div
-								class="flex items-center gap-2 text-white/90 text-sm md:text-base mb-6 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75"
+								class="uppercase flex items-center gap-2 text-white/90 text-sm md:text-base mb-6 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75"
 							>
 								<svg
 									class="w-4 h-4 md:w-5 md:h-5 flex-shrink-0"
@@ -106,7 +109,7 @@
 							>
 								<button
 									@click.stop="goToBooking(show.id)"
-									class="w-full bg-[#d8a669] text-white px-4 py-3 rounded-lg font-bold text-sm md:text-base shadow-xl hover:bg-[#b8884d] transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
+									class="w-full uppercase bg-[#d8a669] text-white px-4 py-3 rounded-lg font-bold text-sm md:text-base shadow-xl hover:bg-[#b8884d] transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
 								>
 									<svg
 										class="w-5 h-5"
@@ -127,7 +130,7 @@
 								<button
 									v-if="show.trailer_url"
 									@click.stop="openTrailer(show.trailer_url)"
-									class="w-full bg-white/90 backdrop-blur-sm text-[#372e2d] px-4 py-3 rounded-lg font-bold text-sm md:text-base shadow-xl hover:bg-white transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
+									class="uppercase w-full bg-white/90 backdrop-blur-sm text-[#372e2d] px-4 py-3 rounded-lg font-bold text-sm md:text-base shadow-xl hover:bg-white transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
 								>
 									<svg
 										class="w-5 h-5"
@@ -180,6 +183,7 @@ import PosterSlider from "../components/PosterSlider.vue";
 import TrailerPopup from "../components/TrailerPopup.vue";
 import { useBookingStore } from "../stores/booking";
 import OptimizedImage from "@/components/OptimizedImage.vue";
+import DuongCamLoading from "@/components/common/DuongCamLoading.vue";
 
 const router = useRouter();
 const bookingStore = useBookingStore();

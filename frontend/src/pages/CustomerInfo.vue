@@ -2,7 +2,7 @@
 	<DefaultLayout>
 		<div class="container mx-auto px-4 py-8">
 			<nav class="mb-6">
-				<ol class="flex items-center space-x-2 text-sm">
+				<ol class="uppercase flex items-center space-x-2 text-sm">
 					<li>
 						<router-link
 							to="/"
@@ -39,7 +39,7 @@
 			<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 				<div class="lg:col-span-2">
 					<div
-						class="bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-6 mb-20 lg:mb-0"
+						class="uppercase bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-6 mb-20 lg:mb-0"
 					>
 						<h2 class="text-2xl font-bold mb-6 text-[#372e2d]">
 							Thông tin người đặt vé
@@ -81,7 +81,9 @@
 									class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
 									placeholder="example@email.com"
 								/>
-								<p class="mt-1 text-xs text-[#372e2d]/70">
+								<p
+									class="mt-1 lowercase text-xs text-[#372e2d]/70"
+								>
 									{{ emailDescription }}
 								</p>
 								<p
@@ -127,7 +129,9 @@
 									class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
 									placeholder="Nhập địa chỉ nhận vé..."
 								></textarea>
-								<p class="mt-1 text-xs text-[#372e2d]/70">
+								<p
+									class="lowercase mt-1 text-xs text-[#372e2d]/70"
+								>
 									{{ addressDescription }}
 								</p>
 								<p
@@ -169,7 +173,7 @@
 									v-model="customerInfo.notes"
 									rows="3"
 									class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
-									placeholder="Yêu cầu đặc biệt (nếu có)..."
+									placeholder="Yêu cầu đặc biệt (xuất hoá đơn, gửi tặng vé, nhận vé tại nhà hát...)"
 								></textarea>
 							</div>
 
@@ -178,14 +182,14 @@
 									type="button"
 									@click="goBack"
 									:disabled="isSubmitting"
-									class="px-6 py-3 border-2 border-[#d8a669] rounded-lg text-[#372e2d] font-semibold hover:bg-[#fdfcf0] transition disabled:opacity-50 disabled:cursor-not-allowed"
+									class="uppercase px-6 py-3 border-2 border-[#d8a669] rounded-lg text-[#372e2d] font-semibold hover:bg-[#fdfcf0] transition disabled:opacity-50 disabled:cursor-not-allowed"
 								>
 									← Quay lại
 								</button>
 								<button
 									type="submit"
 									:disabled="isSubmitting"
-									class="relative px-8 py-3 bg-[#d8a669] text-white rounded-lg font-bold hover:bg-[#b8884d] hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+									class="uppercase relative px-8 py-3 bg-[#d8a669] text-white rounded-lg font-bold hover:bg-[#b8884d] hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
 								>
 									<span
 										v-if="!isSubmitting"
@@ -227,7 +231,7 @@
 
 				<div class="hidden lg:block lg:col-span-1">
 					<div
-						class="bg-[#fdfcf0] border-2 border-[#d8a669] rounded-lg shadow-lg p-6 sticky top-4"
+						class="uppercase bg-[#fdfcf0] border-2 border-[#d8a669] rounded-lg shadow-lg p-6 sticky top-4"
 					>
 						<h3 class="text-xl font-bold mb-4 text-[#372e2d]">
 							Tóm tắt đơn hàng
@@ -286,7 +290,7 @@
 										bookingStore.isDiscountSuccess ||
 										isApplyingDiscount
 									"
-									class="px-4 py-2 bg-[#d8a669] text-white rounded-lg font-semibold hover:bg-[#b8884d] disabled:bg-gray-400 disabled:cursor-not-allowed transition flex items-center gap-2 whitespace-nowrap"
+									class="uppercase px-4 py-2 bg-[#d8a669] text-white rounded-lg font-semibold hover:bg-[#b8884d] disabled:bg-gray-400 disabled:cursor-not-allowed transition flex items-center gap-2 whitespace-nowrap"
 								>
 									<svg
 										v-if="isApplyingDiscount"
@@ -341,22 +345,22 @@
 									formatPrice(ticketAmount)
 								}}</span>
 							</div>
-							<div class="flex justify-between text-sm">
+							<!-- <div class="flex justify-between text-sm">
 								<span class="text-[#372e2d]/70"
 									>Phí vận chuyển:</span
 								>
 								<span class="font-semibold text-[#d8a669]">
 									{{ formatPrice(shippingFee) }}
 								</span>
-							</div>
-							<div class="flex justify-between text-sm">
+							</div> -->
+							<!-- <div class="flex justify-between text-sm">
 								<span class="text-[#372e2d]/70"
 									>Phí dịch vụ:</span
 								>
 								<span class="font-semibold text-[#d8a669]">{{
 									formatPrice(serviceFee)
 								}}</span>
-							</div>
+							</div> -->
 							<div
 								v-if="bookingStore.discountAmount > 0"
 								class="flex justify-between text-sm"
@@ -373,8 +377,10 @@
 						<div
 							class="flex justify-between items-center text-lg font-bold mb-6"
 						>
-							<span class="text-[#372e2d]">Tổng thanh toán:</span>
-							<span class="text-[#d8a669] text-2xl">{{
+							<span class="uppercase text-[#372e2d]"
+								>Tổng thanh toán:</span
+							>
+							<span class="text-[#d8a669] text-2xl uppercase">{{
 								formatPrice(finalAmount)
 							}}</span>
 						</div>
@@ -434,22 +440,22 @@
 									formatPrice(ticketAmount)
 								}}</span>
 							</div>
-							<div class="flex justify-between">
+							<!-- <div class="flex justify-between">
 								<span class="text-[#372e2d]/70"
 									>Phí dịch vụ:</span
 								>
 								<span class="font-semibold text-[#372e2d]">{{
 									formatPrice(serviceFee)
 								}}</span>
-							</div>
-							<div class="flex justify-between">
+							</div> -->
+							<!-- <div class="flex justify-between">
 								<span class="text-[#372e2d]/70"
 									>Phí vận chuyển:</span
 								>
 								<span class="font-semibold text-[#372e2d]">{{
 									formatPrice(shippingFee)
 								}}</span>
-							</div>
+							</div> -->
 							<div
 								v-if="bookingStore.discountAmount > 0"
 								class="flex justify-between"
@@ -592,6 +598,7 @@
 		</div>
 	</DefaultLayout>
 </template>
+
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter, useRoute } from "vue-router";

@@ -4,37 +4,39 @@
 			<div class="flex items-center justify-between h-16">
 				<!-- Logo -->
 				<div class="flex items-center space-x-3">
-					<img
-						class="h-12 w-auto object-contain"
-						src="/logo_DCART.png"
-						alt="Dương Cầm ART Logo"
-					/>
+					<a href="/">
+						<img
+							class="h-12 w-auto object-contain"
+							src="/logo_DCART.png"
+							alt="Dương Cầm ART Logo"
+						/>
+					</a>
 				</div>
 
 				<!-- Desktop Navigation -->
 				<nav class="hidden md:flex items-center space-x-8">
 					<a
 						href="/"
-						class="text-[#d8a669] hover:text-white transition font-medium"
+						class="uppercase text-[#d8a669] hover:text-white transition font-medium"
 					>
 						Trang chủ
 					</a>
 					<a
 						href="/lookup"
-						class="text-[#d8a669] hover:text-white transition font-medium"
+						class="uppercase text-[#d8a669] hover:text-white transition font-medium"
 					>
-						Tra cứu vé
+                        Vé của tôi
 					</a>
 					<a
-						href="https://www.giacmochipheo.com.vn/"
-						class="text-[#d8a669] hover:text-white transition font-medium"
+						href="https://duongcam.art/"
+						class="uppercase text-[#d8a669] hover:text-white transition font-medium"
 					>
 						Về chúng tôi
 					</a>
 					<a
 						v-if="contactInfo?.hotline_display"
 						:href="`tel:${contactInfo.hotline}`"
-						class="bg-[#d8a669] text-white px-4 py-2 rounded-lg hover:bg-white hover:text-[#372e2d] transition font-medium"
+						class="uppercase bg-[#d8a669] text-white px-4 py-2 rounded-lg hover:bg-white hover:text-[#372e2d] transition font-medium"
 					>
 						📞 {{ contactInfo.hotline_display }}
 					</a>
@@ -104,7 +106,7 @@
 							🔍 Tra cứu vé
 						</a>
 						<a
-							href="https://www.giacmochipheo.com.vn/"
+							href="https://duongcam.art/"
 							@click="closeMenu"
 							class="text-[#d8a669] hover:text-white hover:bg-gray-50 px-4 py-3 rounded-lg transition font-medium"
 						>
