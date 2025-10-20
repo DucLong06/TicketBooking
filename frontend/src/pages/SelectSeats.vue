@@ -1,6 +1,5 @@
 <template>
 	<DefaultLayout>
-		<
 		<div
 			v-if="loading"
 			class="flex justify-center items-center min-h-[400px]"
@@ -48,7 +47,7 @@
 						<!-- Seat Map Container with Zoom -->
 
 						<div
-							class="relative overflow-hidde rounded-xl"
+							class="relative overflow-hidden rounded-xl border-0 border-[#d8a669]/20"
 							:style="{
 								minHeight: isMobile ? '400px' : '600px',
 								maxHeight: isMobile
@@ -986,8 +985,9 @@
 						<OptimizedImage
 							:src="tooltipData.seat_image_url"
 							alt="Seat View"
-							aspect-ratio="16/9"
+							wrapperClass="w-full h-full"
 							imageClass="w-full h-full object-cover"
+							loading="eager"
 						/>
 						<!-- <img
 							:src="tooltipData.seat_image_url"

@@ -23,12 +23,12 @@
 				<!-- Shows Grid -->
 				<div
 					v-else-if="shows.length > 0"
-					class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
+					class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6"
 				>
 					<div
 						v-for="show in shows"
 						:key="show.id"
-						class="group relative rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer aspect-[2/3]"
+						class="show-card group relative rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer"
 					>
 						<!-- Background Image -->
 						<div class="absolute inset-0">
@@ -39,12 +39,6 @@
 								aspect-ratio="2/3"
 								imageClass="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
 							/>
-							<!-- <img
-								v-if="show.poster"
-								:src="show.poster"
-								:alt="show.name"
-								class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-							/> -->
 							<div
 								v-else
 								class="w-full h-full bg-gradient-to-br from-[#d8a669]/20 to-[#372e2d]/20 flex items-center justify-center"
@@ -66,21 +60,21 @@
 
 						<!-- Content - Only show on hover -->
 						<div
-							class="absolute inset-0 flex flex-col items-center justify-center p-4 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20"
+							class="absolute inset-0 flex flex-col items-center justify-center p-3 md:p-4 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20"
 						>
 							<!-- Show Title -->
 							<h3
-								class="text-white font-bold text-base md:text-lg lg:text-xl mb-3 text-center line-clamp-2 drop-shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+								class="show-title text-white font-bold mb-2 md:mb-3 text-center line-clamp-2 drop-shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
 							>
 								{{ show.name }}
 							</h3>
 
 							<!-- Venue Info -->
 							<div
-								class="uppercase flex items-center gap-2 text-white/90 text-sm md:text-base mb-6 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75"
+								class="venue-info uppercase flex items-center gap-1 md:gap-2 text-white/90 mb-4 md:mb-6 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75"
 							>
 								<svg
-									class="w-4 h-4 md:w-5 md:h-5 flex-shrink-0"
+									class="w-3 h-3 md:w-5 md:h-5 flex-shrink-0"
 									fill="none"
 									stroke="currentColor"
 									viewBox="0 0 24 24"
@@ -105,14 +99,14 @@
 
 							<!-- Action Buttons -->
 							<div
-								class="flex flex-col gap-3 w-full max-w-[200px] transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-100"
+								class="button-group flex flex-col gap-2 md:gap-3 w-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-100"
 							>
 								<button
 									@click.stop="goToBooking(show.id)"
-									class="w-full uppercase bg-[#d8a669] text-white px-4 py-3 rounded-lg font-bold text-sm md:text-base shadow-xl hover:bg-[#b8884d] transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
+									class="btn-book uppercase bg-[#d8a669] text-white rounded-lg font-bold shadow-xl hover:bg-[#b8884d] transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-1 md:gap-2"
 								>
 									<svg
-										class="w-5 h-5"
+										class="w-4 h-4 md:w-5 md:h-5"
 										fill="none"
 										stroke="currentColor"
 										viewBox="0 0 24 24"
@@ -124,22 +118,22 @@
 											d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
 										/>
 									</svg>
-									Đặt vé ngay
+									<span class="btn-text">Đặt vé ngay</span>
 								</button>
 
 								<button
 									v-if="show.trailer_url"
 									@click.stop="openTrailer(show.trailer_url)"
-									class="uppercase w-full bg-white/90 backdrop-blur-sm text-[#372e2d] px-4 py-3 rounded-lg font-bold text-sm md:text-base shadow-xl hover:bg-white transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
+									class="btn-trailer uppercase bg-white/90 backdrop-blur-sm text-[#372e2d] rounded-lg font-bold shadow-xl hover:bg-white transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-1 md:gap-2"
 								>
 									<svg
-										class="w-5 h-5"
+										class="w-4 h-4 md:w-5 md:h-5"
 										fill="currentColor"
 										viewBox="0 0 24 24"
 									>
 										<path d="M8 5v14l11-7z" />
 									</svg>
-									Xem Trailer
+									<span class="btn-text">Xem Trailer</span>
 								</button>
 							</div>
 						</div>
@@ -202,7 +196,6 @@ const openTrailer = (url) => {
 	if (url) {
 		currentTrailerUrl.value = url;
 		showTrailerPopup.value = true;
-		// Prevent body scroll when popup is open
 		document.body.style.overflow = "hidden";
 	}
 };
@@ -210,7 +203,6 @@ const openTrailer = (url) => {
 const closeTrailer = () => {
 	showTrailerPopup.value = false;
 	currentTrailerUrl.value = "";
-	// Restore body scroll
 	document.body.style.overflow = "";
 };
 
@@ -251,8 +243,129 @@ onMounted(async () => {
 	overflow: hidden;
 }
 
-/* Ensure proper aspect ratio on all screen sizes */
-.aspect-\[2\/3\] {
-	aspect-ratio: 2/3;
+.show-card {
+	aspect-ratio: 2/3.2;
+}
+
+@media (min-width: 768px) {
+	.show-card {
+		aspect-ratio: 2/3;
+	}
+}
+
+.show-title {
+	font-size: 0.813rem; /* 13px */
+	line-height: 1.3;
+	letter-spacing: 0.01em;
+}
+
+@media (min-width: 640px) {
+	.show-title {
+		font-size: 0.938rem; /* 15px */
+		line-height: 1.4;
+	}
+}
+
+@media (min-width: 768px) {
+	.show-title {
+		font-size: 1.063rem; /* 17px */
+		line-height: 1.4;
+	}
+}
+
+@media (min-width: 1024px) {
+	.show-title {
+		font-size: 1.25rem; /* 20px */
+		line-height: 1.4;
+	}
+}
+
+/* Venue Info - Giảm font size trên mobile */
+.venue-info {
+	font-size: 0.688rem; /* 11px */
+	line-height: 1.3;
+	letter-spacing: 0.02em;
+}
+
+@media (min-width: 640px) {
+	.venue-info {
+		font-size: 0.813rem; /* 13px */
+	}
+}
+
+@media (min-width: 768px) {
+	.venue-info {
+		font-size: 0.938rem; /* 15px */
+	}
+}
+
+@media (min-width: 1024px) {
+	.venue-info {
+		font-size: 1rem; /* 16px */
+	}
+}
+
+.button-group {
+	max-width: 90%;
+	margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+	.button-group {
+		max-width: 200px;
+	}
+}
+
+.btn-book,
+.btn-trailer {
+	padding: 0.5rem 0.75rem; /* 8px 12px */
+	font-size: 0.688rem; /* 11px */
+	letter-spacing: 0.03em;
+}
+
+@media (min-width: 640px) {
+	.btn-book,
+	.btn-trailer {
+		padding: 0.625rem 1rem; /* 10px 16px */
+		font-size: 0.75rem; /* 12px */
+	}
+}
+
+@media (min-width: 768px) {
+	.btn-book,
+	.btn-trailer {
+		padding: 0.75rem 1rem; /* 12px 16px */
+		font-size: 0.875rem; /* 14px */
+	}
+}
+
+@media (min-width: 1024px) {
+	.btn-book,
+	.btn-trailer {
+		padding: 0.75rem 1rem; /* 12px 16px */
+		font-size: 1rem; /* 16px */
+	}
+}
+
+/* Button Text - Responsive display */
+.btn-text {
+	white-space: nowrap;
+}
+
+@media (max-width: 359px) {
+	.show-title {
+		font-size: 0.75rem; /* 12px */
+		line-height: 1.2;
+	}
+
+	.venue-info {
+		font-size: 0.625rem; /* 10px */
+	}
+
+	.btn-book,
+	.btn-trailer {
+		padding: 0.438rem 0.625rem; /* 7px 10px */
+		font-size: 0.625rem; /* 10px */
+	}
 }
 </style>

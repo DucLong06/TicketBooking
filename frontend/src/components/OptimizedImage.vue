@@ -12,7 +12,6 @@
 			@load="onLoad"
 			@error="onError"
 		/>
-		<!-- Loading skeleton - hiện khi chưa load xong -->
 		<div
 			v-if="!loaded && !error"
 			class="skeleton-loader"
