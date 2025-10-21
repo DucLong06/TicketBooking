@@ -645,7 +645,7 @@ const emailDescription = ref(
 	"Email để nhận xác nhận thanh toán hoặc xác nhận đặt vé"
 );
 const shippingFee = computed(() => {
-	return bookingStore.shippingFee || 30000;
+	return bookingStore.shippingFee || 0;
 });
 const selectedSeats = ref([]);
 
