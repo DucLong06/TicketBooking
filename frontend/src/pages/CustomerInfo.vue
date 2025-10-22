@@ -120,49 +120,268 @@
 								<label
 									class="block text-sm font-medium text-[#372e2d] mb-2"
 								>
-									Địa chỉ <span class="text-red-500">*</span>
-								</label>
-								<textarea
-									v-model="customerInfo.address"
-									required
-									rows="3"
-									class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
-									placeholder="Nhập địa chỉ nhận vé..."
-								></textarea>
-								<p
-									class="lowercase mt-1 text-xs text-[#372e2d]/70"
-								>
-									{{ addressDescription }}
-								</p>
-								<p
-									v-if="errors.address"
-									class="mt-1 text-sm text-red-500"
-								>
-									{{ errors.address }}
-								</p>
-							</div>
-
-							<div class="mb-6">
-								<label
-									class="block text-sm font-medium text-[#372e2d] mb-2"
-								>
-									Thời gian ship vé
+									Hình thức nhận vé
 									<span class="text-red-500">*</span>
 								</label>
-								<select
-									v-model="customerInfo.shippingTime"
-									required
-									class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
+								<div class="flex space-x-4">
+									<label class="flex items-center">
+										<input
+											type="radio"
+											v-model="shippingMethod"
+											value="pickup"
+											class="form-radio text-[#d8a669] focus:ring-[#d8a669]"
+										/>
+										<span class="ml-2 text-[#372e2d]"
+											>Nhận tại nhà hát</span
+										>
+									</label>
+									<label class="flex items-center">
+										<input
+											type="radio"
+											v-model="shippingMethod"
+											value="delivery"
+											class="form-radio text-[#d8a669] focus:ring-[#d8a669]"
+										/>
+										<span class="ml-2 text-[#372e2d]"
+											>Nhận tại địa chỉ khác</span
+										>
+									</label>
+								</div>
+								<div
+									v-if="shippingMethod === 'pickup'"
+									class="mt-2 text-sm text-yellow-800 bg-yellow-50 p-3 rounded-lg border border-yellow-300 transition-all duration-300"
 								>
-									<option value="business_hours">
-										Trong giờ hành chính
-									</option>
-									<option value="after_hours">
-										Ngoài giờ hành chính
-									</option>
-								</select>
+									<p>
+										🕒 Quý khách vui lòng nhận vé tại quầy
+										lễ tân nhà hát.
+									</p>
+									<p>
+										⏳ Thời gian bắt đầu nhận vé:
+										<strong>1 tiếng</strong> trước giờ công
+										diễn.
+									</p>
+								</div>
 							</div>
 
+							<div
+								v-if="shippingMethod === 'delivery'"
+								class="border border-[#d8a669]/20 rounded-lg p-4 mb-4 bg-white transition-all duration-300"
+							>
+								<div class="mb-4 space-y-2">
+									<p class="text-sm text-[#372e2d]">
+										Phí ship dự kiến:
+										<strong
+											>Nội thành 20.000đ, Ngoại thành
+											30.000đ</strong
+										>.
+										<br />
+										<span class="text-xs text-[#372e2d]/70"
+											>(Phí ship thực tế sẽ được xác nhận
+											sau khi lên đơn hàng).</span
+										>
+									</p>
+
+									<p
+										v-if="!isCloseToEvent"
+										class="text-sm text-yellow-800 bg-yellow-50 p-3 rounded-lg border border-yellow-300"
+									>
+										⚠️ <strong>Lưu ý:</strong> Nhà hát không
+										nhận ship trước
+										<strong>03 ngày</strong> sự kiện.
+									</p>
+
+									<p
+										v-if="isCloseToEvent"
+										class="text-sm text-red-700 bg-red-50 p-3 rounded-lg border border-red-300"
+									>
+										🚫
+										<strong
+											>Sự kiện sắp diễn ra (dưới 3
+											ngày).</strong
+										>
+										<br />
+										Quý khách vui lòng chọn hình thức "Nhận
+										tại nhà hát".
+									</p>
+									<p
+										v-if="errors.shipping"
+										class="mt-1 text-sm text-red-500"
+									>
+										{{ errors.shipping }}
+									</p>
+								</div>
+
+								<h3
+									class="text-lg font-semibold mb-3 text-[#372e2d]"
+								>
+									Thông tin giao vé
+								</h3>
+
+								<div class="mb-4">
+									<label
+										class="block text-sm font-medium text-[#372e2d] mb-2"
+									>
+										Địa chỉ nhận vé
+										<span class="text-red-500">*</span>
+									</label>
+									<textarea
+										v-model="customerInfo.address"
+										:required="
+											shippingMethod === 'delivery'
+										"
+										:disabled="isCloseToEvent"
+										rows="3"
+										class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d] disabled:bg-gray-100 disabled:cursor-not-allowed"
+										placeholder="Nhập địa chỉ nhận vé..."
+									></textarea>
+									<p
+										class="lowercase mt-1 text-xs text-[#372e2d]/70"
+									>
+										{{ addressDescription }}
+									</p>
+									<p
+										v-if="errors.address"
+										class="mt-1 text-sm text-red-500"
+									>
+										{{ errors.address }}
+									</p>
+								</div>
+
+								<div class="mb-4">
+									<label
+										class="block text-sm font-medium text-[#372e2d] mb-2"
+									>
+										Thời gian ship vé
+										<span class="text-red-500">*</span>
+									</label>
+									<select
+										v-model="customerInfo.shippingTime"
+										:required="
+											shippingMethod === 'delivery'
+										"
+										:disabled="isCloseToEvent"
+										class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d] disabled:bg-gray-100 disabled:cursor-not-allowed"
+									>
+										<option value="business_hours">
+											Trong giờ hành chính
+										</option>
+										<option value="after_hours">
+											Ngoài giờ hành chính
+										</option>
+									</select>
+								</div>
+							</div>
+							<div class="mb-4">
+								<label class="flex items-center">
+									<input
+										type="checkbox"
+										v-model="requestInvoice"
+										class="form-checkbox text-[#d8a669] focus:ring-[#d8a669]"
+									/>
+									<span
+										class="ml-2 text-[#372e2d] font-medium"
+										>Xuất hoá đơn (VAT)</span
+									>
+								</label>
+							</div>
+
+							<div
+								v-if="requestInvoice"
+								class="border border-[#d8a669]/20 rounded-lg p-4 mb-4 bg-white transition-all duration-300"
+							>
+								<h3
+									class="text-lg font-semibold mb-3 text-[#372e2d]"
+								>
+									Thông tin xuất hoá đơn
+								</h3>
+
+								<div class="mb-4">
+									<label
+										class="block text-sm font-medium text-[#372e2d] mb-2"
+									>
+										Tên công ty
+										<span class="text-red-500">*</span>
+									</label>
+									<input
+										v-model="invoiceInfo.companyName"
+										type="text"
+										:required="requestInvoice"
+										class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
+										placeholder="Tên công ty đầy đủ"
+									/>
+									<p
+										v-if="errors.companyName"
+										class="mt-1 text-sm text-red-500"
+									>
+										{{ errors.companyName }}
+									</p>
+								</div>
+
+								<div class="mb-4">
+									<label
+										class="block text-sm font-medium text-[#372e2d] mb-2"
+									>
+										Địa chỉ công ty
+										<span class="text-red-500">*</span>
+									</label>
+									<input
+										v-model="invoiceInfo.companyAddress"
+										type="text"
+										:required="requestInvoice"
+										class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
+										placeholder="Địa chỉ đăng ký kinh doanh"
+									/>
+									<p
+										v-if="errors.companyAddress"
+										class="mt-1 text-sm text-red-500"
+									>
+										{{ errors.companyAddress }}
+									</p>
+								</div>
+								<div class="mb-4">
+									<label
+										class="block text-sm font-medium text-[#372e2d] mb-2"
+									>
+										Mã số thuế
+										<span class="text-red-500">*</span>
+									</label>
+									<input
+										v-model="invoiceInfo.taxId"
+										type="text"
+										:required="requestInvoice"
+										class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
+										placeholder="Mã số thuế công ty"
+									/>
+									<p
+										v-if="errors.taxId"
+										class="mt-1 text-sm text-red-500"
+									>
+										{{ errors.taxId }}
+									</p>
+								</div>
+
+								<div class="mb-4">
+									<label
+										class="block text-sm font-medium text-[#372e2d] mb-2"
+									>
+										Email nhận hoá đơn
+										<span class="text-red-500">*</span>
+									</label>
+									<input
+										v-model="invoiceInfo.companyEmail"
+										type="email"
+										:required="requestInvoice"
+										class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
+										placeholder="Email kế toán hoặc email công ty"
+									/>
+									<p
+										v-if="errors.companyEmail"
+										class="mt-1 text-sm text-red-500"
+									>
+										{{ errors.companyEmail }}
+									</p>
+								</div>
+							</div>
 							<div class="mb-6">
 								<label
 									class="block text-sm font-medium text-[#372e2d] mb-2"
@@ -173,7 +392,7 @@
 									v-model="customerInfo.notes"
 									rows="3"
 									class="w-full px-4 py-2 border border-[#d8a669]/50 rounded-lg focus:ring-2 focus:ring-[#d8a669] focus:border-[#d8a669] bg-white text-[#372e2d]"
-									placeholder="Yêu cầu đặc biệt (xuất hoá đơn, gửi tặng vé, nhận vé tại nhà hát...)"
+									placeholder="Yêu cầu đặc biệt (gửi tặng vé, ..)"
 								></textarea>
 							</div>
 
@@ -251,7 +470,9 @@
 							<h4 class="font-semibold mb-2 text-[#372e2d]">
 								Ghế đã chọn
 							</h4>
-							<div class="space-y-2">
+							<div
+								class="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar"
+							>
 								<div
 									v-for="seat in selectedSeats"
 									:key="seat.id"
@@ -268,6 +489,7 @@
 								</div>
 							</div>
 						</div>
+
 						<div class="mb-4 pb-4 border-b border-[#d8a669]/30">
 							<label
 								class="block text-sm font-medium text-[#372e2d] mb-2"
@@ -345,22 +567,25 @@
 									formatPrice(ticketAmount)
 								}}</span>
 							</div>
-							<!-- <div class="flex justify-between text-sm">
+							<div
+								v-if="shippingMethod === 'delivery'"
+								class="flex justify-between text-sm"
+							>
 								<span class="text-[#372e2d]/70"
 									>Phí vận chuyển:</span
 								>
 								<span class="font-semibold text-[#d8a669]">
 									{{ formatPrice(shippingFee) }}
 								</span>
-							</div> -->
-							<!-- <div class="flex justify-between text-sm">
+							</div>
+							<div class="flex justify-between text-sm">
 								<span class="text-[#372e2d]/70"
 									>Phí dịch vụ:</span
 								>
 								<span class="font-semibold text-[#d8a669]">{{
 									formatPrice(serviceFee)
 								}}</span>
-							</div> -->
+							</div>
 							<div
 								v-if="bookingStore.discountAmount > 0"
 								class="flex justify-between text-sm"
@@ -440,22 +665,25 @@
 									formatPrice(ticketAmount)
 								}}</span>
 							</div>
-							<!-- <div class="flex justify-between">
+							<div class="flex justify-between">
 								<span class="text-[#372e2d]/70"
 									>Phí dịch vụ:</span
 								>
 								<span class="font-semibold text-[#372e2d]">{{
 									formatPrice(serviceFee)
 								}}</span>
-							</div> -->
-							<!-- <div class="flex justify-between">
+							</div>
+							<div
+								v-if="shippingMethod === 'delivery'"
+								class="flex justify-between"
+							>
 								<span class="text-[#372e2d]/70"
 									>Phí vận chuyển:</span
 								>
 								<span class="font-semibold text-[#372e2d]">{{
 									formatPrice(shippingFee)
 								}}</span>
-							</div> -->
+							</div>
 							<div
 								v-if="bookingStore.discountAmount > 0"
 								class="flex justify-between"
@@ -552,7 +780,6 @@
 							</div>
 						</div>
 					</div>
-
 					<div class="flex gap-2">
 						<button
 							type="button"
@@ -605,6 +832,14 @@ import { useRouter, useRoute } from "vue-router";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { useBookingStore } from "../stores/booking";
 import { useToast } from "vue-toastification";
+// Import dayjs for date calculations
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+// Extend dayjs with plugins
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const toast = useToast();
 const bookingStore = useBookingStore();
@@ -624,19 +859,30 @@ const showInfo = ref({
 const performanceInfo = ref({
 	date: "",
 	time: "",
+	isoDatetime: null, // To store the full ISO datetime string
 });
 
 const customerInfo = ref({
 	fullName: "",
 	email: "",
 	phone: "",
-	idNumber: "",
 	address: "",
 	notes: "",
 	shippingTime: "business_hours",
 });
 
-const agreedToTerms = ref(false);
+// Shipping method state
+const shippingMethod = ref("pickup"); // 'pickup' or 'delivery'
+
+// Invoice state
+const requestInvoice = ref(false);
+const invoiceInfo = ref({
+	companyName: "",
+	companyAddress: "", // NEW: Company Address
+	companyEmail: "",
+	taxId: "",
+});
+
 const errors = ref({});
 const addressDescription = ref(
 	"Địa chỉ nhận vé cứng. Nhà hát Hồ Gươm chỉ sử dụng vé cứng để vào cửa."
@@ -644,9 +890,6 @@ const addressDescription = ref(
 const emailDescription = ref(
 	"Email để nhận xác nhận thanh toán hoặc xác nhận đặt vé"
 );
-const shippingFee = computed(() => {
-	return bookingStore.shippingFee || 0;
-});
 const selectedSeats = ref([]);
 
 // Mobile order summary toggle
@@ -659,6 +902,39 @@ const toggleOrderSummary = () => {
 // Timer
 const timeLeft = ref(600);
 let timer = null;
+
+// COMPUTED PROPERTIES
+
+// Get performance date as a dayjs object in UTC+7
+const performanceDate = computed(() => {
+	if (performanceInfo.value.isoDatetime) {
+		// Parse the ISO string and set timezone to Asia/Ho_Chi_Minh (UTC+7)
+		return dayjs(performanceInfo.value.isoDatetime).tz("Asia/Ho_Chi_Minh");
+	}
+	return null;
+});
+
+// Check if event is within 3 days (0, 1, 2 days away)
+const isCloseToEvent = computed(() => {
+	if (!performanceDate.value) return false;
+
+	const now = dayjs().tz("Asia/Ho_Chi_Minh");
+
+	// Compare the start of the day
+	const daysDiff = performanceDate.value
+		.startOf("day")
+		.diff(now.startOf("day"), "day");
+
+	// True if 0, 1, or 2 days diff
+	return daysDiff < 3;
+});
+
+const shippingFee = computed(() => {
+	// This fee is from the backend (performance.shipping_fee)
+	return shippingMethod.value === "delivery"
+		? bookingStore.shippingFee || 0
+		: 0;
+});
 
 const serviceFeePerTicket = computed(() => {
 	if (showInfo.value.service_fee_per_ticket) {
@@ -701,8 +977,15 @@ const totalAmount = computed(() => {
 });
 
 const finalAmount = computed(() => {
-	if (bookingStore.currentBooking?.final_amount) {
-		return bookingStore.currentBooking.final_amount;
+	if (
+		bookingStore.currentBooking?.final_amount !== undefined &&
+		bookingStore.isDiscountSuccess
+	) {
+		const baseAmountWithoutShipping =
+			bookingStore.currentBooking.total_amount +
+			bookingStore.currentBooking.service_fee -
+			bookingStore.currentBooking.discount_amount;
+		return baseAmountWithoutShipping + shippingFee.value;
 	}
 	return totalAmount.value;
 });
@@ -719,10 +1002,10 @@ const applyDiscountCode = async () => {
 
 	isApplyingDiscount.value = true;
 	try {
-		await bookingStore.applyDiscount(
-			discountCodeInput.value,
-			customerInfo.value
-		);
+		await bookingStore.applyDiscount(discountCodeInput.value, {
+			...customerInfo.value,
+			shippingMethod: shippingMethod.value,
+		});
 	} finally {
 		isApplyingDiscount.value = false;
 	}
@@ -744,12 +1027,12 @@ const formatTime = (seconds) => {
 
 const validateForm = () => {
 	errors.value = {};
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 	if (!customerInfo.value.fullName.trim()) {
 		errors.value.fullName = "Vui lòng nhập họ tên";
 	}
 
-	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	if (!emailRegex.test(customerInfo.value.email)) {
 		errors.value.email = "Email không hợp lệ";
 	}
@@ -759,8 +1042,33 @@ const validateForm = () => {
 		errors.value.phone = "Số điện thoại không hợp lệ";
 	}
 
-	if (!customerInfo.value.address.trim()) {
-		errors.value.address = "Vui lòng nhập địa chỉ";
+	// Validate shipping
+	if (shippingMethod.value === "delivery") {
+		if (isCloseToEvent.value) {
+			errors.value.shipping =
+				"Sự kiện sắp diễn ra (dưới 3 ngày), không thể ship. Vui lòng chọn 'Nhận tại nhà hát'.";
+			toast.error("Không thể chọn ship, sự kiện sắp diễn ra.");
+		}
+		if (!customerInfo.value.address.trim()) {
+			errors.value.address = "Vui lòng nhập địa chỉ nhận vé";
+		}
+	}
+
+	// Validate invoice fields only if requested
+	if (requestInvoice.value) {
+		if (!invoiceInfo.value.companyName.trim()) {
+			errors.value.companyName = "Vui lòng nhập tên công ty";
+		}
+		// NEW: Validate Company Address
+		if (!invoiceInfo.value.companyAddress.trim()) {
+			errors.value.companyAddress = "Vui lòng nhập địa chỉ công ty";
+		}
+		if (!invoiceInfo.value.taxId.trim()) {
+			errors.value.taxId = "Vui lòng nhập mã số thuế";
+		}
+		if (!emailRegex.test(invoiceInfo.value.companyEmail)) {
+			errors.value.companyEmail = "Email nhận hoá đơn không hợp lệ";
+		}
 	}
 
 	return Object.keys(errors.value).length === 0;
@@ -768,18 +1076,41 @@ const validateForm = () => {
 
 const handleSubmit = async () => {
 	if (!validateForm()) return;
-	if (isSubmitting.value) return; // Prevent double submission
+	if (isSubmitting.value) return;
 
 	isSubmitting.value = true;
 
 	try {
+		// Prepare notes with invoice info if requested
+		let finalNotes = customerInfo.value.notes || "";
+		if (requestInvoice.value) {
+			const invoiceString = `
+--------------------------------
+YÊU CẦU XUẤT HOÁ ĐƠN (VAT):
+- Tên công ty: ${invoiceInfo.value.companyName}
+- Địa chỉ công ty: ${invoiceInfo.value.companyAddress} 
+- Mã số thuế: ${invoiceInfo.value.taxId}
+- Email nhận HĐ: ${invoiceInfo.value.companyEmail}
+--------------------------------
+`; // Added Company Address here
+			finalNotes = invoiceString + "\n" + finalNotes;
+		}
+
+		// Adjust data based on shipping method
 		bookingStore.customerInfo = {
 			customer_name: customerInfo.value.fullName,
 			customer_email: customerInfo.value.email,
 			customer_phone: customerInfo.value.phone,
-			customer_address: customerInfo.value.address,
-			shipping_time: customerInfo.value.shippingTime,
-			notes: customerInfo.value.notes || "",
+			customer_address:
+				shippingMethod.value === "delivery"
+					? customerInfo.value.address
+					: "Nhận tại nhà hát",
+			shipping_time:
+				shippingMethod.value === "delivery"
+					? customerInfo.value.shippingTime
+					: "after_hours", // Send default
+			shipping_method: shippingMethod.value,
+			notes: finalNotes.trim(),
 			discount_code: bookingStore.isDiscountSuccess
 				? discountCodeInput.value
 				: "",
@@ -814,16 +1145,17 @@ const handleSubmit = async () => {
 			amount: finalAmount.value,
 			ticketAmount: ticketAmount.value,
 			serviceFee: serviceFee.value,
+			shippingFee: shippingFee.value,
 			discountAmount: bookingStore.discountAmount,
 			selectedSeats: selectedSeats.value,
 			bookingCode: bookingStore.bookingCode,
 			status: "pending",
 			transactionId: paymentData.transaction_id,
+			shippingMethod: shippingMethod.value,
 		};
 
 		sessionStorage.setItem("bookingData", JSON.stringify(bookingData));
 
-		// Redirect to payment
 		if (paymentData.payment_url) {
 			window.location.href = paymentData.payment_url;
 		} else {
@@ -831,7 +1163,9 @@ const handleSubmit = async () => {
 		}
 	} catch (error) {
 		console.error("Error:", error);
-		bookingStore.clearBooking();
+		if (error.message !== "Không nhận được URL thanh toán") {
+			bookingStore.clearBooking();
+		}
 		toast.error(error.message || "Có lỗi xảy ra. Vui lòng thử lại.");
 
 		if (error.shouldRedirect) {
@@ -873,6 +1207,7 @@ const startTimer = () => {
 		if (timeLeft.value === 0) {
 			clearInterval(timer);
 			toast.error("Hết thời gian giữ ghế");
+			bookingStore.clearBooking();
 			router.push(`/booking/${route.params.showId}/seats`);
 		}
 	}, 1000);
@@ -927,6 +1262,7 @@ onMounted(() => {
 			) {
 				bookingStore.selectedPerformance = performance;
 			}
+			bookingStore.shippingFee = performance.shipping_fee || 0;
 
 			showInfo.value = {
 				name:
@@ -938,24 +1274,35 @@ onMounted(() => {
 					bookingStore.currentShow?.service_fee_per_ticket,
 			};
 
+			// Store full datetime info
 			if (performance.datetime) {
+				const perfDate = new Date(performance.datetime);
 				performanceInfo.value = {
-					date: new Date(performance.datetime).toLocaleDateString(
-						"vi-VN"
-					),
-					time: new Date(performance.datetime).toLocaleTimeString(
-						"vi-VN",
-						{
-							hour: "2-digit",
-							minute: "2-digit",
-						}
-					),
+					date: perfDate.toLocaleDateString("vi-VN", {
+						timeZone: "Asia/Ho_Chi_Minh", // UTC+7
+					}),
+					time: perfDate.toLocaleTimeString("vi-VN", {
+						hour: "2-digit",
+						minute: "2-digit",
+						timeZone: "Asia/Ho_Chi_Minh", // UTC+7
+					}),
+					isoDatetime: performance.datetime, // Store the original ISO string
 				};
 			}
 		} catch (e) {
 			console.error("Failed to parse savedPerformance:", e);
+			if (bookingStore.currentShow) {
+				bookingStore.shippingFee =
+					bookingStore.currentShow.shipping_fee || 0;
+				showInfo.value = {
+					name: bookingStore.currentShow.name,
+					service_fee_per_ticket:
+						bookingStore.currentShow.service_fee_per_ticket,
+				};
+			}
 		}
 	} else if (bookingStore.currentShow) {
+		bookingStore.shippingFee = bookingStore.currentShow.shipping_fee || 0;
 		showInfo.value = {
 			name: bookingStore.currentShow.name,
 			service_fee_per_ticket:
@@ -969,46 +1316,61 @@ onMounted(() => {
 		return;
 	}
 
-	if (!serviceFeePerTicket.value) {
-		console.error("❌ Service fee not found");
-		router.push(`/booking/${route.params.showId}/seats`);
-		return;
-	}
-
-	const savedExpiry = sessionStorage.getItem("reservationExpiry");
-	if (!savedExpiry) {
-		console.error("❌ No reservation expiry");
-		router.push(`/booking/${route.params.showId}/seats`);
-		return;
-	}
-
-	const expiryDate = new Date(savedExpiry);
-	const now = new Date();
-	if (expiryDate <= now) {
-		console.error("❌ Reservation expired");
-		toast.error("Hết thời gian giữ ghế");
-		router.push(`/booking/${route.params.showId}/seats`);
-		return;
-	}
-
-	// Start timer
-	timer = setInterval(() => {
-		const now = new Date();
-		const diff = Math.floor((expiryDate - now) / 1000);
-		timeLeft.value = Math.max(0, diff);
-
-		if (timeLeft.value === 0) {
-			clearInterval(timer);
-			toast.error("Hết thời gian giữ ghế");
-			router.push(`/booking/${route.params.showId}/seats`);
-		}
-	}, 1000);
+	startTimer();
 });
 
 onUnmounted(() => {
 	if (timer) {
 		clearInterval(timer);
 	}
-	discountCodeInput.value = "";
 });
 </script>
+
+<style scoped>
+/* Custom scrollbar style */
+.custom-scrollbar::-webkit-scrollbar {
+	width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+	background: #fdfcf0;
+	border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+	background-color: #d8a669;
+	border-radius: 10px;
+	border: 1px solid #fdfcf0;
+}
+
+/* Custom checkbox/radio style */
+.form-radio,
+.form-checkbox {
+	appearance: none;
+	width: 1.25rem;
+	height: 1.25rem;
+	border: 2px solid #d8a669;
+	background-color: white;
+	transition: all 0.2s;
+	cursor: pointer;
+}
+.form-radio {
+	border-radius: 50%;
+}
+.form-checkbox {
+	border-radius: 0.25rem;
+}
+.form-radio:checked,
+.form-checkbox:checked {
+	background-color: #d8a669;
+	border-color: #d8a669;
+	background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+}
+.form-radio:checked {
+	background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e");
+}
+.form-radio:focus,
+.form-checkbox:focus {
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(216, 166, 105, 0.5);
+	border-color: #b8884d;
+}
+</style>

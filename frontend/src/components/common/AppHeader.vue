@@ -45,7 +45,7 @@
 				<!-- Mobile menu button -->
 				<button
 					@click="toggleMenu"
-					class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition"
+					class="uppercase md:hidden p-2 rounded-lg hover:bg-gray-100 transition"
 					aria-label="Toggle menu"
 				>
 					<svg
@@ -88,7 +88,7 @@
 			>
 				<nav
 					v-show="isMenuOpen"
-					class="md:hidden py-4 border-t border-gray-200"
+					class="uppercase md:hidden py-4 border-t border-gray-200"
 				>
 					<div class="flex flex-col space-y-3">
 						<a

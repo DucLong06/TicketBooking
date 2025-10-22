@@ -1,7 +1,6 @@
 <template>
 	<DefaultLayout>
 		<div class="container mx-auto px-4 py-8">
-			<!-- Breadcrumb -->
 			<nav class="mb-8">
 				<ol class="flex items-center space-x-2 uppercase text-sm">
 					<li>
@@ -19,31 +18,20 @@
 				</ol>
 			</nav>
 
-			<!-- Loading -->
 			<div v-if="loading" class="flex justify-center py-12">
 				<DuongCamLoading size="lg" message="Đang tải suất diễn..." />
 			</div>
 
 			<template v-else>
-				<!-- Show Info Section -->
 				<div
 					class="bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-6 md:p-8 mb-8"
 				>
 					<div class="grid md:grid-cols-3 gap-6 md:gap-8">
-						<!-- Poster Column - Responsive aspect ratio -->
 						<div class="md:col-span-1">
 							<div
 								class="relative w-full poster-container bg-[#e8dcc8] rounded-lg overflow-hidden border-2 border-[#d8a669]/20 group cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300 mx-auto"
 								@click="openTrailer"
 							>
-								<!-- <OptimizedImage
-									v-if="showInfo.poster"
-									:src="showInfo.poster"
-									:alt="showInfo.name"
-									aspect-ratio="2/3"
-									wrapperClass="w-full h-full"
-									imageClass="w-full h-full object-cover"
-								/> -->
 								<img
 									v-if="showInfo.poster"
 									:src="showInfo.poster"
@@ -65,7 +53,6 @@
 									</svg>
 								</div>
 
-								<!-- Trailer Overlay -->
 								<div
 									v-if="showInfo.trailer_url"
 									class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center"
@@ -94,7 +81,6 @@
 							</div>
 						</div>
 
-						<!-- Show Details Column -->
 						<div class="md:col-span-2 space-y-4">
 							<h1
 								class="uppercase text-2xl md:text-3xl lg:text-4xl font-bold text-[#372e2d]"
@@ -102,7 +88,6 @@
 								{{ showInfo.name }}
 							</h1>
 
-							<!-- Action Buttons (Trailer + Đặt vé) -->
 							<div class="flex flex-wrap gap-3">
 								<button
 									v-if="showInfo.trailer_url"
@@ -144,9 +129,8 @@
 								</button>
 							</div>
 
-							<!-- Show Meta Information -->
 							<div
-								class="space-y-2 text-[#372e2d] text-sm md:text-base"
+								class="space-y-2 text-[#372e2d] text-sm md:text-base pt-2"
 							>
 								<p class="font-medium flex items-center gap-2">
 									<span class="uppercase text-[#d8a669]"
@@ -246,7 +230,6 @@
 					</div>
 				</div>
 
-				<!-- Markdown Description Section (MỚI) -->
 				<div
 					v-if="showInfo.description_markdown"
 					class="bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-6 md:p-8 mb-8"
@@ -278,7 +261,9 @@
 
 				<div
 					ref="performancesSection"
-					class="bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-6 md:p-8 scroll-mt-20"
+					id="performances"
+					class="bg-[#fdfcf0] border border-[#d8a669]/30 rounded-lg shadow-lg p-6 md:p-8"
+					style="scroll-margin-top: 80px"
 				>
 					<h2
 						class="uppercase text-xl md:text-2xl font-bold mb-6 text-[#372e2d]"
@@ -294,7 +279,6 @@
 					</div>
 
 					<div v-else class="space-y-6">
-						<!-- Group performances by date -->
 						<div
 							v-for="(dateGroup, date) in groupedPerformances"
 							:key="date"
@@ -331,7 +315,6 @@
 										performance.available_seats === 0
 									"
 								>
-									<!-- Selected Badge -->
 									<div
 										v-if="
 											selectedPerformance?.id ===
@@ -400,7 +383,6 @@
 						</div>
 					</div>
 
-					<!-- Continue Button -->
 					<div
 						v-if="selectedPerformance"
 						class="mt-6 md:mt-8 flex justify-end"
@@ -416,7 +398,6 @@
 			</template>
 		</div>
 
-		<!-- Trailer Popup -->
 		<TrailerPopup
 			:show="showTrailerPopup"
 			:trailerUrl="showInfo.trailer_url"
@@ -426,17 +407,19 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import TrailerPopup from "../components/TrailerPopup.vue";
 import MarkdownCollapse from "../components/MarkdownCollapse.vue";
 import { useBookingStore } from "../stores/booking";
 import DuongCamLoading from "@/components/common/DuongCamLoading.vue";
+import { useToast } from "vue-toastification";
 
 const route = useRoute();
 const router = useRouter();
 const bookingStore = useBookingStore();
+const toast = useToast();
 
 const showInfo = ref({});
 const performances = ref([]);
@@ -526,29 +509,47 @@ const closeTrailer = () => {
 	document.body.style.overflow = "";
 };
 
-// Scroll to performances section
+// [CẬP NHẬT] Scroll to performances section bằng JS
 const scrollToPerformances = () => {
 	if (performancesSection.value) {
-		performancesSection.value.scrollIntoView({
+		// Lấy chiều cao của header (nếu có)
+		// Thay 'app-header-id' bằng ID thật của header nếu có,
+		// hoặc ước lượng chiều cao (vd: 80px)
+		const headerElement = document.getElementById("app-header"); // <-- THAY ID HEADER Ở ĐÂY (NẾU CÓ)
+		const headerHeight = headerElement ? headerElement.offsetHeight : 80; // Ước lượng 80px
+
+		const elementPosition = performancesSection.value.offsetTop;
+		const offsetPosition = elementPosition - headerHeight;
+
+		window.scrollTo({
+			top: offsetPosition,
 			behavior: "smooth",
-			block: "start",
 		});
 	}
 };
 
 onMounted(async () => {
+	loading.value = true;
 	try {
-		// Initialize session
 		bookingStore.initSession();
-
-		// Load show details
 		await bookingStore.loadShowDetail(route.params.showId);
 		showInfo.value = bookingStore.currentShow;
 		performances.value = bookingStore.performances;
 	} catch (error) {
 		console.error("Failed to load show:", error);
+		toast.error("Không thể tải chi tiết chương trình.");
 	} finally {
 		loading.value = false;
+
+		// [CẬP NHẬT] Gọi scrollToPerformances bằng JS thay vì dựa vào scroll-mt
+		if (route.hash === "#performances") {
+			// Đợi DOM render xong mới scroll
+			await nextTick();
+			// Thêm delay nhỏ để đảm bảo mọi thứ (vd: ảnh) đã load xong chiều cao
+			setTimeout(() => {
+				scrollToPerformances();
+			}, 100);
+		}
 	}
 });
 </script>
@@ -582,10 +583,5 @@ onMounted(async () => {
 		-webkit-line-clamp: unset;
 		-webkit-box-orient: unset;
 	}
-}
-
-/* Smooth scroll offset for fixed header */
-.scroll-mt-20 {
-	scroll-margin-top: 5rem;
 }
 </style>

@@ -206,7 +206,7 @@ def ninepay_return(request):
                 logger.error(f"🚨 Invalid booking status: {booking.status}")
                 return redirect(f'{settings.FRONTEND_URL}/payment/error?reason=invalid_booking_status')
 
-            if payment_status_code == 5 and error_code == '000':
+            if payment_status_code == 5:
                 logger.info(f"✅ Payment {transaction_id} successful")
 
                 payment.status = 'success'

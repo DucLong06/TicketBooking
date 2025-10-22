@@ -8,11 +8,78 @@
 		</div>
 
 		<div v-else class="bg-[#fdfcf0] container mx-auto px-4 py-8">
+			<transition name="fade">
+				<div
+					v-if="showGuidePopup"
+					class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+					@click="closeGuidePopup"
+				>
+					<div
+						class="w-full max-w-md bg-[#eaddc7] rounded-lg shadow-xl p-6 border-2 border-[#b8884d] text-[#372e2d] relative"
+						@click.stop
+					>
+						<button
+							@click="closeGuidePopup"
+							class="absolute top-2 right-2 p-1 text-[#372e2d]/60 hover:text-[#372e2d] transition"
+						>
+							<svg
+								class="w-5 h-5"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M6 18L18 6M6 6l12 12"
+								/>
+							</svg>
+						</button>
+
+						<h3
+							class="text-xl font-bold mb-3 text-center text-[#372e2d]"
+						>
+							Hướng dẫn chọn ghế
+						</h3>
+						<p class="text-sm mb-3">
+							•
+							<strong class="text-[#b8884d]"
+								>Chạm/Click vào ghế</strong
+							>
+							trên sơ đồ để chọn hoặc bỏ chọn ghế mong muốn.
+						</p>
+						<p class="text-sm mb-3">
+							• Sử dụng
+							<strong class="text-[#b8884d]">cuộn chuột</strong>
+							hoặc
+							<strong class="text-[#b8884d]">hai ngón tay</strong>
+							(trên điện thoại) để phóng to/thu nhỏ sơ đồ.
+						</p>
+						<p class="text-sm mb-3">
+							•
+							<strong class="text-[#b8884d]"
+								>Giữ và kéo chuột/màn hình</strong
+							>
+							để di chuyển sơ đồ khi đã phóng to.
+						</p>
+						<p class="text-sm mb-4">
+							• Bạn có thể chọn tối đa
+							<strong class="text-[#b8884d]">8 ghế</strong>.
+						</p>
+						<button
+							@click="closeGuidePopup"
+							class="w-full bg-[#b8884d] text-white py-2 rounded-lg font-semibold hover:bg-[#a07644] transition"
+						>
+							Đã hiểu
+						</button>
+					</div>
+				</div>
+			</transition>
+
 			<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-				<!-- Left Column: Seat Map (2/3 width) -->
 				<div class="lg:col-span-2">
 					<div class="">
-						<!-- Price Categories - Mobile horizontal scroll -->
 						<div class="lg:hidden mb-4">
 							<div class="grid grid-cols-2 gap-2">
 								<div
@@ -44,8 +111,6 @@
 							</div>
 						</div>
 
-						<!-- Seat Map Container with Zoom -->
-
 						<div
 							class="relative overflow-hidden rounded-xl border-0 border-[#d8a669]/20"
 							:style="{
@@ -55,7 +120,6 @@
 									: 'calc(100vh - 150px)',
 							}"
 						>
-							<!-- Zoom Controls - Top Left Corner -->
 							<div
 								class="absolute top-4 left-4 z-20 flex flex-col gap-2"
 							>
@@ -136,7 +200,6 @@
 										margin: '0 auto',
 									}"
 								>
-									<!-- Stage -->
 									<div class="mb-12 flex justify-center">
 										<div
 											class="relative"
@@ -173,11 +236,9 @@
 										</div>
 									</div>
 
-									<!-- Main area with LG -->
 									<div
 										class="flex items-start justify-between gap-20"
 									>
-										<!-- LG Left -->
 										<div
 											v-if="logeLeftSection"
 											class="flex-shrink-0"
@@ -242,7 +303,6 @@
 											</div>
 										</div>
 
-										<!-- Main Sections -->
 										<div
 											class="flex-1"
 											style="
@@ -502,7 +562,6 @@
 											</div>
 										</div>
 
-										<!-- LG Right -->
 										<div
 											v-if="logeRightSection"
 											class="flex-shrink-0"
@@ -573,11 +632,7 @@
 					</div>
 				</div>
 
-				<!-- Right Column: Price Categories & Booking Summary - DESKTOP ONLY -->
-
 				<div class="hidden lg:block lg:col-span-1">
-					<!-- Enhanced Header -->
-
 					<div
 						class="mb-6 bg-[#fdfcf0] rounded-2xl shadow-xl p-5 border-2 border-[#d8a669]"
 					>
@@ -782,7 +837,7 @@
 							:class="[
 								'uppercase w-full py-4 px-4 rounded-xl font-bold text-lg transition-all shadow-lg',
 								selectedSeats.length > 0
-									? 'uppercase bg-[#d8a669] text-white hover:bg-[#b8884d] hover:shadow-2xl transform hover:scale-105 active:scale-95'
+									? 'uppercase bg-[#d8a669] text-white hover:bg-[#b8884d] hover:shadow-xl transform hover:scale-105 active:scale-95'
 									: 'uppercase bg-gray-300 text-gray-500 cursor-not-allowed',
 							]"
 						>
@@ -797,7 +852,6 @@
 			</div>
 		</div>
 
-		<!-- Mobile Bottom Sheet -->
 		<div class="lg:hidden">
 			<div
 				v-if="bottomSheetState === 'expanded'"
@@ -967,7 +1021,6 @@
 			</div>
 		</div>
 
-		<!-- Seat Tooltip -->
 		<Teleport to="body">
 			<div
 				v-if="tooltipVisible"
@@ -989,11 +1042,6 @@
 							imageClass="w-full h-full object-cover"
 							loading="eager"
 						/>
-						<!-- <img
-							:src="tooltipData.seat_image_url"
-							alt="Seat View"
-							class="w-full h-full object-cover"
-						/> -->
 					</div>
 
 					<div class="p-4">
@@ -1103,6 +1151,7 @@ const touchOffset = ref(0);
 // Zoom instructions state
 const showZoomInstructions = ref(false);
 const instructionsClosed = ref(false);
+const showGuidePopup = ref(false); // State for the new guide popup
 
 // Computed properties
 const venueInfo = computed(() => seatMap.value?.venue || {});
@@ -1484,7 +1533,6 @@ const isSelected = (seat) => {
 
 // Tooltip functions
 const showSeatTooltip = (seat, event) => {
-	console.log("Dữ liệu ghế khi hover:", seat);
 	if (tooltipTimer) {
 		clearTimeout(tooltipTimer);
 		tooltipTimer = null;
@@ -1765,56 +1813,9 @@ const handleZoomOut = () => {
 	zoomLevel.value = newZoom;
 };
 
-// Reset View Handler
-// const handleResetView = async () => {
-// 	await calculateAutoFit();
-// };
-
-const calculateAutoFit = async () => {
-	const container = document.getElementById("seat-map-container");
-	if (!container) return;
-
-	await nextTick();
-	await new Promise((resolve) => setTimeout(resolve, 100));
-
-	const containerRect = container.getBoundingClientRect();
-	const containerWidth = containerRect.width;
-	const containerHeight = containerRect.height;
-
-	const contentElement = container.querySelector('[style*="transform"]');
-	if (!contentElement) return;
-
-	zoomLevel.value = 1;
-	panX.value = 0;
-	panY.value = 0;
-
-	await nextTick();
-
-	const contentRect = contentElement.getBoundingClientRect();
-	const actualContentWidth = contentRect.width;
-	const actualContentHeight = contentRect.height;
-
-	// Padding (desktop: 60px, mobile: 20px)
-	const padding = window.innerWidth >= 1024 ? 60 : 20;
-
-	const zoomX = (containerWidth - padding * 2) / actualContentWidth;
-	const zoomY = (containerHeight - padding * 2) / actualContentHeight;
-	const optimalZoom = Math.min(zoomX, zoomY, 1);
-
-	const scaledContentWidth = actualContentWidth * optimalZoom;
-	const scaledContentHeight = actualContentHeight * optimalZoom;
-	const spaceX = containerWidth - scaledContentWidth;
-	const spaceY = containerHeight - scaledContentHeight;
-	const optimalPanX = spaceX / 2;
-	const optimalPanY = spaceY / 2;
-
-	zoomLevel.value = optimalZoom;
-	panX.value = optimalPanX;
-	panY.value = optimalPanY;
-
-	initialZoomLevel.value = optimalZoom;
-	initialPanX.value = optimalPanX;
-	initialPanY.value = optimalPanY;
+const closeGuidePopup = () => {
+	showGuidePopup.value = false;
+	sessionStorage.setItem("seatmap_guide_shown", "true");
 };
 
 // Lifecycle
@@ -1879,6 +1880,11 @@ onMounted(async () => {
 		await loadSeatMap();
 
 		await loadSessionReservations();
+
+		// Show guide popup if not shown before in this session
+		if (!sessionStorage.getItem("seatmap_guide_shown")) {
+			showGuidePopup.value = true;
+		}
 	} catch (error) {
 		console.error("SelectSeats onMounted error:", error);
 		// Only show toast for critical errors
@@ -1922,6 +1928,26 @@ onBeforeRouteLeave((to, from, next) => {
 </script>
 
 <style scoped>
+/* Fade transition for popup */
+.fade-enter-active,
+.fade-leave-active {
+	transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+	opacity: 0;
+}
+
+.fade-enter-active .popup-content,
+.fade-leave-active .popup-content {
+	transition: transform 0.3s ease;
+}
+
+.fade-enter-from .popup-content,
+.fade-leave-to .popup-content {
+	transform: scale(0.95);
+}
 .custom-scrollbar::-webkit-scrollbar {
 	width: 6px;
 }
