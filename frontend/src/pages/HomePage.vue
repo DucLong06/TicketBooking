@@ -24,9 +24,9 @@
 					<div
 						v-for="show in shows"
 						:key="show.id"
-						class="grid grid-cols-5 bg-[#fdfcf0] rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-[#d8a669]/30"
+						class="grid grid-cols-7 items-start bg-[#fdfcf0] rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-[#d8a669]/30"
 					>
-						<div class="col-span-2">
+						<div class="col-span-3">
 							<OptimizedImage
 								v-if="show.poster"
 								:src="show.poster"
@@ -49,17 +49,17 @@
 						</div>
 
 						<div
-							class="col-span-3 p-4 sm:p-5 flex flex-col justify-between"
+							class="col-span-4 p-3 sm:p-5 flex flex-col justify-between"
 						>
 							<div class="flex-1">
 								<h3
-									class="text-lg sm:text-xl lg:text-2xl font-bold text-[#372e2d] mb-3 line-clamp-2 uppercase"
+									class="text-base sm:text-lg lg:text-xl font-bold text-[#372e2d] mb-2 line-clamp-2 uppercase"
 								>
 									{{ show.name }}
 								</h3>
 
 								<div
-									class="flex items-center gap-2 text-[#372e2d]/80 mb-3 text-sm sm:text-base"
+									class="flex items-center gap-2 text-[#372e2d]/80 mb-2 text-xs sm:text-sm"
 								>
 									<svg
 										class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-[#d8a669]"
@@ -88,7 +88,7 @@
 
 								<div
 									v-if="show.duration_minutes"
-									class="flex items-center gap-2 text-[#372e2d]/80 text-sm sm:text-base"
+									class="flex items-center gap-2 text-[#372e2d]/80 text-xs sm:text-sm"
 								>
 									<svg
 										class="w-4 h-4 sm:w-5 sm:h-5 text-[#d8a669]"
@@ -110,11 +110,11 @@
 							</div>
 
 							<div
-								class="flex flex-col gap-2 w-full mt-4 sm:mt-6"
+								class="flex flex-col gap-2 w-full mt-3 sm:mt-6"
 							>
 								<button
 									@click.stop="goToBookingAndScroll(show.id)"
-									class="uppercase font-semibold bg-[#d8a669] text-white rounded-lg shadow-lg hover:bg-[#b8884d] transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 py-2.5 sm:py-3 text-sm sm:text-base"
+									class="uppercase font-semibold bg-[#d8a669] text-white rounded-lg shadow-lg hover:bg-[#b8884d] transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 py-2 sm:py-2.5 text-xs sm:text-sm"
 								>
 									<svg
 										class="w-4 h-4 sm:w-5 sm:h-5"
@@ -134,7 +134,7 @@
 
 								<button
 									@click.stop="goToDetails(show.id)"
-									class="uppercase font-semibold bg-white text-[#d8a669] border-2 border-[#d8a669] rounded-lg shadow-lg hover:bg-[#d8a669]/10 transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 py-2.5 sm:py-3 text-sm sm:text-base"
+									class="uppercase font-semibold bg-white text-[#d8a669] border-2 border-[#d8a669] rounded-lg shadow-lg hover:bg-[#d8a669]/10 transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 py-2 sm:py-2.5 text-xs sm:text-sm"
 								>
 									<svg
 										class="w-4 h-4 sm:w-5 sm:h-5"
@@ -155,7 +155,7 @@
 								<button
 									v-if="show.trailer_url"
 									@click.stop="openTrailer(show.trailer_url)"
-									class="uppercase font-semibold bg-white text-[#372e2d]/90 border-2 border-[#372e2d]/30 rounded-lg shadow-lg hover:bg-gray-50 transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 py-2.5 sm:py-3 text-sm sm:text-base"
+									class="uppercase font-semibold bg-white text-[#372e2d]/90 border-2 border-[#372e2d]/30 rounded-lg shadow-lg hover:bg-gray-50 transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 py-2 sm:py-2.5 text-xs sm:text-sm"
 								>
 									<svg
 										class="w-4 h-4 sm:w-5 sm:h-5"
@@ -197,7 +197,6 @@
 		/>
 	</DefaultLayout>
 </template>
-
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
