@@ -568,25 +568,6 @@
 								}}</span>
 							</div>
 							<div
-								v-if="shippingMethod === 'delivery'"
-								class="flex justify-between text-sm"
-							>
-								<span class="text-[#372e2d]/70"
-									>Phí vận chuyển:</span
-								>
-								<span class="font-semibold text-[#d8a669]">
-									{{ formatPrice(shippingFee) }}
-								</span>
-							</div>
-							<div class="flex justify-between text-sm">
-								<span class="text-[#372e2d]/70"
-									>Phí dịch vụ:</span
-								>
-								<span class="font-semibold text-[#d8a669]">{{
-									formatPrice(serviceFee)
-								}}</span>
-							</div>
-							<div
 								v-if="bookingStore.discountAmount > 0"
 								class="flex justify-between text-sm"
 							>
@@ -665,25 +646,7 @@
 									formatPrice(ticketAmount)
 								}}</span>
 							</div>
-							<div class="flex justify-between">
-								<span class="text-[#372e2d]/70"
-									>Phí dịch vụ:</span
-								>
-								<span class="font-semibold text-[#372e2d]">{{
-									formatPrice(serviceFee)
-								}}</span>
-							</div>
-							<div
-								v-if="shippingMethod === 'delivery'"
-								class="flex justify-between"
-							>
-								<span class="text-[#372e2d]/70"
-									>Phí vận chuyển:</span
-								>
-								<span class="font-semibold text-[#372e2d]">{{
-									formatPrice(shippingFee)
-								}}</span>
-							</div>
+
 							<div
 								v-if="bookingStore.discountAmount > 0"
 								class="flex justify-between"
