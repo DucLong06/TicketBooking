@@ -103,7 +103,7 @@
 							@click="closeMenu"
 							class="text-[#d8a669] hover:text-white hover:bg-gray-50 px-4 py-3 rounded-lg transition font-medium"
 						>
-							🔍 Tra cứu vé
+							🔍 Vé của tôi 
 						</a>
 						<a
 							href="https://duongcam.art/"

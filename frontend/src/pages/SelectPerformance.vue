@@ -302,7 +302,6 @@
 							]"
 							:disabled="performance.available_seats === 0"
 						>
-							<!-- Checkmark khi được chọn -->
 							<div
 								v-if="
 									selectedPerformance?.id === performance.id
@@ -327,9 +326,9 @@
 							<div class="space-y-1 md:space-y-2">
 								<div
 									:class="[
-										'uppercase text-xl md:text-2xl font-semibold transition-colors duration-300',
+										'uppercase text-xl  font-semibold transition-colors duration-300',
 										{
-											'text-[#372e2d]':
+											'text-[#d8a669]':
 												selectedPerformance?.id !==
 													performance.id &&
 												performance.available_seats > 0,
@@ -347,7 +346,7 @@
 
 								<div
 									:class="[
-										'uppercase text-xs md:text-base font-semibold transition-colors duration-300',
+										'uppercase text-xl  font-semibold transition-colors duration-300',
 										{
 											'text-[#372e2d]':
 												selectedPerformance?.id !==
