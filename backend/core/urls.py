@@ -5,8 +5,12 @@ from django.conf.urls.static import static
 from django.views.generic import TemplateView
 from markdownx.views import MarkdownifyView, ImageUploadView
 
+from bookings.ketoan_admin import ketoan_admin_site
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('ketoan/', ketoan_admin_site.urls),
     path('api/', include('shows.urls')),
     path('api/', include('bookings.urls')),
     path('api/', include('payments.urls')),
