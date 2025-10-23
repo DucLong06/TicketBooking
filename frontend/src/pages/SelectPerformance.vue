@@ -278,111 +278,102 @@
 						Không có suất diễn nào
 					</div>
 
-					<div v-else class="space-y-6">
-						<div
-							v-for="(dateGroup, date) in groupedPerformances"
-							:key="date"
+					<div
+						v-else
+						class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4"
+					>
+						<button
+							v-for="performance in performances"
+							:key="performance.id"
+							@click="selectPerformance(performance)"
+							:class="[
+								'relative px-3 py-4 md:px-6 md:py-6 rounded-xl border-2 transition-all duration-300 text-center',
+								{
+									'border-[#d8a669]/30 bg-white hover:border-[#d8a669] hover:bg-[#d8a669]/5 shadow-md hover:shadow-xl hover:-translate-y-0.5':
+										selectedPerformance?.id !==
+											performance.id &&
+										performance.available_seats > 0,
+									'border-[#d8a669] bg-gradient-to-br from-[#d8a669] to-[#b8884d] shadow-xl ring-2 ring-[#d8a669]/50':
+										selectedPerformance?.id ===
+										performance.id,
+									'opacity-50 cursor-not-allowed bg-gray-100 border-gray-300':
+										performance.available_seats === 0,
+								},
+							]"
+							:disabled="performance.available_seats === 0"
 						>
-							<h3
-								class="font-semibold uppercase text-base md:text-lg mb-4 text-[#372e2d] flex items-center"
-							>
-								{{ formatDate(date) }}
-							</h3>
-
+							<!-- Checkmark khi được chọn -->
 							<div
-								class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4"
+								v-if="
+									selectedPerformance?.id === performance.id
+								"
+								class="absolute -top-2 -right-2 w-6 h-6 md:w-7 md:h-7 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-[#d8a669] z-10"
 							>
+								<svg
+									class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#d8a669]"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="3"
+										d="M5 13l4 4L19 7"
+									/>
+								</svg>
+							</div>
+
+							<div class="space-y-1 md:space-y-2">
 								<div
-									v-for="performance in dateGroup"
-									:key="performance.id"
-									@click="selectPerformance(performance)"
 									:class="[
-										'relative border-2 rounded-xl p-3 md:p-4 uppercase text-center cursor-pointer transition-all duration-300',
+										'uppercase text-xl md:text-2xl font-semibold transition-colors duration-300',
 										{
-											'border-[#d8a669] bg-white hover:border-[#b8884d] hover:shadow-lg hover:bg-[#fdfcf0]':
+											'text-[#372e2d]':
 												selectedPerformance?.id !==
 													performance.id &&
 												performance.available_seats > 0,
-											'border-[#d8a669] bg-gradient-to-br from-[#d8a669] to-[#b8884d] shadow-2xl ring-4 ring-[#d8a669]/50 scale-105 -translate-y-1':
+											'text-white/90':
 												selectedPerformance?.id ===
 												performance.id,
-											'opacity-50 cursor-not-allowed bg-gray-100':
+											'text-gray-500':
 												performance.available_seats ===
 												0,
 										},
 									]"
-									:disabled="
-										performance.available_seats === 0
-									"
 								>
-									<div
-										v-if="
-											selectedPerformance?.id ===
-											performance.id
-										"
-										class="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-[#d8a669] z-10"
-									>
-										<svg
-											class="w-5 h-5 text-[#d8a669]"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="3"
-												d="M5 13l4 4L19 7"
-											/>
-										</svg>
-									</div>
+									{{ formatTime(performance.datetime) }}
+								</div>
 
-									<div
-										:class="[
-											'uppercase text-base md:text-lg font-bold transition-colors duration-300',
-											{
-												'text-[#372e2d]':
-													selectedPerformance?.id !==
-													performance.id,
-												'text-white':
-													selectedPerformance?.id ===
-													performance.id,
-											},
-										]"
-									>
-										{{ formatTime(performance.datetime) }}
-									</div>
-									<div
-										:class="[
-											'uppercase text-xs md:text-sm mt-2 font-medium transition-colors duration-300',
-											{
-												'uppercase text-[#372e2d]':
-													performance.available_seats >
-														0 &&
-													selectedPerformance?.id !==
-														performance.id,
-												'text-white/90':
-													performance.available_seats >
-														0 &&
-													selectedPerformance?.id ===
-														performance.id,
-												'uppercase text-red-600':
-													performance.available_seats ===
-													0,
-											},
-										]"
-									>
-										{{
-											performance.available_seats > 0
-												? `Còn ${performance.available_seats} chỗ`
-												: "Hết vé"
-										}}
-									</div>
+								<div
+									:class="[
+										'uppercase text-xs md:text-base font-semibold transition-colors duration-300',
+										{
+											'text-[#372e2d]':
+												selectedPerformance?.id !==
+													performance.id &&
+												performance.available_seats > 0,
+											'text-white/90':
+												selectedPerformance?.id ===
+												performance.id,
+											'text-gray-500':
+												performance.available_seats ===
+												0,
+										},
+									]"
+								>
+									{{ formatDate(performance.datetime) }}
+								</div>
+
+								<div
+									v-if="performance.available_seats === 0"
+									class="uppercase text-[10px] md:text-xs font-bold text-red-600 pt-1"
+								>
+									Hết vé
 								</div>
 							</div>
-						</div>
+						</button>
 					</div>
-
 					<div
 						v-if="selectedPerformance"
 						class="mt-6 md:mt-8 flex justify-end"
@@ -460,9 +451,7 @@ const formatDate = (dateString) => {
 		"Thứ 6",
 		"Thứ 7",
 	];
-	return `${days[date.getDay()]}, ${date.getDate()}/${
-		date.getMonth() + 1
-	}/${date.getFullYear()}`;
+	return `Ngày ${date.getDate()}/${date.getMonth() + 1}`;
 };
 
 const formatTime = (datetime) => {

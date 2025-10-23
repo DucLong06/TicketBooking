@@ -7,10 +7,12 @@
 		</main>
 
 		<AppFooter />
+		<FloatingContacts />
 	</div>
 </template>
 
 <script setup>
 import AppHeader from "@/components/common/AppHeader.vue";
 import AppFooter from "@/components/common/AppFooter.vue";
+import FloatingContacts from "@/components/FloatingContacts.vue";
 </script>
