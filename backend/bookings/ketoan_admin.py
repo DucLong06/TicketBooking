@@ -1,6 +1,3 @@
-# backend/bookings/ketoan_admin.py
-# THÊM CỘT GHI CHÚ
-
 from django.contrib.admin import AdminSite
 from django.contrib import admin
 from django.utils.html import format_html
@@ -47,10 +44,8 @@ def extract_clean_notes(notes):
     if not notes:
         return ''
 
-    # Nếu có hóa đơn, lấy phần sau dấu phân cách
     if 'YÊU CẦU XUẤT HOÁ ĐƠN' in notes:
         parts = notes.split('--------------------------------')
-        # Lấy phần cuối cùng (ghi chú thực tế)
         clean_notes = parts[-1].strip() if len(parts) > 2 else ''
         return clean_notes
 
@@ -73,7 +68,6 @@ class KeToanAdminSite(AdminSite):
     def dashboard_view(self, request):
         """Dashboard với filter đầy đủ"""
 
-        # Lấy filters
         show_id = request.GET.get('show')
         performance_id = request.GET.get('performance')
         from_date = request.GET.get('from_date')
@@ -90,7 +84,6 @@ class KeToanAdminSite(AdminSite):
             except:
                 pass
         else:
-            # Mặc định 7 ngày gần nhất nếu không có filter
             seven_days_ago = timezone.now() - timedelta(days=7)
             bookings_query = bookings_query.filter(paid_at__gte=seven_days_ago)
 
@@ -116,7 +109,6 @@ class KeToanAdminSite(AdminSite):
             'payments'
         ).order_by('-paid_at')[:100]
 
-        # Xử lý thông tin chi tiết cho từng booking
         for booking in recent_bookings:
             booking.invoice_info = parse_invoice_from_notes(booking.notes)
             booking.clean_notes = extract_clean_notes(booking.notes)
@@ -147,18 +139,15 @@ class KeToanAdminSite(AdminSite):
             notes__icontains='YÊU CẦU XUẤT HOÁ ĐƠN'
         ).count()
 
-        # Tổng doanh thu
         total_revenue = bookings_query.aggregate(
             total=Sum('final_amount')
         )['total'] or 0
 
-        # Booking qua 9Pay
         total_9pay = bookings_query.filter(
             payments__status='success',
             payments__payment_method='9pay'
         ).distinct().count()
 
-        # ===== VÉ TỒN =====
         upcoming_performances = Performance.objects.filter(
             datetime__gte=timezone.now(),
             status='on_sale'

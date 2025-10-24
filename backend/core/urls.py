@@ -9,8 +9,8 @@ from bookings.ketoan_admin import ketoan_admin_site
 
 
 urlpatterns = [
+    path('admin/ketoan/', ketoan_admin_site.urls),
     path('admin/', admin.site.urls),
-    path('ketoan/', ketoan_admin_site.urls),
     path('api/', include('shows.urls')),
     path('api/', include('bookings.urls')),
     path('api/', include('payments.urls')),
