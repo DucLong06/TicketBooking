@@ -13,9 +13,12 @@
 .stat-value { font-size: 36px; font-weight: bold; }
 
 .filter-section { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-.filter-row { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
-.filter-section select { padding: 10px 15px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; min-width: 250px; }
-.filter-section button { padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+.filter-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 15px; }
+.filter-group { display: flex; flex-direction: column; }
+.filter-group label { font-size: 13px; color: #666; margin-bottom: 5px; font-weight: 600; }
+.filter-section select, .filter-section input[type="date"] { padding: 10px 15px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; }
+.filter-actions { display: flex; gap: 10px; align-items: center; }
+.filter-section button { padding: 10px 24px; background: #2196F3; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
 .filter-section button:hover { background: #1976D2; }
 .clear-filter { color: #F44336; text-decoration: none; font-weight: 600; padding: 10px 20px; }
 .clear-filter:hover { text-decoration: underline; }
@@ -26,14 +29,17 @@
 
 .section-title { font-size: 20px; font-weight: bold; margin: 30px 0 15px 0; color: #333; border-bottom: 3px solid #667eea; padding-bottom: 10px; }
 .table-wrapper { background: white; border-radius: 10px; overflow-x: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px; }
-table { width: 100%; border-collapse: collapse; min-width: 1400px; }
+table { width: 100%; border-collapse: collapse; min-width: 1600px; }
 th { background: #4472C4; color: white; padding: 12px 10px; text-align: left; font-weight: 600; font-size: 13px; white-space: nowrap; }
 td { padding: 10px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
 tr:hover { background: #f8f9fa; }
 .booking-link { color: #2196F3; font-weight: 600; text-decoration: none; }
 .invoice-box { background: #e8f5e9; padding: 6px 10px; border-radius: 4px; border-left: 3px solid #4CAF50; font-size: 11px; }
 .invoice-box p { margin: 2px 0; }
-.no-invoice { color: #999; font-style: italic; }
+.notes-box { background: #fff9c4; padding: 6px 10px; border-radius: 4px; border-left: 3px solid #FFC107; font-size: 11px; max-height: 60px; overflow-y: auto; }
+.no-data { color: #999; font-style: italic; }
+.badge-9pay { background: #FF6B35; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+.badge-no { background: #ddd; color: #666; padding: 3px 8px; border-radius: 3px; font-size: 11px; }
 
 .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
 .perf-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
@@ -57,16 +63,43 @@ tr:hover { background: #f8f9fa; }
 <div class="dashboard">
     <h1 class="page-title">📊 Dashboard Kế Toán</h1>
     
-   
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-label">Booking đã lọc</div>
+            <div class="stat-value">{{ total_bookings }}</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="stat-label">Có yêu cầu xuất HĐ</div>
+            <div class="stat-value">{{ total_with_invoice }}</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);">
+            <div class="stat-label">Tổng doanh thu</div>
+            <div class="stat-value">{{ total_revenue|floatformat:0 }} ₫</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);">
+            <div class="stat-label">Thanh toán qua 9Pay</div>
+            <div class="stat-value">{{ total_9pay }}</div>
+        </div>
+    </div>
     
     <div class="filter-section">
         <h3 style="margin: 0 0 15px 0;">🔍 Lọc dữ liệu</h3>
         <form method="get" action="" id="filter-form">
             <div class="filter-row">
-                <div>
-                    <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #666;">Vở diễn:</label>
+                <div class="filter-group">
+                    <label>Từ ngày:</label>
+                    <input type="date" name="from_date" value="{{ from_date }}">
+                </div>
+                
+                <div class="filter-group">
+                    <label>Đến ngày:</label>
+                    <input type="date" name="to_date" value="{{ to_date }}">
+                </div>
+                
+                <div class="filter-group">
+                    <label>Vở diễn:</label>
                     <select name="show" id="show-filter">
-                        <option value="">-- Tất cả vở diễn --</option>
+                        <option value="">-- Tất cả --</option>
                         {% for show in shows %}
                         <option value="{{ show.id }}" {% if selected_show == show.id %}selected{% endif %}>
                             {{ show.name }}
@@ -75,10 +108,10 @@ tr:hover { background: #f8f9fa; }
                     </select>
                 </div>
                 
-                <div>
-                    <label style="display: block; margin-bottom: 5px; font-size: 13px; color: #666;">Suất diễn:</label>
+                <div class="filter-group">
+                    <label>Suất diễn:</label>
                     <select name="performance" id="performance-filter">
-                        <option value="">-- Tất cả suất diễn --</option>
+                        <option value="">-- Tất cả --</option>
                         {% for perf in performances %}
                         <option value="{{ perf.id }}" {% if selected_performance == perf.id %}selected{% endif %}>
                             {{ perf.show.name }} - {{ perf.datetime|date:"d/m/Y H:i" }}
@@ -86,10 +119,12 @@ tr:hover { background: #f8f9fa; }
                         {% endfor %}
                     </select>
                 </div>
-                
-                <button type="submit" style="margin-top: 20px;">Lọc</button>
-                {% if selected_show or selected_performance %}
-                <a href="?" class="clear-filter" style="margin-top: 20px;">✕ Xóa lọc</a>
+            </div>
+            
+            <div class="filter-actions">
+                <button type="submit">Lọc</button>
+                {% if selected_show or selected_performance or from_date or to_date %}
+                <a href="?" class="clear-filter">✕ Xóa lọc</a>
                 {% endif %}
             </div>
         </form>
@@ -97,27 +132,29 @@ tr:hover { background: #f8f9fa; }
     
     <div class="export-section">
         <h3 style="margin: 0 0 15px 0;">📥 Xuất dữ liệu</h3>
-        <a href="{% url 'ketoan_admin:export_excel' %}{% if selected_performance %}?performance={{ selected_performance }}{% elif selected_show %}?show={{ selected_show }}{% endif %}" class="export-btn">
-            📊 Xuất Excel{% if selected_performance %}: Suất đã chọn{% elif selected_show %}: Vở đã chọn{% else %}: Tất cả{% endif %}
+        <a href="{% url 'ketoan_admin:export_excel' %}?from_date={{ from_date }}&to_date={{ to_date }}&show={{ selected_show|default:'' }}&performance={{ selected_performance|default:'' }}" class="export-btn">
+            📊 Xuất Excel ({{ total_bookings }} booking)
         </a>
     </div>
     
-    <div class="section-title">🎫 Danh sách Booking{% if selected_performance or selected_show %} (Đã lọc){% endif %}</div>
+    <div class="section-title">🎫 Danh sách Booking</div>
     
     <div class="table-wrapper">
         <table>
             <thead>
                 <tr>
-                    <th>Mã booking</th>
+                    <th>Mã</th>
                     <th>Tên KH</th>
                     <th>SĐT</th>
                     <th>Địa chỉ</th>
                     <th>Suất diễn</th>
                     <th>Hạng vé</th>
                     <th>Số ghế</th>
-                    <th>SL vé</th>
+                    <th>SL</th>
                     <th>Tổng tiền</th>
-                    <th>Thông tin hóa đơn</th>
+                    <th>9Pay</th>
+                    <th>Thông tin HĐ</th>
+                    <th>Ghi chú</th>
                     <th>Ngày TT</th>
                 </tr>
             </thead>
@@ -127,13 +164,20 @@ tr:hover { background: #f8f9fa; }
                     <td><a href="{% url 'ketoan_admin:bookings_booking_change' b.id %}" class="booking-link">{{ b.booking_code }}</a></td>
                     <td><strong>{{ b.customer_name }}</strong></td>
                     <td>{{ b.customer_phone }}</td>
-                    <td style="max-width: 180px;">{{ b.customer_address }}</td>
+                    <td style="max-width: 150px;">{{ b.customer_address }}</td>
                     <td><strong>{{ b.performance.show.name }}</strong><br><small style="color:#666;">{{ b.performance.datetime|date:"d/m/Y H:i" }}</small></td>
                     <td>{{ b.ticket_classes }}</td>
-                    <td style="max-width: 200px; font-size: 11px;" title="{{ b.seat_numbers }}">{{ b.seat_numbers }}</td>
+                    <td style="max-width: 160px; font-size: 11px;" title="{{ b.seat_numbers }}">{{ b.seat_numbers }}</td>
                     <td style="text-align: center;"><strong>{{ b.seat_count }}</strong></td>
                     <td><strong style="color: #2196F3;">{{ b.final_amount|floatformat:0 }} ₫</strong></td>
-                    <td style="max-width: 220px;">
+                    <td style="text-align: center;">
+                        {% if b.is_9pay %}
+                        <span class="badge-9pay">✓</span>
+                        {% else %}
+                        <span class="badge-no">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="max-width: 200px;">
                         {% if b.invoice_info %}
                         <div class="invoice-box">
                             <p><strong>CT:</strong> {{ b.invoice_info.company_name }}</p>
@@ -141,19 +185,22 @@ tr:hover { background: #f8f9fa; }
                             <p><strong>Email:</strong> {{ b.invoice_info.email }}</p>
                         </div>
                         {% else %}
-                        <span class="no-invoice">Không có</span>
+                        <span class="no-data">Không có</span>
+                        {% endif %}
+                    </td>
+                    <td style="max-width: 200px;">
+                        {% if b.clean_notes %}
+                        <div class="notes-box" title="{{ b.clean_notes }}">{{ b.clean_notes }}</div>
+                        {% else %}
+                        <span class="no-data">—</span>
                         {% endif %}
                     </td>
                     <td>{{ b.paid_at|date:"d/m/Y H:i" }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="11" style="text-align:center;padding:60px;color:#999;">
-                        {% if selected_performance or selected_show %}
-                        Không có booking nào cho bộ lọc này
-                        {% else %}
-                        Chưa có booking nào trong 7 ngày qua
-                        {% endif %}
+                    <td colspan="13" style="text-align:center;padding:60px;color:#999;">
+                        Không có booking nào
                     </td>
                 </tr>
                 {% endfor %}
@@ -215,12 +262,15 @@ tr:hover { background: #f8f9fa; }
 </div>
 
 <script>
-// Auto-reload performances when show changes
 document.getElementById('show-filter').addEventListener('change', function() {
     const showId = this.value;
     if (showId) {
-        // Redirect với show parameter
-        window.location.href = '?show=' + showId;
+        const fromDate = document.querySelector('input[name="from_date"]').value;
+        const toDate = document.querySelector('input[name="to_date"]').value;
+        let url = '?show=' + showId;
+        if (fromDate) url += '&from_date=' + fromDate;
+        if (toDate) url += '&to_date=' + toDate;
+        window.location.href = url;
     }
 });
 </script>
