@@ -1,3 +1,6 @@
+# backend/bookings/ketoan_admin.py
+# THÊM CỘT GHI CHÚ
+
 from django.contrib.admin import AdminSite
 from django.contrib import admin
 from django.utils.html import format_html
@@ -5,7 +8,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import path
 from django.utils import timezone
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Sum
 from datetime import timedelta, datetime
 import re
 
@@ -19,6 +22,7 @@ from openpyxl.utils import get_column_letter
 
 
 def parse_invoice_from_notes(notes):
+    """Parse thông tin hóa đơn từ notes"""
     if not notes or 'YÊU CẦU XUẤT HOÁ ĐƠN' not in notes:
         return None
 
@@ -38,6 +42,21 @@ def parse_invoice_from_notes(notes):
     return invoice_info if invoice_info else None
 
 
+def extract_clean_notes(notes):
+    """Trích xuất ghi chú sạch (bỏ phần hóa đơn)"""
+    if not notes:
+        return ''
+
+    # Nếu có hóa đơn, lấy phần sau dấu phân cách
+    if 'YÊU CẦU XUẤT HOÁ ĐƠN' in notes:
+        parts = notes.split('--------------------------------')
+        # Lấy phần cuối cùng (ghi chú thực tế)
+        clean_notes = parts[-1].strip() if len(parts) > 2 else ''
+        return clean_notes
+
+    return notes.strip()
+
+
 class KeToanAdminSite(AdminSite):
     site_header = '📊 Hệ Thống Kế Toán'
     site_title = 'Kế Toán'
@@ -52,18 +71,37 @@ class KeToanAdminSite(AdminSite):
         return custom_urls + urls
 
     def dashboard_view(self, request):
+        """Dashboard với filter đầy đủ"""
 
+        # Lấy filters
         show_id = request.GET.get('show')
         performance_id = request.GET.get('performance')
+        from_date = request.GET.get('from_date')
+        to_date = request.GET.get('to_date')
 
         # Query bookings
-        seven_days_ago = timezone.now() - timedelta(days=7)
-        bookings_query = Booking.objects.filter(
-            status='paid',
-            paid_at__gte=seven_days_ago
-        )
+        bookings_query = Booking.objects.filter(status='paid')
 
         # Apply filters
+        if from_date:
+            try:
+                from_dt = datetime.strptime(from_date, '%Y-%m-%d')
+                bookings_query = bookings_query.filter(paid_at__gte=from_dt)
+            except:
+                pass
+        else:
+            # Mặc định 7 ngày gần nhất nếu không có filter
+            seven_days_ago = timezone.now() - timedelta(days=7)
+            bookings_query = bookings_query.filter(paid_at__gte=seven_days_ago)
+
+        if to_date:
+            try:
+                to_dt = datetime.strptime(to_date, '%Y-%m-%d')
+                to_dt = to_dt.replace(hour=23, minute=59, second=59)
+                bookings_query = bookings_query.filter(paid_at__lte=to_dt)
+            except:
+                pass
+
         if performance_id:
             bookings_query = bookings_query.filter(performance_id=performance_id)
         elif show_id:
@@ -74,11 +112,14 @@ class KeToanAdminSite(AdminSite):
         ).prefetch_related(
             'seat_reservations__seat__row__section',
             'seat_reservations__seat__price_category',
-            'seat_reservations__seat__row__price_category'
+            'seat_reservations__seat__row__price_category',
+            'payments'
         ).order_by('-paid_at')[:100]
 
+        # Xử lý thông tin chi tiết cho từng booking
         for booking in recent_bookings:
             booking.invoice_info = parse_invoice_from_notes(booking.notes)
+            booking.clean_notes = extract_clean_notes(booking.notes)
 
             seats = booking.seat_reservations.all()
             booking.seat_count = len(seats)
@@ -94,6 +135,30 @@ class KeToanAdminSite(AdminSite):
             booking.ticket_classes = ', '.join(sorted(categories)) if categories else '—'
             booking.seat_numbers = ', '.join(seat_numbers)
 
+            # Check payment method (9Pay)
+            booking.is_9pay = False
+            successful_payment = booking.payments.filter(status='success').first()
+            if successful_payment and successful_payment.payment_method == '9pay':
+                booking.is_9pay = True
+
+        # ===== STATS THEO FILTER =====
+        total_bookings = bookings_query.count()
+        total_with_invoice = bookings_query.filter(
+            notes__icontains='YÊU CẦU XUẤT HOÁ ĐƠN'
+        ).count()
+
+        # Tổng doanh thu
+        total_revenue = bookings_query.aggregate(
+            total=Sum('final_amount')
+        )['total'] or 0
+
+        # Booking qua 9Pay
+        total_9pay = bookings_query.filter(
+            payments__status='success',
+            payments__payment_method='9pay'
+        ).distinct().count()
+
+        # ===== VÉ TỒN =====
         upcoming_performances = Performance.objects.filter(
             datetime__gte=timezone.now(),
             status='on_sale'
@@ -158,12 +223,10 @@ class KeToanAdminSite(AdminSite):
             })
 
         # ===== FILTER OPTIONS =====
-        # List shows
         shows = Show.objects.filter(
             performances__datetime__gte=timezone.now()
         ).distinct().order_by('name')
 
-        # List performances (filtered by show if selected)
         performances_query = Performance.objects.filter(
             datetime__gte=timezone.now()
         ).select_related('show').order_by('datetime')
@@ -171,16 +234,22 @@ class KeToanAdminSite(AdminSite):
         if show_id:
             performances_query = performances_query.filter(show_id=show_id)
 
-        performances = performances_query[:50]  # Limit 50
+        performances = performances_query[:50]
 
         context = {
             **self.each_context(request),
             'recent_bookings': recent_bookings,
+            'total_bookings': total_bookings,
+            'total_with_invoice': total_with_invoice,
+            'total_revenue': total_revenue,
+            'total_9pay': total_9pay,
             'inventory_data': inventory_data,
             'shows': shows,
             'performances': performances,
             'selected_show': int(show_id) if show_id else None,
             'selected_performance': int(performance_id) if performance_id else None,
+            'from_date': from_date or '',
+            'to_date': to_date or '',
         }
 
         return render(request, 'admin/ketoan/dashboard.html', context)
@@ -189,8 +258,25 @@ class KeToanAdminSite(AdminSite):
         """Export Excel với filter"""
         show_id = request.GET.get('show')
         performance_id = request.GET.get('performance')
+        from_date = request.GET.get('from_date')
+        to_date = request.GET.get('to_date')
 
         queryset = Booking.objects.filter(status='paid')
+
+        if from_date:
+            try:
+                from_dt = datetime.strptime(from_date, '%Y-%m-%d')
+                queryset = queryset.filter(paid_at__gte=from_dt)
+            except:
+                pass
+
+        if to_date:
+            try:
+                to_dt = datetime.strptime(to_date, '%Y-%m-%d')
+                to_dt = to_dt.replace(hour=23, minute=59, second=59)
+                queryset = queryset.filter(paid_at__lte=to_dt)
+            except:
+                pass
 
         if performance_id:
             queryset = queryset.filter(performance_id=performance_id)
@@ -201,16 +287,11 @@ class KeToanAdminSite(AdminSite):
             'performance__show'
         ).prefetch_related(
             'seat_reservations__seat__row__section',
-            'seat_reservations__seat__price_category'
+            'seat_reservations__seat__price_category',
+            'payments'
         ).order_by('-paid_at')
 
-        if performance_id:
-            filename = f'booking_performance_{performance_id}'
-        elif show_id:
-            filename = f'booking_show_{show_id}'
-        else:
-            filename = 'tat_ca_booking'
-
+        filename = 'booking_filtered'
         return export_bookings_to_excel(queryset, filename)
 
 
@@ -335,16 +416,9 @@ class BookingKeToanAdmin(admin.ModelAdmin):
     invoice_display.short_description = 'Thông tin hóa đơn'
 
     def notes_clean(self, obj):
-        if not obj.notes:
-            return format_html('<em style="color:#999;">Không có ghi chú</em>')
-
-        notes = obj.notes
-        if 'YÊU CẦU XUẤT HOÁ ĐƠN' in notes:
-            parts = notes.split('--------------------------------')
-            notes = parts[-1].strip() if len(parts) > 2 else ''
-
+        notes = extract_clean_notes(obj.notes)
         if not notes:
-            return format_html('<em style="color:#999;">Không có ghi chú thêm</em>')
+            return format_html('<em style="color:#999;">Không có ghi chú</em>')
 
         return format_html('<div style="background:#fff9c4; padding:10px; border-radius:4px;">{}</div>', notes)
     notes_clean.short_description = 'Ghi chú'
@@ -361,7 +435,7 @@ class BookingKeToanAdmin(admin.ModelAdmin):
 
 
 def export_bookings_to_excel(queryset, filename_prefix):
-    """Export bookings - 12 cột"""
+    """Export bookings - 14 cột (thêm cột Ghi chú)"""
     wb = Workbook()
     ws = wb.active
     ws.title = "Bookings"
@@ -378,7 +452,7 @@ def export_bookings_to_excel(queryset, filename_prefix):
     headers = [
         'Mã booking', 'Tên KH', 'SĐT', 'Địa chỉ',
         'Suất diễn', 'Ngày giờ', 'Hạng vé', 'Số ghế', 'SL vé',
-        'Tổng tiền', 'Thông tin hóa đơn', 'Ngày thanh toán'
+        'Tổng tiền', '9Pay', 'Thông tin hóa đơn', 'Ghi chú', 'Ngày thanh toán'
     ]
 
     for col_num, header in enumerate(headers, 1):
@@ -392,6 +466,7 @@ def export_bookings_to_excel(queryset, filename_prefix):
     row_num = 2
     for booking in queryset:
         inv = parse_invoice_from_notes(booking.notes)
+        clean_notes = extract_clean_notes(booking.notes)
 
         seats = booking.seat_reservations.all()
         categories = set()
@@ -412,6 +487,12 @@ def export_bookings_to_excel(queryset, filename_prefix):
         else:
             invoice_text = 'Không có'
 
+        # Check 9Pay
+        is_9pay = 'Không'
+        successful_payment = booking.payments.filter(status='success').first()
+        if successful_payment and successful_payment.payment_method == '9pay':
+            is_9pay = 'Có'
+
         row_data = [
             booking.booking_code,
             booking.customer_name,
@@ -423,7 +504,9 @@ def export_bookings_to_excel(queryset, filename_prefix):
             so_ghe,
             len(seats),
             float(booking.final_amount),
+            is_9pay,
             invoice_text,
+            clean_notes or 'Không có',
             booking.paid_at.strftime('%d/%m/%Y %H:%M') if booking.paid_at else ''
         ]
 
