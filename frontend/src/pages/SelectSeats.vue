@@ -1079,7 +1079,7 @@
 							<div
 								class="text-xs text-gray-400 pt-2 border-t border-gray-700 text-center"
 							>
-								{{ getSeatStatusText(tooltipData.status) }}
+								{{ getSeatTooltipText(tooltipData) }}
 							</div>
 						</div>
 					</div>
@@ -1162,6 +1162,54 @@ const priceCategories = computed(() => seatMap.value?.price_categories || {});
 const goBack = async () => {
 	await cleanup();
 	router.push("/");
+};
+
+const checkOrphanSeat = (seat) => {
+	const row = groupedSeats.value
+		.flatMap((section) => section.rows)
+		.find((r) => r.label === seat.row);
+
+	if (!row) return { isOrphan: false };
+
+	const seats = row.seats.seats || row.seats;
+	const sortedSeats = [...seats].sort(
+		(a, b) => parseInt(a.number) - parseInt(b.number)
+	);
+
+	const currentIndex = sortedSeats.findIndex((s) => s.id === seat.id);
+	if (currentIndex === -1) return { isOrphan: false };
+
+	const wouldBeSelected = new Set([
+		...selectedSeats.value.map((s) => s.id),
+		seat.id,
+	]);
+
+	for (let i = 0; i < sortedSeats.length; i++) {
+		const checkSeat = sortedSeats[i];
+
+		if (wouldBeSelected.has(checkSeat.id)) continue;
+
+		if (checkSeat.status !== "available") continue;
+
+		const leftOccupied =
+			i > 0 &&
+			(wouldBeSelected.has(sortedSeats[i - 1].id) ||
+				sortedSeats[i - 1].status !== "available");
+
+		const rightOccupied =
+			i < sortedSeats.length - 1 &&
+			(wouldBeSelected.has(sortedSeats[i + 1].id) ||
+				sortedSeats[i + 1].status !== "available");
+
+		if (leftOccupied && rightOccupied) {
+			return {
+				isOrphan: true,
+				orphanSeat: checkSeat.display_number,
+			};
+		}
+	}
+
+	return { isOrphan: false };
 };
 
 const stageWidth = computed(() => {
@@ -1512,12 +1560,24 @@ const getSeatBorderColor = (seat) => {
 	return seat.price_category_color || "#10B981";
 };
 
+const getOrphanWarning = (seat) => {
+	if (seat.status !== "available") return false;
+	const check = checkOrphanSeat(seat);
+	return check.isOrphan;
+};
+
 const getSeatClass = (seat) => {
 	const classes = [];
 	if (seat.status === "available") {
 		classes.push(
 			"hover:scale-110 cursor-pointer shadow-md hover:shadow-xl"
 		);
+		if (!isSelected(seat) && selectedSeats.value.length > 0) {
+			const orphanCheck = checkWillCreateOrphan(seat);
+			if (orphanCheck.willCreate) {
+				classes.push("ring-2 ring-orange-400 opacity-70");
+			}
+		}
 	} else if (!isSelected(seat)) {
 		classes.push("cursor-not-allowed opacity-60");
 	}
@@ -1529,6 +1589,56 @@ const getSeatClass = (seat) => {
 
 const isSelected = (seat) => {
 	return selectedSeats.value.some((s) => s.id === seat.id);
+};
+const checkWillCreateOrphan = (seatToAdd) => {
+	if (!seatMap.value || !seatMap.value.seats) {
+		return { willCreate: false };
+	}
+
+	const cacheKey = `${seatToAdd.section_id}-${seatToAdd.row}`;
+
+	const seatsInSameRow = seatMap.value.seats.filter(
+		(s) => s.row === seatToAdd.row && s.section_id === seatToAdd.section_id
+	);
+
+	const sortedSeats = [...seatsInSameRow].sort((a, b) => {
+		const aNum = parseInt(a.number);
+		const bNum = parseInt(b.number);
+		return aNum - bNum;
+	});
+
+	const occupiedSet = new Set();
+
+	selectedSeats.value.forEach((s) => occupiedSet.add(s.id));
+
+	occupiedSet.add(seatToAdd.id);
+
+	seatsInSameRow.forEach((s) => {
+		if (s.status !== "available") {
+			occupiedSet.add(s.id);
+		}
+	});
+
+	for (let i = 0; i < sortedSeats.length; i++) {
+		const seat = sortedSeats[i];
+
+		if (occupiedSet.has(seat.id)) continue;
+		if (seat.status !== "available") continue;
+
+		const hasLeft = i > 0 && occupiedSet.has(sortedSeats[i - 1].id);
+		const hasRight =
+			i < sortedSeats.length - 1 &&
+			occupiedSet.has(sortedSeats[i + 1].id);
+
+		if (hasLeft && hasRight) {
+			return {
+				willCreate: true,
+				orphanSeatLabel: seat.full_label,
+			};
+		}
+	}
+
+	return { willCreate: false };
 };
 
 // Tooltip functions
@@ -1571,6 +1681,19 @@ const getSeatStatusText = (status) => {
 		blocked: "🚫 Không khả dụng",
 	};
 	return statusMap[status] || status;
+};
+
+const getSeatTooltipText = (seat) => {
+	if (seat.status !== "available") {
+		return getSeatStatusText(seat.status);
+	}
+
+	const orphanCheck = checkWillCreateOrphan(seat);
+	if (orphanCheck.willCreate) {
+		return `⚠️ Sẽ để ghế ${orphanCheck.orphanSeatLabel} trống ở giữa`;
+	}
+
+	return getSeatStatusText(seat.status);
 };
 
 const loadSessionReservations = async () => {
@@ -1638,6 +1761,15 @@ const toggleSeat = async (seat) => {
 			toast.error("Không thể bỏ chọn ghế");
 		}
 	} else {
+		const orphanCheck = checkWillCreateOrphan(seat);
+		if (orphanCheck.willCreate) {
+			toast.error(
+				`Không thể chọn ghế này vì sẽ để lại ghế ${orphanCheck.orphanSeatLabel} trống ở giữa. Vui lòng chọn thêm ghế ${orphanCheck.orphanSeatLabel} hoặc chọn ghế khác.`,
+				{ duration: 5000 }
+			);
+			return;
+		}
+
 		if (selectedSeats.value.length >= 8) {
 			toast.warning("Bạn chỉ có thể chọn tối đa 8 ghế");
 			return;

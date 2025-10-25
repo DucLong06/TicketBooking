@@ -302,6 +302,12 @@ class Row(models.Model):
         help_text='Danh sách số ghế bị ẩn để tạo lối đi. VD: [8,9,26,27]'
     )
 
+    orphan_seat_rule_enabled = models.BooleanField(
+        default=True,
+        verbose_name='Bật rule ghế mồ côi',
+        help_text='Không cho đặt ghế nếu để lại 1 ghế trống ở giữa'
+    )
+
     class Meta:
         verbose_name = 'Hàng ghế'
         verbose_name_plural = 'Hàng ghế'

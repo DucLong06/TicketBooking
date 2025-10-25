@@ -1,12 +1,13 @@
 from django.db.models import Q, Count
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from django.utils import timezone
 from shows.models import Show, Performance
 from shows.serializers import ShowListSerializer, ShowDetailSerializer, PerformanceSerializer
 
-from . models import ContactInfo
+from . models import ContactInfo, Row
 from .serializers import ContactInfoSerializer
 
 
@@ -64,3 +65,42 @@ class ContactInfoViewSet(viewsets.ReadOnlyModelViewSet):
         contact = ContactInfo.get_instance()
         serializer = self.get_serializer(contact)
         return Response(serializer.data)
+
+
+@api_view(['PATCH'])
+def toggle_row_orphan_rule(request, row_id):
+    """Toggle orphan seat rule for a specific row"""
+    row = get_object_or_404(Row, id=row_id)
+    enabled = request.data.get('enabled')
+
+    if enabled is not None:
+        row.orphan_seat_rule_enabled = enabled
+    else:
+        row.orphan_seat_rule_enabled = not row.orphan_seat_rule_enabled
+
+    row.save()
+
+    return Response({
+        'row_id': row.id,
+        'row_label': row.label,
+        'orphan_seat_rule_enabled': row.orphan_seat_rule_enabled
+    })
+
+
+@api_view(['PATCH'])
+def toggle_venue_orphan_rule(request, venue_id):
+    """Toggle orphan seat rule for all rows in a venue"""
+    from .models import Venue
+    venue = get_object_or_404(Venue, id=venue_id)
+    enabled = request.data.get('enabled', True)
+
+    # Update all rows in venue
+    Row.objects.filter(
+        section__venue=venue
+    ).update(orphan_seat_rule_enabled=enabled)
+
+    return Response({
+        'venue_id': venue.id,
+        'orphan_seat_rule_enabled': enabled,
+        'updated_rows': Row.objects.filter(section__venue=venue).count()
+    })

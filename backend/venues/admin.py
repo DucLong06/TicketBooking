@@ -128,7 +128,8 @@ class RowAdmin(admin.ModelAdmin):
         'actual_seats',
         'numbering_style',
         'price_category',
-        'spacing_after'
+        'spacing_after',
+        "orphan_seat_rule_enabled",
     ]
     list_filter = ['section__venue', 'section', 'price_category', 'numbering_style']
     search_fields = ['label']
@@ -143,8 +144,22 @@ class RowAdmin(admin.ModelAdmin):
         ('Hệ thống đánh số ghế', {
             'fields': ('numbering_style', 'center_x', 'aisle_width', 'has_center_aisle', 'gaps'),
             'description': 'Cấu hình cách đánh số và sắp xếp ghế'
-        })
+        }),
+        ('Quy tắc đặt ghế', {
+            'fields': ('orphan_seat_rule_enabled',),
+            'description': 'Bật/tắt rule không cho để lại ghế mồ côi (orphan seat)'
+        }),
     )
+
+    def orphan_rule_status(self, obj):
+        if obj.orphan_seat_rule_enabled:
+            return format_html(
+                '<span style="color: green; font-weight: bold;">✓ Bật</span>'
+            )
+        return format_html(
+            '<span style="color: red; font-weight: bold;">✗ Tắt</span>'
+        )
+    orphan_rule_status.short_description = 'Orphan Rule'
 
     def actual_seats(self, obj):
         count = obj.seats.count()
@@ -156,7 +171,26 @@ class RowAdmin(admin.ModelAdmin):
         )
     actual_seats.short_description = 'Ghế thực tế/Dự kiến'
 
-    actions = ['regenerate_seats', 'create_default_seats', 'add_center_spacing']
+    actions = ['regenerate_seats', 'create_default_seats', 'add_center_spacing', 'enable_orphan_rule',
+               'disable_orphan_rule', ]
+
+    def enable_orphan_rule(self, request, queryset):
+        updated = queryset.update(orphan_seat_rule_enabled=True)
+        self.message_user(
+            request,
+            f"Đã bật Orphan Seat Rule cho {updated} hàng",
+            level='success'
+        )
+    enable_orphan_rule.short_description = "✓ Bật Orphan Seat Rule"
+
+    def disable_orphan_rule(self, request, queryset):
+        updated = queryset.update(orphan_seat_rule_enabled=False)
+        self.message_user(
+            request,
+            f"Đã tắt Orphan Seat Rule cho {updated} hàng",
+            level='warning'
+        )
+    disable_orphan_rule.short_description = "✗ Tắt Orphan Seat Rule"
 
     def regenerate_seats(self, request, queryset):
         """Regenerate seats for selected rows"""
@@ -192,7 +226,6 @@ class RowAdmin(admin.ModelAdmin):
     create_default_seats.short_description = "Tạo ghế mặc định (auto)"
 
     def add_center_spacing(self, request, queryset):
-        """Thêm spacing ở giữa hàng"""
         for row in queryset:
             seats = list(row.seats.all().order_by('number'))
             if not seats:
@@ -325,6 +358,39 @@ class VenueAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         })
     )
+    actions = ['enable_orphan_rule_all', 'disable_orphan_rule_all']
+
+    def enable_orphan_rule_all(self, request, queryset):
+        """Bật orphan seat rule cho TẤT CẢ hàng trong các venue đã chọn"""
+        total = 0
+        for venue in queryset:
+            updated = Row.objects.filter(
+                section__venue=venue
+            ).update(orphan_seat_rule_enabled=True)
+            total += updated
+
+        self.message_user(
+            request,
+            f"Đã bật Orphan Seat Rule cho {total} hàng trong {queryset.count()} venue",
+            level='success'
+        )
+    enable_orphan_rule_all.short_description = "✓ Bật Orphan Rule (toàn bộ venue)"
+
+    def disable_orphan_rule_all(self, request, queryset):
+        """Tắt orphan seat rule cho TẤT CẢ hàng trong các venue đã chọn"""
+        total = 0
+        for venue in queryset:
+            updated = Row.objects.filter(
+                section__venue=venue
+            ).update(orphan_seat_rule_enabled=False)
+            total += updated
+
+        self.message_user(
+            request,
+            f"Đã tắt Orphan Seat Rule cho {total} hàng trong {queryset.count()} venue",
+            level='warning'
+        )
+    disable_orphan_rule_all.short_description = "✗ Tắt Orphan Rule (toàn bộ venue)"
 
     def layout_name(self, obj):
         return obj.layout.name if obj.layout else '-'

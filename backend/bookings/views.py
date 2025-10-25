@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .email_service import send_booking_confirmation
 from logzero import logger
 from shows.models import Performance, PerformancePrice
-from venues.models import Seat
+from venues.models import Row, Seat
 from .serializers import (
     BookingDetailSerializer,
     BookingCreateSerializer,
@@ -20,6 +20,78 @@ from django.utils import timezone
 from django.db import transaction
 from datetime import timezone as dt_timezone
 from datetime import timedelta
+
+
+def validate_orphan_seats(selected_seat_ids, performance):
+
+    seats = Seat.objects.filter(
+        id__in=selected_seat_ids
+    ).select_related('row').only('id', 'row_id', 'number', 'display_number')
+
+    # Group seats by row
+    rows_to_check = {}
+    for seat in seats:
+        if seat.row_id not in rows_to_check:
+            rows_to_check[seat.row_id] = {
+                'row': seat.row,
+                'seat_ids': []
+            }
+        rows_to_check[seat.row_id]['seat_ids'].append(seat.id)
+
+    row_ids_with_rule = [
+        row_id for row_id, data in rows_to_check.items()
+        if data['row'].orphan_seat_rule_enabled
+    ]
+
+    if not row_ids_with_rule:
+        return (True, None)
+
+    all_seats_map = {}
+    all_seats = Seat.objects.filter(
+        row_id__in=row_ids_with_rule,
+        status='active'
+    ).order_by('row_id', 'number').only('id', 'row_id', 'number', 'display_number')
+
+    for seat in all_seats:
+        if seat.row_id not in all_seats_map:
+            all_seats_map[seat.row_id] = []
+        all_seats_map[seat.row_id].append(seat)
+
+    existing_reservations = set(
+        SeatReservation.objects.filter(
+            performance=performance,
+            seat__row_id__in=row_ids_with_rule,
+            status__in=['reserved', 'sold', 'blocked']
+        ).values_list('seat_id', flat=True)
+    )
+
+    for row_id in row_ids_with_rule:
+        seat_ids_in_row = rows_to_check[row_id]['seat_ids']
+        all_seats_in_row = all_seats_map.get(row_id, [])
+
+        if not all_seats_in_row:
+            continue
+
+        # Simulate occupied seats
+        occupied_seats = existing_reservations | set(seat_ids_in_row)
+
+        # Check orphan
+        for i, seat in enumerate(all_seats_in_row):
+            if seat.id in occupied_seats:
+                continue
+
+            has_left = (i > 0 and all_seats_in_row[i-1].id in occupied_seats)
+            has_right = (i < len(all_seats_in_row) - 1 and
+                         all_seats_in_row[i+1].id in occupied_seats)
+
+            if has_left and has_right:
+                return (
+                    False,
+                    f'Không thể đặt vì sẽ để lại ghế {seat.full_display_label} trống ở giữa. '
+                    f'Vui lòng chọn ghế khác hoặc thêm ghế này vào.'
+                )
+
+    return (True, None)
 
 
 def get_performance_seat_map(performance):
@@ -276,6 +348,13 @@ def reserve_seats(request):
         if conflicting_reservations.exists():
             return Response(
                 {'error': 'Một số ghế đã được đặt hoặc đang được giữ bởi người khác. Vui lòng tải lại trang.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        is_valid, error_msg = validate_orphan_seats(seat_ids, performance)
+        if not is_valid:
+            return Response(
+                {'error': error_msg},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
