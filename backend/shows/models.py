@@ -85,6 +85,12 @@ class Performance(models.Model):
         verbose_name='Phí vận chuyển'
     )
 
+    max_tickets_per_booking = models.PositiveIntegerField(
+        default=8,
+        verbose_name='Số vé tối đa mỗi đơn',
+        help_text='Số lượng vé tối đa khách hàng có thể đặt trong suất diễn này'
+    )
+
     class Meta:
         verbose_name = 'Suất diễn'
         verbose_name_plural = 'Suất diễn'

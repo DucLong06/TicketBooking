@@ -81,9 +81,9 @@ class ShowAdmin(MarkdownxModelAdmin):
 
 @admin.register(Performance)
 class SimplePerformanceAdmin(admin.ModelAdmin):
-    list_display = ['show', 'datetime', 'status', 'available_seats_count', 'quick_actions']
+    list_display = ['show', 'datetime', 'status', 'available_seats_count', 'quick_actions', 'max_tickets_per_booking',]
     list_filter = ['show', 'status', 'datetime']
-    list_editable = ['status']
+    list_editable = ['status', 'max_tickets_per_booking']
     date_hierarchy = 'datetime'
 
     def quick_actions(self, obj):

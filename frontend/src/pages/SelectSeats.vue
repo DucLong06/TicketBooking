@@ -1,4 +1,131 @@
 <template>
+	<!-- Orphan Warning Modal -->
+	<Teleport to="body">
+		<div
+			v-if="showOrphanWarningModal"
+			class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
+			@click="showOrphanWarningModal = false"
+		>
+			<div
+				class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all"
+				@click.stop
+			>
+				<!-- Icon & Title -->
+				<div class="flex items-center gap-4 mb-4">
+					<div
+						class="flex-shrink-0 w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center"
+					>
+						<svg
+							class="w-6 h-6 text-amber-600"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+							/>
+						</svg>
+					</div>
+					<div class="flex-1">
+						<h3 class="text-lg font-bold text-gray-800">
+							Không thể chọn ghế này
+						</h3>
+						<p class="text-sm text-gray-500">
+							Để trải nghiệm tốt hơn cho khách hàng
+						</p>
+					</div>
+				</div>
+
+				<div class="mb-6 space-y-3">
+					<div
+						class="bg-amber-50 border border-amber-200 rounded-lg p-4"
+					>
+						<p class="text-sm text-gray-700 leading-relaxed">
+							{{ orphanWarningData.message }}
+						</p>
+					</div>
+
+					<div class="flex items-start gap-2 text-sm text-gray-600">
+						<svg
+							class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						</svg>
+						<div>
+							<p class="font-medium text-gray-700 mb-1">
+								Gợi ý của chúng tôi:
+							</p>
+							<ul
+								class="list-disc list-inside space-y-1 text-gray-600"
+							>
+								<li>
+									Chọn ghế
+									<span class="font-semibold">{{
+										orphanWarningData.orphanSeatLabel
+									}}</span>
+									cùng lúc
+								</li>
+								<li>
+									Hoặc chọn vị trí ghế khác không tạo khoảng
+									trống
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+
+				<!-- Actions -->
+				<div class="flex gap-3">
+					<button
+						v-if="orphanWarningData.orphanSeat"
+						@click="
+							selectSuggestedSeat(orphanWarningData.orphanSeat)
+						"
+						class="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-3 rounded-xl font-semibold hover:from-amber-600 hover:to-orange-600 transition-all shadow-md hover:shadow-lg"
+					>
+						Chọn ghế {{ orphanWarningData.orphanSeatLabel }}
+					</button>
+					<button
+						@click="showOrphanWarningModal = false"
+						class="flex-1 bg-gray-100 text-gray-700 px-4 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all"
+					>
+						Chọn ghế khác
+					</button>
+				</div>
+
+				<!-- Close button -->
+				<button
+					@click="showOrphanWarningModal = false"
+					class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+				>
+					<svg
+						class="w-6 h-6"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M6 18L18 6M6 6l12 12"
+						/>
+					</svg>
+				</button>
+			</div>
+		</div>
+	</Teleport>
 	<DefaultLayout>
 		<div
 			v-if="loading"
@@ -65,7 +192,9 @@
 						</p>
 						<p class="text-sm mb-4">
 							• Bạn có thể chọn tối đa
-							<strong class="text-[#b8884d]">8 ghế</strong>.
+							<strong class="text-[#b8884d]"
+								>{{ maxTicketsPerBooking }} ghế</strong
+							>.
 						</p>
 						<button
 							@click="closeGuidePopup"
@@ -1079,7 +1208,7 @@
 							<div
 								class="text-xs text-gray-400 pt-2 border-t border-gray-700 text-center"
 							>
-								{{ getSeatTooltipText(tooltipData) }}
+								{{ getSeatStatusText(tooltipData.status) }}
 							</div>
 						</div>
 					</div>
@@ -1108,7 +1237,7 @@ const toast = useToast();
 const router = useRouter();
 const route = useRoute();
 const bookingStore = useBookingStore();
-
+const maxTicketsPerBooking = ref(10);
 const isMobile = ref(window.innerWidth < 1024);
 
 // State
@@ -1118,8 +1247,13 @@ const selectedSeats = ref([]);
 const performanceInfo = ref({});
 const reservationExpiry = ref(null);
 const timeLeft = ref(0);
-const showLayoutModal = ref(false);
 let timer = null;
+const showOrphanWarningModal = ref(false);
+const orphanWarningData = ref({
+	selectedSeatLabel: "",
+	orphanSeatLabel: "",
+	suggestions: [],
+});
 
 // Zoom and Pan state
 const zoomLevel = ref(0.29);
@@ -1572,12 +1706,6 @@ const getSeatClass = (seat) => {
 		classes.push(
 			"hover:scale-110 cursor-pointer shadow-md hover:shadow-xl"
 		);
-		if (!isSelected(seat) && selectedSeats.value.length > 0) {
-			const orphanCheck = checkWillCreateOrphan(seat);
-			if (orphanCheck.willCreate) {
-				classes.push("ring-2 ring-orange-400 opacity-70");
-			}
-		}
 	} else if (!isSelected(seat)) {
 		classes.push("cursor-not-allowed opacity-60");
 	}
@@ -1683,19 +1811,6 @@ const getSeatStatusText = (status) => {
 	return statusMap[status] || status;
 };
 
-const getSeatTooltipText = (seat) => {
-	if (seat.status !== "available") {
-		return getSeatStatusText(seat.status);
-	}
-
-	const orphanCheck = checkWillCreateOrphan(seat);
-	if (orphanCheck.willCreate) {
-		return `⚠️ Sẽ để ghế ${orphanCheck.orphanSeatLabel} trống ở giữa`;
-	}
-
-	return getSeatStatusText(seat.status);
-};
-
 const loadSessionReservations = async () => {
 	try {
 		const response = await bookingAPI.getSessionReservations(
@@ -1740,6 +1855,14 @@ const loadSessionReservations = async () => {
 	}
 };
 
+const selectSuggestedSeat = async (suggestedSeat) => {
+	showOrphanWarningModal.value = false;
+
+	if (suggestedSeat && suggestedSeat.status === "available") {
+		await toggleSeat(suggestedSeat);
+	}
+};
+
 const toggleSeat = async (seat) => {
 	if (seat.status !== "available" && !isSelected(seat)) return;
 
@@ -1750,7 +1873,6 @@ const toggleSeat = async (seat) => {
 
 		try {
 			await bookingAPI.releaseSeats([seat.id], bookingStore.sessionId);
-
 			sessionStorage.setItem(
 				"selectedSeats",
 				JSON.stringify(selectedSeats.value)
@@ -1761,17 +1883,10 @@ const toggleSeat = async (seat) => {
 			toast.error("Không thể bỏ chọn ghế");
 		}
 	} else {
-		const orphanCheck = checkWillCreateOrphan(seat);
-		if (orphanCheck.willCreate) {
-			toast.error(
-				`Không thể chọn ghế này vì sẽ để lại ghế ${orphanCheck.orphanSeatLabel} trống ở giữa. Vui lòng chọn thêm ghế ${orphanCheck.orphanSeatLabel} hoặc chọn ghế khác.`,
-				{ duration: 5000 }
+		if (selectedSeats.value.length >= maxTicketsPerBooking.value) {
+			toast.warning(
+				`Bạn chỉ có thể chọn tối đa ${maxTicketsPerBooking.value} ghế`
 			);
-			return;
-		}
-
-		if (selectedSeats.value.length >= 8) {
-			toast.warning("Bạn chỉ có thể chọn tối đa 8 ghế");
 			return;
 		}
 
@@ -1802,11 +1917,31 @@ const toggleSeat = async (seat) => {
 		} catch (error) {
 			console.error("Failed to reserve seat:", error);
 
-			const errorMsg =
-				error.response?.data?.error || "Không thể giữ ghế này";
-			toast.error(errorMsg);
+			const errorData = error.response?.data || error.data || {};
 
-			if (errorMsg.includes("quá 8 ghế")) {
+			if (errorData?.type === "orphan_seat") {
+				const orphanSeat = seatMap.value.seats.find(
+					(s) => s.id === errorData.orphan_seat.id
+				);
+
+				orphanWarningData.value = {
+					selectedSeatLabel: seat.full_label,
+					orphanSeatLabel: errorData.orphan_seat.label,
+					orphanSeat: orphanSeat,
+					message: errorData.message,
+				};
+
+				showOrphanWarningModal.value = true;
+				return;
+			}
+
+			const errorMsg =
+				errorData?.message ||
+				errorData?.error ||
+				"Không thể giữ ghế này";
+			toast.error(errorMsg, { duration: 5000 });
+
+			if (errorMsg.includes(`quá ${maxTicketsPerBooking.value} ghế`)) {
 				await loadSessionReservations();
 			}
 		}
@@ -2011,6 +2146,10 @@ onMounted(async () => {
 
 		await loadSeatMap();
 
+		if (seatMap.value?.performance?.max_tickets_per_booking) {
+			maxTicketsPerBooking.value =
+				seatMap.value.performance.max_tickets_per_booking;
+		}
 		await loadSessionReservations();
 
 		// Show guide popup if not shown before in this session

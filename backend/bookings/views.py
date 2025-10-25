@@ -22,15 +22,17 @@ from datetime import timezone as dt_timezone
 from datetime import timedelta
 
 
-def validate_orphan_seats(selected_seat_ids, performance):
+def validate_orphan_seats(seat_dict, performance):
+    """
+    Optimized: Nhận seat_dict thay vì query lại
+    seat_dict: Dict[seat_id, Seat object]
+    """
+    import time
+    start_time = time.time()
 
-    seats = Seat.objects.filter(
-        id__in=selected_seat_ids
-    ).select_related('row').only('id', 'row_id', 'number', 'display_number')
-
-    # Group seats by row
+    # ✅ Dùng seat_dict có sẵn thay vì query
     rows_to_check = {}
-    for seat in seats:
+    for seat_id, seat in seat_dict.items():
         if seat.row_id not in rows_to_check:
             rows_to_check[seat.row_id] = {
                 'row': seat.row,
@@ -44,19 +46,26 @@ def validate_orphan_seats(selected_seat_ids, performance):
     ]
 
     if not row_ids_with_rule:
+        if settings.DEBUG:
+            elapsed = (time.time() - start_time) * 1000
+            logger.debug(f"Orphan validation skipped - {elapsed:.2f}ms")
         return (True, None)
 
+    # ✅ Chỉ query seats trong rows cần check
     all_seats_map = {}
     all_seats = Seat.objects.filter(
         row_id__in=row_ids_with_rule,
         status='active'
-    ).order_by('row_id', 'number').only('id', 'row_id', 'number', 'display_number')
+    ).select_related('row').only(
+        'id', 'row_id', 'number', 'display_number'
+    ).order_by('row_id', 'number')
 
     for seat in all_seats:
         if seat.row_id not in all_seats_map:
             all_seats_map[seat.row_id] = []
         all_seats_map[seat.row_id].append(seat)
 
+    # ✅ Dùng values_list thay vì objects
     existing_reservations = set(
         SeatReservation.objects.filter(
             performance=performance,
@@ -65,6 +74,7 @@ def validate_orphan_seats(selected_seat_ids, performance):
         ).values_list('seat_id', flat=True)
     )
 
+    # Validation logic giữ nguyên...
     for row_id in row_ids_with_rule:
         seat_ids_in_row = rows_to_check[row_id]['seat_ids']
         all_seats_in_row = all_seats_map.get(row_id, [])
@@ -72,10 +82,8 @@ def validate_orphan_seats(selected_seat_ids, performance):
         if not all_seats_in_row:
             continue
 
-        # Simulate occupied seats
         occupied_seats = existing_reservations | set(seat_ids_in_row)
 
-        # Check orphan
         for i, seat in enumerate(all_seats_in_row):
             if seat.id in occupied_seats:
                 continue
@@ -85,11 +93,25 @@ def validate_orphan_seats(selected_seat_ids, performance):
                          all_seats_in_row[i+1].id in occupied_seats)
 
             if has_left and has_right:
-                return (
-                    False,
-                    f'Không thể đặt vì sẽ để lại ghế {seat.full_display_label} trống ở giữa. '
-                    f'Vui lòng chọn ghế khác hoặc thêm ghế này vào.'
-                )
+                if settings.DEBUG:
+                    elapsed = (time.time() - start_time) * 1000
+                    logger.debug(f"Orphan validation FAILED - {elapsed:.2f}ms")
+
+                error_data = {
+                    'type': 'orphan_seat',
+                    'message': f'Không thể đặt vì sẽ để lại ghế {seat.full_display_label} trống ở giữa',
+                    'orphan_seat': {
+                        'id': seat.id,
+                        'label': seat.full_display_label,
+                        'number': seat.display_label,
+                        'row': seat.row.label
+                    }
+                }
+                return (False, error_data)
+
+    if settings.DEBUG:
+        elapsed = (time.time() - start_time) * 1000
+        logger.debug(f"Orphan validation passed - {elapsed:.2f}ms")
 
     return (True, None)
 
@@ -143,6 +165,7 @@ def get_performance_seat_map(performance):
         'performance': {
             'id': performance.id,
             'datetime': datetime_in_utc7.isoformat(),
+            'max_tickets_per_booking': performance.max_tickets_per_booking,
             'date': datetime_in_utc7.strftime('%d/%m/%Y'),
             'time': datetime_in_utc7.strftime('%H:%M'),
             'day_of_week': ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'][datetime_in_utc7.weekday()],
@@ -289,8 +312,9 @@ def performance_seat_map(request, performance_id):
 @api_view(['POST'])
 @csrf_exempt
 def reserve_seats(request):
-    """Reserve seats temporarily"""
+    """Reserve seats temporarily - OPTIMIZED"""
     from .utils import validate_session_ownership
+
     serializer = ReserveSeatSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
@@ -299,23 +323,32 @@ def reserve_seats(request):
     session_id = serializer.validated_data['session_id']
 
     if not validate_session_ownership(session_id, request):
-        logger.warning(f"⚠️ Potential session hijacking: {session_id}")
+        logger.warning(f"⚠️ Session hijacking attempt: {session_id}")
         return Response(
             {'error': 'Session không hợp lệ'},
             status=status.HTTP_403_FORBIDDEN
         )
-    performance = Performance.objects.get(id=performance_id)
+
+    performance = Performance.objects.select_related('show', 'show__venue').get(id=performance_id)
+
+    max_tickets = getattr(
+        performance,
+        'max_tickets_per_booking',
+        getattr(performance.show.venue, 'max_tickets_per_booking', 10)
+    )
+
     client_ip = request.META.get('REMOTE_ADDR')
+
     with transaction.atomic():
-        # Release expired reservations that are not linked to any booking yet
-        expired_reservations = SeatReservation.objects.filter(
+        # Release expired reservations
+        SeatReservation.objects.filter(
             performance=performance,
             status='reserved',
             expires_at__lt=timezone.now(),
             booking__isnull=True
-        )
-        expired_reservations.update(status='available', session_id='', expires_at=None, client_ip=None)
+        ).update(status='available', session_id='', expires_at=None, client_ip=None)
 
+        # Check existing session reservations
         existing_session_reservations = SeatReservation.objects.filter(
             performance=performance,
             session_id=session_id,
@@ -325,20 +358,21 @@ def reserve_seats(request):
 
         existing_seat_ids = set(existing_session_reservations.values_list('seat_id', flat=True))
         new_seat_ids = set(seat_ids)
-        total_seat_ids = existing_seat_ids | new_seat_ids  # Union of both sets
+        total_seat_ids = existing_seat_ids | new_seat_ids
 
-        if len(total_seat_ids) > 8:
+        if len(total_seat_ids) > max_tickets:
             return Response(
                 {
-                    'error': f'Không thể giữ quá 8 ghế. Bạn đang có {len(existing_seat_ids)} ghế, yêu cầu thêm {len(new_seat_ids)} ghế.',
+                    'error': f'Không thể giữ quá {max_tickets} ghế. Bạn đang có {len(existing_seat_ids)} ghế.',
                     'current_count': len(existing_seat_ids),
                     'requested_count': len(new_seat_ids),
-                    'max_allowed': 8
+                    'max_allowed': max_tickets,
+                    'type': 'max_seats_exceeded'
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Check if any requested seats are already reserved (by another session) or sold
+        # Check conflicts
         conflicting_reservations = SeatReservation.objects.filter(
             performance=performance,
             seat_id__in=seat_ids,
@@ -347,14 +381,7 @@ def reserve_seats(request):
 
         if conflicting_reservations.exists():
             return Response(
-                {'error': 'Một số ghế đã được đặt hoặc đang được giữ bởi người khác. Vui lòng tải lại trang.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        is_valid, error_msg = validate_orphan_seats(seat_ids, performance)
-        if not is_valid:
-            return Response(
-                {'error': error_msg},
+                {'error': 'Một số ghế đã được đặt. Vui lòng tải lại trang.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -364,23 +391,26 @@ def reserve_seats(request):
         seat_dict = {seat.id: seat for seat in seats}
 
         if len(seat_dict) != len(set(seat_ids)):
-            return Response({'error': 'Một hoặc nhiều ghế không hợp lệ.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'Một hoặc nhiều ghế không hợp lệ.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        # Get performance prices
+        is_valid, error_data = validate_orphan_seats(seat_dict, performance)
+        if not is_valid:
+            return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get prices (1 query)
         performance_prices = PerformancePrice.objects.filter(
             performance=performance
         ).values('price_category_id', 'price')
         price_map = {pp['price_category_id']: pp['price'] for pp in performance_prices}
 
+        # Reserve seats
         reserved_seats = []
         timeout_minutes = getattr(settings, 'SEAT_RESERVATION_TIMEOUT_MINUTES', 5)
-        existing_reservation = SeatReservation.objects.filter(
-            performance=performance,
-            session_id=session_id,
-            status='reserved',
-            expires_at__isnull=False
-        ).first()
 
+        existing_reservation = existing_session_reservations.first()
         if existing_reservation and existing_reservation.expires_at:
             expires_at = existing_reservation.expires_at
         else:
@@ -388,6 +418,7 @@ def reserve_seats(request):
 
         for seat_id in seat_ids:
             seat = seat_dict[seat_id]
+
             effective_pc = seat.effective_price_category
             price_category_id = effective_pc.id if effective_pc else None
             seat_price = price_map.get(
@@ -417,6 +448,7 @@ def reserve_seats(request):
                 'price': float(seat_price)
             })
 
+        # Log action
         BookingHistory.log_action(
             booking=None,
             action='reserve_seat',

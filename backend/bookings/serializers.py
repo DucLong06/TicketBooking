@@ -54,7 +54,7 @@ class ReserveSeatSerializer(serializers.Serializer):
     seat_ids = serializers.ListField(
         child=serializers.IntegerField(),
         min_length=1,
-        max_length=8
+        max_length=10
     )
     session_id = serializers.CharField(max_length=100)
 
