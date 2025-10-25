@@ -91,7 +91,7 @@ class RowSerializer(serializers.ModelSerializer):
         model = Row
         fields = [
             'id', 'label', 'seat_count', 'actual_seat_count',
-            'position_y', 'price_category', 'seats'
+            'position_y', 'price_category', 'seats', 'orphan_seat_rule_enabled'
         ]
 
     def get_actual_seat_count(self, obj):
